@@ -104,4 +104,4 @@ __all__ = [
     "SleeperDetector",
     "SleeperAlert",
 ]
-__version__ = "2.0.0"
+__version__ = "0.0.1"
