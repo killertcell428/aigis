@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/aigis
+      url: https://pypi.org/p/pyaigis
 
     steps:
       - name: Download distributions
@@ -74,7 +74,7 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         # No username/password needed — uses OIDC trusted publishing.
-        # Configure at: https://pypi.org/manage/project/aigis/settings/publishing/
+        # Configure at: https://pypi.org/manage/project/pyaigis/settings/publishing/
 
   # ── 3. GitHub Release with auto-changelog ─────────────────────────────────
   github-release:
@@ -126,7 +126,7 @@ jobs:
             fi
             echo "### Installation"
             echo '```bash'
-            echo "pip install aigis==${{ needs.build.outputs.version }}"
+            echo "pip install pyaigis==${{ needs.build.outputs.version }}"
             echo '```'
             if [ -n "$PREV_TAG" ]; then
               echo ""
