@@ -39,7 +39,7 @@ export default function LandingPage() {
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500" />
                 <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="ml-3 text-gray-500 text-xs font-mono">dashboard.ai-guardian.dev</span>
+                <span className="ml-3 text-gray-500 text-xs font-mono">dashboard.aigis.dev</span>
               </div>
               <div className="grid grid-cols-4 gap-4 mb-6">
                 {[

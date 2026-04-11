@@ -340,7 +340,7 @@ export default function ChallengePage() {
                   : "Your AI apps face these same attacks. Protect them with Aigis."}
               </p>
               <code className="block bg-black/50 rounded-lg p-3 text-sm text-green-400 mb-4">
-                pip install aigis
+                pip install pyaigis
               </code>
               <a
                 href="/docs/quickstart"

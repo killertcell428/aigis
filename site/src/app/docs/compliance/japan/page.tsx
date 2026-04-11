@@ -264,7 +264,7 @@ print(cleaned)  # "${ja ? "マイナンバーは [MY_NUMBER_REDACTED] です" : 
         </p>
 
         <pre><code>{`# Step 1: ${ja ? "インストール" : "Install"}
-pip install aigis
+pip install pyaigis
 
 # Step 2: ${ja ? "スキャン統合（2行追加するだけ）" : "Integrate scanning (just add 2 lines)"}
 from aigis import scan, sanitize

@@ -35,6 +35,10 @@
   <a href="https://github.com/killertcell428/aigis/tree/main/docs">Docs</a>
 </p>
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/.github/demo.svg" alt="Aigis Demo" width="700" />
+</p>
+
 ---
 
 ## Quick Start

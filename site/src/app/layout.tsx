@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s | Aigis",
   },
   description:
-    "Open-source Python library to protect LLM apps from prompt injection, PII leaks, jailbreaks & SQL injection. OWASP LLM Top 10 coverage, zero dependencies. pip install aigis",
+    "Open-source Python library to protect LLM apps from prompt injection, PII leaks, jailbreaks & SQL injection. OWASP LLM Top 10 coverage, zero dependencies. pip install pyaigis",
   keywords: [
     "LLM security",
     "prompt injection",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Aigis — Open-source LLM Security Library | Protect Against Prompt Injection",
     description:
-      "Open-source Python library to protect LLM apps from prompt injection, PII leaks, jailbreaks & SQL injection. OWASP LLM Top 10 coverage, zero dependencies. pip install aigis",
+      "Open-source Python library to protect LLM apps from prompt injection, PII leaks, jailbreaks & SQL injection. OWASP LLM Top 10 coverage, zero dependencies. pip install pyaigis",
     url: "https://aigis.dev",
     type: "website",
     images: [
