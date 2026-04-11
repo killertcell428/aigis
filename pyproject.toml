@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "aigis"
+name = "pyaigis"
 version = "2.0.0"
 description = "The open-source firewall for AI agents. Block prompt injections, jailbreaks, and data leaks before they reach your LLM. Multi-layer defense, agent-era security (MCP/Capability), US/CN/JP/EU compliance. Zero-dependency core."
 readme = "README.md"
@@ -50,7 +50,7 @@ anthropic = ["anthropic>=0.20.0"]
 
 # Full SaaS server (backend + all integrations)
 server = [
-    "aigis[yaml,fastapi,openai]",
+    "pyaigis[yaml,fastapi,openai]",
     "uvicorn[standard]>=0.30.0",
     "sqlalchemy>=2.0.0",
     "alembic>=1.13.0",
@@ -68,11 +68,11 @@ server = [
 ]
 
 # Everything
-all = ["aigis[yaml,fastapi,langchain,openai,anthropic]"]
+all = ["pyaigis[yaml,fastapi,langchain,openai,anthropic]"]
 
 # Development
 dev = [
-    "aigis[all]",
+    "pyaigis[all]",
     "pytest>=8.2.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=5.0.0",

@@ -19,10 +19,10 @@
 </table>
 
 <p align="center">
-  <a href="https://pypi.org/project/aigis/"><img src="https://img.shields.io/pypi/v/aigis.svg" alt="PyPI" /></a>
-  <a href="https://pypi.org/project/aigis/"><img src="https://img.shields.io/pypi/pyversions/aigis.svg" alt="Python" /></a>
+  <a href="https://pypi.org/project/pyaigis/"><img src="https://img.shields.io/pypi/v/pyaigis.svg" alt="PyPI" /></a>
+  <a href="https://pypi.org/project/pyaigis/"><img src="https://img.shields.io/pypi/pyversions/pyaigis.svg" alt="Python" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg" alt="License" /></a>
-  <a href="https://pepy.tech/projects/aigis"><img src="https://static.pepy.tech/badge/aigis" alt="Downloads" /></a>
+  <a href="https://pepy.tech/projects/pyaigis"><img src="https://static.pepy.tech/badge/pyaigis" alt="Downloads" /></a>
   <a href="https://github.com/killertcell428/aigis/actions/workflows/ci.yml"><img src="https://github.com/killertcell428/aigis/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
 </p>
 
@@ -40,7 +40,7 @@
 ## Quick Start
 
 ```bash
-pip install aigis
+pip install pyaigis
 ```
 
 ```python
