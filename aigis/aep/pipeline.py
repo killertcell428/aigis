@@ -188,9 +188,7 @@ class AtomicPipeline:
         opted_out = False
 
         if self._vaporize:
-            vaporize_result = self._vaporizer.vaporize(
-                work_dir, keep=declared_outputs
-            )
+            vaporize_result = self._vaporizer.vaporize(work_dir, keep=declared_outputs)
             artifacts_destroyed = vaporize_result.verified
             if not vaporize_result.verified:
                 logger.error(

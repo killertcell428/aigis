@@ -47,7 +47,9 @@ class TestActionTracker:
 
     def test_record_with_outcome(self):
         tracker = ActionTracker()
-        action = tracker.record("Write", "file:write", "/etc/passwd", risk_score=90, outcome="blocked")
+        action = tracker.record(
+            "Write", "file:write", "/etc/passwd", risk_score=90, outcome="blocked"
+        )
         assert action.outcome == "blocked"
         assert action.risk_score == 90
 
@@ -128,8 +130,13 @@ class TestActionTracker:
 
     def test_tracked_action_to_dict(self):
         action = TrackedAction(
-            timestamp=1000.0, tool_name="Bash", resource="shell:exec",
-            target="ls", risk_score=0, session_id="abc", outcome="allowed",
+            timestamp=1000.0,
+            tool_name="Bash",
+            resource="shell:exec",
+            target="ls",
+            risk_score=0,
+            session_id="abc",
+            outcome="allowed",
         )
         d = action.to_dict()
         assert d["tool_name"] == "Bash"
@@ -175,15 +182,17 @@ class TestBaselineBuilder:
         base_time = time.time()
         actions = []
         for i, (tool, resource) in enumerate(tool_resource_pairs):
-            actions.append(TrackedAction(
-                timestamp=base_time + (i * duration_spread / max(len(tool_resource_pairs), 1)),
-                tool_name=tool,
-                resource=resource,
-                target=f"target_{i}",
-                risk_score=risk_scores[i] if risk_scores else 0,
-                session_id="test",
-                outcome="allowed",
-            ))
+            actions.append(
+                TrackedAction(
+                    timestamp=base_time + (i * duration_spread / max(len(tool_resource_pairs), 1)),
+                    tool_name=tool,
+                    resource=resource,
+                    target=f"target_{i}",
+                    risk_score=risk_scores[i] if risk_scores else 0,
+                    session_id="test",
+                    outcome="allowed",
+                )
+            )
         return actions
 
     def test_build_empty(self):
@@ -194,11 +203,13 @@ class TestBaselineBuilder:
 
     def test_build_single_session(self):
         builder = BaselineBuilder()
-        actions = self._make_actions([
-            ("Read", "file:read"),
-            ("Read", "file:read"),
-            ("Bash", "shell:exec"),
-        ])
+        actions = self._make_actions(
+            [
+                ("Read", "file:read"),
+                ("Read", "file:read"),
+                ("Bash", "shell:exec"),
+            ]
+        )
         builder.observe(actions)
         profile = builder.build()
 
@@ -238,10 +249,13 @@ class TestBaselineBuilder:
 
     def test_save_and_load(self):
         builder = BaselineBuilder()
-        actions = self._make_actions([
-            ("Read", "file:read"),
-            ("Bash", "shell:exec"),
-        ], risk_scores=[10, 50])
+        actions = self._make_actions(
+            [
+                ("Read", "file:read"),
+                ("Bash", "shell:exec"),
+            ],
+            risk_scores=[10, 50],
+        )
         builder.observe(actions)
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -311,15 +325,17 @@ class TestDriftDetector:
         base_time = time.time()
         actions = []
         for i, res in enumerate(resources):
-            actions.append(TrackedAction(
-                timestamp=base_time + (i * duration_seconds / max(len(resources), 1)),
-                tool_name=(tools[i] if tools else "Tool"),
-                resource=res,
-                target=f"target_{i}",
-                risk_score=(risk_scores[i] if risk_scores else 0),
-                session_id="test",
-                outcome="allowed",
-            ))
+            actions.append(
+                TrackedAction(
+                    timestamp=base_time + (i * duration_seconds / max(len(resources), 1)),
+                    tool_name=(tools[i] if tools else "Tool"),
+                    resource=res,
+                    target=f"target_{i}",
+                    risk_score=(risk_scores[i] if risk_scores else 0),
+                    session_id="test",
+                    outcome="allowed",
+                )
+            )
         return actions
 
     def test_no_drift_normal(self):
@@ -378,7 +394,9 @@ class TestDriftDetector:
         base_time = time.time()
         actions = [
             TrackedAction(base_time, "Read", "file:read", "/etc/passwd", 0, "test", "allowed"),
-            TrackedAction(base_time + 5, "Network", "network:send", "https://evil.com", 0, "test", "allowed"),
+            TrackedAction(
+                base_time + 5, "Network", "network:send", "https://evil.com", 0, "test", "allowed"
+            ),
         ]
         alerts = detector.check(actions)
         exfil_alerts = [a for a in alerts if a.drift_type == "exfiltration_pattern"]
@@ -474,8 +492,12 @@ class TestAnomalyDetector:
         actions = [
             TrackedAction(
                 timestamp=base_time + i * 0.2,
-                tool_name="Tool", resource="file:read", target=f"f_{i}",
-                risk_score=0, session_id="test", outcome="allowed",
+                tool_name="Tool",
+                resource="file:read",
+                target=f"f_{i}",
+                risk_score=0,
+                session_id="test",
+                outcome="allowed",
             )
             for i in range(50)
         ]
@@ -490,8 +512,12 @@ class TestAnomalyDetector:
         actions = [
             TrackedAction(
                 timestamp=base_time + i * 12,
-                tool_name="Tool", resource="file:read", target=f"f_{i}",
-                risk_score=0, session_id="test", outcome="allowed",
+                tool_name="Tool",
+                resource="file:read",
+                target=f"f_{i}",
+                risk_score=0,
+                session_id="test",
+                outcome="allowed",
             )
             for i in range(5)
         ]
@@ -770,12 +796,28 @@ class TestBehavioralMonitor:
 
         # Record an escalation chain (file:read -> network:send)
         base_time = time.time()
-        monitor._tracker._actions.append(TrackedAction(
-            base_time, "Read", "file:read", "/etc/passwd", 0, "test", "allowed",
-        ))
-        monitor._tracker._actions.append(TrackedAction(
-            base_time + 5, "Net", "network:send", "https://evil.com", 0, "test", "allowed",
-        ))
+        monitor._tracker._actions.append(
+            TrackedAction(
+                base_time,
+                "Read",
+                "file:read",
+                "/etc/passwd",
+                0,
+                "test",
+                "allowed",
+            )
+        )
+        monitor._tracker._actions.append(
+            TrackedAction(
+                base_time + 5,
+                "Net",
+                "network:send",
+                "https://evil.com",
+                0,
+                "test",
+                "allowed",
+            )
+        )
 
         alerts = monitor.check()
         # Should detect: new_resource (network:send not in baseline), possible exfil
@@ -795,16 +837,30 @@ class TestBehavioralMonitor:
         # Inject many dangerous actions to trigger escalation
         base_time = time.time()
         for i in range(30):
-            monitor._tracker._actions.append(TrackedAction(
-                base_time + i * 0.5,
-                "Bash", "shell:exec", f"dangerous_cmd_{i}", 80, "test", "allowed",
-            ))
+            monitor._tracker._actions.append(
+                TrackedAction(
+                    base_time + i * 0.5,
+                    "Bash",
+                    "shell:exec",
+                    f"dangerous_cmd_{i}",
+                    80,
+                    "test",
+                    "allowed",
+                )
+            )
             # Also some exfil patterns
             if i % 3 == 0:
-                monitor._tracker._actions.append(TrackedAction(
-                    base_time + i * 0.5 + 0.1,
-                    "Net", "network:send", "https://evil.com", 90, "test", "allowed",
-                ))
+                monitor._tracker._actions.append(
+                    TrackedAction(
+                        base_time + i * 0.5 + 0.1,
+                        "Net",
+                        "network:send",
+                        "https://evil.com",
+                        90,
+                        "test",
+                        "allowed",
+                    )
+                )
 
         alerts = monitor.check()
         # Should have multiple alerts
@@ -938,7 +994,9 @@ class TestFullWorkflow:
             alerts = m2.check()
 
             # Should detect new_resource at minimum
-            new_res = [a for a in alerts if hasattr(a, "anomaly_type") and a.anomaly_type == "new_resource"]
+            new_res = [
+                a for a in alerts if hasattr(a, "anomaly_type") and a.anomaly_type == "new_resource"
+            ]
             assert len(new_res) > 0
 
     def test_containment_blocks_operations(self):

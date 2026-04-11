@@ -200,10 +200,10 @@ _MEMORY_PATTERNS: list[tuple[re.Pattern, str, int]] = _build_memory_patterns()
 
 # Source trust levels — untrusted sources get harsher scoring
 _SOURCE_TRUST: dict[str, float] = {
-    "system": 0.0,   # fully trusted, no penalty
-    "agent": 0.2,    # low penalty
-    "tool": 0.5,     # moderate penalty
-    "user": 1.0,     # full penalty (untrusted)
+    "system": 0.0,  # fully trusted, no penalty
+    "agent": 0.2,  # low penalty
+    "tool": 0.5,  # moderate penalty
+    "user": 1.0,  # full penalty (untrusted)
 }
 
 
@@ -295,9 +295,7 @@ class MemoryScanner:
             generic_score = int(check.risk_score * max(trust_multiplier, 0.3))
             score += generic_score
             for rule in check.matched_rules:
-                threats.append(
-                    f"[generic] {rule.rule_name}: {rule.matched_text[:80]}"
-                )
+                threats.append(f"[generic] {rule.rule_name}: {rule.matched_text[:80]}")
 
         # Layer 2: memory-specific pattern matching
         for pattern, description, pat_score in self._memory_patterns:
@@ -305,9 +303,7 @@ class MemoryScanner:
             if m:
                 adjusted = int(pat_score * max(trust_multiplier, 0.3))
                 score += adjusted
-                threats.append(
-                    f"[memory] {description} (matched: {m.group(0)[:80]})"
-                )
+                threats.append(f"[memory] {description} (matched: {m.group(0)[:80]})")
 
         # Cap at 100
         score = min(score, 100)

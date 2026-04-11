@@ -304,9 +304,7 @@ class AgentTopology:
             with elevated risk).
         """
         with self._lock:
-            high_risk = [
-                e for e in self._edges.values() if e.avg_risk_score > 30
-            ]
+            high_risk = [e for e in self._edges.values() if e.avg_risk_score > 30]
             trust_violations: list[dict] = []
             for key, edge in self._edges.items():
                 from_id, to_id = key
@@ -316,14 +314,16 @@ class AgentTopology:
                     from_rank = _trust_rank(from_node.trust_level)
                     to_rank = _trust_rank(to_node.trust_level)
                     if to_rank > from_rank and edge.avg_risk_score > 20:
-                        trust_violations.append({
-                            "from_agent": from_id,
-                            "to_agent": to_id,
-                            "from_trust": from_node.trust_level,
-                            "to_trust": to_node.trust_level,
-                            "avg_risk_score": edge.avg_risk_score,
-                            "message_count": edge.message_count,
-                        })
+                        trust_violations.append(
+                            {
+                                "from_agent": from_id,
+                                "to_agent": to_id,
+                                "from_trust": from_node.trust_level,
+                                "to_trust": to_node.trust_level,
+                                "avg_risk_score": edge.avg_risk_score,
+                                "message_count": edge.message_count,
+                            }
+                        )
 
             unexpected = self.unexpected_edges() if self._allowed_edges else []
 

@@ -101,9 +101,7 @@ class TestBuildComplianceItems:
     def test_no_v11_references(self):
         items = _build_compliance_items()
         for item in items:
-            assert "v1.1" not in item.regulation, (
-                f"{item.requirement_id} still references v1.1"
-            )
+            assert "v1.1" not in item.regulation, f"{item.requirement_id} still references v1.1"
 
 
 class TestGetComplianceReport:
@@ -146,7 +144,12 @@ class TestGetComplianceSummary:
 
     def test_total_matches_sum(self):
         summary = get_compliance_summary()
-        total = summary["covered"] + summary["partial"] + summary["not_covered"] + summary["user_responsibility"]
+        total = (
+            summary["covered"]
+            + summary["partial"]
+            + summary["not_covered"]
+            + summary["user_responsibility"]
+        )
         assert total == summary["total_requirements"]
 
     def test_coverage_rate_range(self):

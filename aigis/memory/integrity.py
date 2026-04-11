@@ -44,10 +44,10 @@ class IntegrityRecord:
 # the persistence window of poisoned entries. Trusted sources (agent, system)
 # have no expiry.
 _DEFAULT_TTL_BY_SOURCE: dict[str, float] = {
-    "user": 604_800.0,     # 7 days — external/untrusted input
-    "tool": 604_800.0,     # 7 days — tool outputs are untrusted
-    "agent": 0.0,          # no expiry — trusted inter-agent data
-    "system": 0.0,         # no expiry — system-level data
+    "user": 604_800.0,  # 7 days — external/untrusted input
+    "tool": 604_800.0,  # 7 days — tool outputs are untrusted
+    "agent": 0.0,  # no expiry — trusted inter-agent data
+    "system": 0.0,  # no expiry — system-level data
 }
 
 

@@ -99,7 +99,9 @@ class MonitoringReport:
 
         _a("# Aigis Security Report")
         _a("")
-        _a(f"**Period**: Last {days} days | **Generated**: {meta['generated_at'][:10]} | **Version**: {meta['version']}")
+        _a(
+            f"**Period**: Last {days} days | **Generated**: {meta['generated_at'][:10]} | **Version**: {meta['version']}"
+        )
         _a("")
 
         # --- Summary ---
@@ -124,7 +126,7 @@ class MonitoringReport:
         _a("|-------|-------|-------|")
         for level in ("critical", "high", "medium", "low"):
             count = risk.get(level, 0)
-            _a(f"| {level.upper()} | {count:,} | {count/total_risk:.1%} |")
+            _a(f"| {level.upper()} | {count:,} | {count / total_risk:.1%} |")
         _a("")
 
         # --- ASR Trend ---
@@ -137,7 +139,9 @@ class MonitoringReport:
             _a("| Date | Attacks | Blocked | Bypassed | ASR |")
             _a("|------|---------|---------|----------|-----|")
             for t in trend[-14:]:  # Last 14 days
-                _a(f"| {t['date']} | {t['total_attacks']} | {t['blocked']} | {t['bypassed']} | {t['asr']:.1%} |")
+                _a(
+                    f"| {t['date']} | {t['total_attacks']} | {t['blocked']} | {t['bypassed']} | {t['asr']:.1%} |"
+                )
             _a("")
 
         # --- OWASP LLM Top 10 Scorecard ---
@@ -149,7 +153,12 @@ class MonitoringReport:
         for oid in sorted(scorecard.keys()):
             sc = scorecard[oid]
             level = sc.get("protection_level", "not-covered")
-            icon = {"active": "ACTIVE", "monitored": "MONITORED", "pattern-ready": "READY", "not-covered": "-"}[level]
+            icon = {
+                "active": "ACTIVE",
+                "monitored": "MONITORED",
+                "pattern-ready": "READY",
+                "not-covered": "-",
+            }[level]
             feats = ", ".join(sc.get("unique_features", [])[:2]) or "-"
             _a(f"| {oid} | {sc['name']} | {icon} | {sc.get('detections', 0)} | {feats} |")
         _a("")
@@ -212,11 +221,19 @@ class MonitoringReport:
 
         # OWASP coverage data
         owasp_ids = json.dumps(list(OWASP_LLM_TOP10.keys()))
-        owasp_detections = json.dumps([scorecard.get(oid, {}).get("detections", 0) for oid in OWASP_LLM_TOP10])
+        owasp_detections = json.dumps(
+            [scorecard.get(oid, {}).get("detections", 0) for oid in OWASP_LLM_TOP10]
+        )
 
         # Detection layer data
-        layer_names = json.dumps(list(pipeline["layers"].keys()) if pipeline["layers"] else ["regex", "similarity", "decoded", "multi_turn"])
-        layer_values = json.dumps(list(pipeline["layers"].values()) if pipeline["layers"] else [0, 0, 0, 0])
+        layer_names = json.dumps(
+            list(pipeline["layers"].keys())
+            if pipeline["layers"]
+            else ["regex", "similarity", "decoded", "multi_turn"]
+        )
+        layer_values = json.dumps(
+            list(pipeline["layers"].values()) if pipeline["layers"] else [0, 0, 0, 0]
+        )
 
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -284,30 +301,30 @@ footer {{ margin-top:3rem; padding-top:1rem; border-top:1px solid var(--border);
 <body>
 <div class="container">
 <h1>Aigis Security Report</h1>
-<p class="subtitle">Period: Last {days} days &middot; Generated: {meta['generated_at'][:10]} &middot; Version: {meta['version']}</p>
+<p class="subtitle">Period: Last {days} days &middot; Generated: {meta["generated_at"][:10]} &middot; Version: {meta["version"]}</p>
 
 <div class="grid">
     <div class="card accent">
         <div class="label">Total Scans</div>
-        <div class="value">{snap['total_scans']:,}</div>
+        <div class="value">{snap["total_scans"]:,}</div>
     </div>
     <div class="card green">
         <div class="label">Blocked</div>
-        <div class="value">{snap['total_blocked']:,}</div>
+        <div class="value">{snap["total_blocked"]:,}</div>
         <div class="sub">Critical threats stopped</div>
     </div>
     <div class="card yellow">
         <div class="label">Review Required</div>
-        <div class="value">{snap['total_review']:,}</div>
+        <div class="value">{snap["total_review"]:,}</div>
     </div>
-    <div class="card {'green' if snap['detection_rate'] >= 0.95 else 'yellow' if snap['detection_rate'] >= 0.8 else 'red'}">
+    <div class="card {"green" if snap["detection_rate"] >= 0.95 else "yellow" if snap["detection_rate"] >= 0.8 else "red"}">
         <div class="label">Detection Rate</div>
-        <div class="value">{snap['detection_rate']:.1%}</div>
+        <div class="value">{snap["detection_rate"]:.1%}</div>
         <div class="sub">Higher is better</div>
     </div>
-    <div class="card {'green' if snap['asr'] <= 0.05 else 'yellow' if snap['asr'] <= 0.2 else 'red'}">
+    <div class="card {"green" if snap["asr"] <= 0.05 else "yellow" if snap["asr"] <= 0.2 else "red"}">
         <div class="label">ASR</div>
-        <div class="value">{snap['asr']:.1%}</div>
+        <div class="value">{snap["asr"]:.1%}</div>
         <div class="sub">Attack Success Rate (lower = better)</div>
     </div>
 </div>
@@ -320,25 +337,25 @@ footer {{ margin-top:3rem; padding-top:1rem; border-top:1px solid var(--border);
 <div class="pipeline">
     <div class="pipe-stage">
         <div class="pipe-name">Layer 1: Regex</div>
-        <div class="pipe-count">{pipeline['layers'].get('regex', 0):,}</div>
+        <div class="pipe-count">{pipeline["layers"].get("regex", 0):,}</div>
         <div class="pipe-desc">165+ patterns, 25 categories</div>
     </div>
     <div class="pipe-arrow">&rarr;</div>
     <div class="pipe-stage">
         <div class="pipe-name">Layer 2: Similarity</div>
-        <div class="pipe-count">{pipeline['layers'].get('similarity', 0):,}</div>
+        <div class="pipe-count">{pipeline["layers"].get("similarity", 0):,}</div>
         <div class="pipe-desc">Semantic matching vs known attacks</div>
     </div>
     <div class="pipe-arrow">&rarr;</div>
     <div class="pipe-stage">
         <div class="pipe-name">Layer 3: Decoded</div>
-        <div class="pipe-count">{pipeline['layers'].get('decoded', 0):,}</div>
+        <div class="pipe-count">{pipeline["layers"].get("decoded", 0):,}</div>
         <div class="pipe-desc">Base64 / hex / URL / ROT13</div>
     </div>
     <div class="pipe-arrow">&rarr;</div>
     <div class="pipe-stage">
         <div class="pipe-name">Layer 4: Multi-turn</div>
-        <div class="pipe-count">{pipeline['layers'].get('multi_turn', 0):,}</div>
+        <div class="pipe-count">{pipeline["layers"].get("multi_turn", 0):,}</div>
         <div class="pipe-desc">Conversation escalation analysis</div>
     </div>
 </div>
@@ -373,7 +390,7 @@ footer {{ margin-top:3rem; padding-top:1rem; border-top:1px solid var(--border);
 </div>
 
 <footer>
-    Generated by Aigis v{meta['version']} &middot;
+    Generated by Aigis v{meta["version"]} &middot;
     <a href="https://github.com/killertcell428/aigis" style="color:var(--accent);">GitHub</a>
 </footer>
 </div>
@@ -471,9 +488,11 @@ new Chart(document.getElementById('layerChart'), {{
 
 # === Helpers ===
 
+
 def _get_version() -> str:
     try:
         from aigis import __version__
+
         return __version__
     except ImportError:
         return "unknown"
@@ -541,7 +560,9 @@ def _render_risk_bar(risk: dict) -> str:
         count = risk.get(level, 0)
         pct = count / total * 100
         if pct > 0:
-            parts.append(f'<span style="background:{colors[level]};width:{pct}%">{level[0].upper()} {count}</span>')
+            parts.append(
+                f'<span style="background:{colors[level]};width:{pct}%">{level[0].upper()} {count}</span>'
+            )
     return f'<div class="risk-bar">{"".join(parts)}</div>'
 
 
@@ -550,13 +571,17 @@ def _render_owasp_rows(scorecard: dict) -> str:
     for oid in sorted(scorecard.keys()):
         sc = scorecard[oid]
         level = sc.get("protection_level", "not-covered")
-        badge_cls = {"active": "badge-active", "monitored": "badge-monitored", "pattern-ready": "badge-ready"}.get(level, "badge-none")
+        badge_cls = {
+            "active": "badge-active",
+            "monitored": "badge-monitored",
+            "pattern-ready": "badge-ready",
+        }.get(level, "badge-none")
         badge_text = level.upper().replace("-", " ")
         feats = "<br>".join(sc.get("unique_features", [])) or "-"
         rows.append(
-            f'<tr><td>{oid}</td><td>{sc["name"]}</td>'
+            f"<tr><td>{oid}</td><td>{sc['name']}</td>"
             f'<td><span class="badge {badge_cls}">{badge_text}</span></td>'
-            f'<td>{sc.get("detections", 0)}</td>'
+            f"<td>{sc.get('detections', 0)}</td>"
             f'<td style="font-size:0.85rem">{feats}</td></tr>'
         )
     return "\n".join(rows)
@@ -566,7 +591,7 @@ def _render_differentiator_rows(caps: list[dict]) -> str:
     rows = []
     for cap in caps:
         rows.append(
-            f'<tr><td>{cap["name"]}</td>'
+            f"<tr><td>{cap['name']}</td>"
             f'<td class="check">{cap["status"]}</td>'
             f'<td class="cross">{cap.get("scan_only", "-")}</td>'
             f'<td style="color:var(--text-muted)">{cap["differentiator"]}</td></tr>'

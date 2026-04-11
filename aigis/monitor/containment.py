@@ -90,7 +90,9 @@ _ALLOWED_RESOURCES: dict[ContainmentLevel, set[str] | None] = {
     ContainmentLevel.WARN: None,  # Everything allowed (just log warnings)
     ContainmentLevel.THROTTLE: None,  # Everything allowed (rate limited externally)
     ContainmentLevel.RESTRICT: {
-        "file:read", "file:search", "database:query",
+        "file:read",
+        "file:search",
+        "database:query",
     },
     ContainmentLevel.ISOLATE: {
         "file:read",
@@ -114,11 +116,11 @@ class ContainmentManager:
 
     # Default escalation thresholds (number of alerts to trigger each level)
     DEFAULT_THRESHOLDS: dict[ContainmentLevel, int] = {
-        ContainmentLevel.WARN: 1,       # 1 alert -> start warning
-        ContainmentLevel.THROTTLE: 3,   # 3 alerts -> rate limit
-        ContainmentLevel.RESTRICT: 5,   # 5 alerts -> restrict to low-risk
-        ContainmentLevel.ISOLATE: 8,    # 8 alerts -> read-only
-        ContainmentLevel.STOP: 12,      # 12 alerts -> full stop
+        ContainmentLevel.WARN: 1,  # 1 alert -> start warning
+        ContainmentLevel.THROTTLE: 3,  # 3 alerts -> rate limit
+        ContainmentLevel.RESTRICT: 5,  # 5 alerts -> restrict to low-risk
+        ContainmentLevel.ISOLATE: 8,  # 8 alerts -> read-only
+        ContainmentLevel.STOP: 12,  # 12 alerts -> full stop
     }
 
     def __init__(

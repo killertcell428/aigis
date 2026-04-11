@@ -403,9 +403,7 @@ class AgentMessageScanner:
             cross_agent_risk=cross_agent_risk,
         )
 
-    def scan_conversation(
-        self, messages: list[AgentMessage]
-    ) -> list[MessageScanResult]:
+    def scan_conversation(self, messages: list[AgentMessage]) -> list[MessageScanResult]:
         """Scan a full conversation between agents.
 
         In addition to scanning each message individually, this method
@@ -488,9 +486,7 @@ class AgentMessageScanner:
                 message.content,
                 re.IGNORECASE,
             ):
-                threats.append(
-                    "Delegation message contains hidden instruction tags"
-                )
+                threats.append("Delegation message contains hidden instruction tags")
                 score += 35
             # Check for override language in delegations
             if re.search(
@@ -498,9 +494,7 @@ class AgentMessageScanner:
                 message.content,
                 re.IGNORECASE,
             ):
-                threats.append(
-                    "Delegation message attempts to override policies"
-                )
+                threats.append("Delegation message attempts to override policies")
                 score += 35
 
         elif message.message_type == "tool_result":
@@ -513,18 +507,14 @@ class AgentMessageScanner:
                 message.content,
                 re.IGNORECASE,
             ):
-                threats.append(
-                    "Tool result contains instruction-like content"
-                )
+                threats.append("Tool result contains instruction-like content")
                 score += 35
             if re.search(
                 r"(次は|今すぐ|直ちに|実行して|実行しなさい)",
                 message.content,
                 re.IGNORECASE,
             ):
-                threats.append(
-                    "Tool result contains instruction-like content (JA)"
-                )
+                threats.append("Tool result contains instruction-like content (JA)")
                 score += 35
 
         return threats, score

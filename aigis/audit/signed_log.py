@@ -146,6 +146,7 @@ def _resolve_key(secret_key: str | None) -> bytes:
             pass  # Windows may not support POSIX permissions
 
         import logging
+
         logging.getLogger(__name__).warning(
             "AUDIT: HMAC key auto-generated at %s. "
             "For production use, provide an explicit secret_key and restrict "
@@ -236,9 +237,7 @@ class SignedAuditLog:
         with self._lock:
             with open(p, "w", encoding="utf-8") as f:
                 for entry in self._entries:
-                    f.write(
-                        json.dumps(entry.to_dict(), ensure_ascii=False, sort_keys=True) + "\n"
-                    )
+                    f.write(json.dumps(entry.to_dict(), ensure_ascii=False, sort_keys=True) + "\n")
 
     def load(self, path: Path | str) -> None:
         """Load entries from an existing JSONL log file.

@@ -163,6 +163,7 @@ class SBOMGenerator:
                 continue
             # Use same canonical format as ToolPinManager.compute_hash()
             from aigis.supply_chain.hash_pin import ToolPinManager
+
             tool_hash = ToolPinManager.compute_hash(tool)
 
             entry = SBOMEntry(

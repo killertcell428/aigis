@@ -69,6 +69,7 @@ class TestProcessSandbox:
             assert "artifact.txt" in result.artifacts
         finally:
             import shutil
+
             shutil.rmtree(work_dir, ignore_errors=True)
 
     def test_env_stripping(self):
@@ -104,8 +105,11 @@ class TestProcessSandbox:
 
     def test_sandbox_result_dataclass(self):
         r = SandboxResult(
-            stdout="out", stderr="err", exit_code=0,
-            execution_time_ms=1.5, artifacts=["a.txt"],
+            stdout="out",
+            stderr="err",
+            exit_code=0,
+            execution_time_ms=1.5,
+            artifacts=["a.txt"],
         )
         assert r.stdout == "out"
         assert r.artifacts == ["a.txt"]
@@ -165,6 +169,7 @@ class TestVaporizer:
     def test_verify_destruction_nonexistent(self):
         work_dir = Path(tempfile.mkdtemp(prefix="aep_vap_"))
         import shutil
+
         shutil.rmtree(work_dir)
         assert self.vaporizer.verify_destruction(work_dir) is True
 

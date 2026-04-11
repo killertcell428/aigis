@@ -1043,7 +1043,9 @@ CHINESE_PII_PATTERNS: list[DetectionPattern] = [
         id="pii_zh_uscc",
         name="Chinese Unified Social Credit Code",
         category="pii_input",
-        pattern=_p(r"(?<![0-9A-Za-z])[0-9A-HJ-NP-RTUW-Y]{2}\d{6}[0-9A-HJ-NP-RTUW-Y]{10}(?![0-9A-Za-z])"),
+        pattern=_p(
+            r"(?<![0-9A-Za-z])[0-9A-HJ-NP-RTUW-Y]{2}\d{6}[0-9A-HJ-NP-RTUW-Y]{10}(?![0-9A-Za-z])"
+        ),
         base_score=45,
         description="Chinese unified social credit code (统一社会信用代码, 18 chars) detected.",
         owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
@@ -1588,9 +1590,7 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
         id="enc_rot13_instruction",
         name="ROT13 / Caesar Cipher Instruction",
         category="encoding_bypass",
-        pattern=_p(
-            r"(rot13|caesar|cipher|decode\s+this)\s*[:\-]?\s*[a-zA-Z\s]{10,}"
-        ),
+        pattern=_p(r"(rot13|caesar|cipher|decode\s+this)\s*[:\-]?\s*[a-zA-Z\s]{10,}"),
         base_score=40,
         description="ROT13 or Caesar cipher used to encode attack instructions.",
         owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",

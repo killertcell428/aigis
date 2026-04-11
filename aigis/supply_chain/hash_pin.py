@@ -313,6 +313,7 @@ class ToolPinManager:
             Lowercase hex SHA-256 digest.
         """
         import unicodedata
+
         canonical = json.dumps(definition, sort_keys=True, ensure_ascii=True, separators=(",", ":"))
         # Normalize Unicode to NFC to prevent homoglyph/zero-width character bypass
         canonical = unicodedata.normalize("NFC", canonical)

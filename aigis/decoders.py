@@ -111,7 +111,9 @@ _BASE64_RE = re.compile(r"[A-Za-z0-9+/]{20,}={0,2}")
 _HEX_ESCAPE_RE = re.compile(r"(\\x[0-9a-fA-F]{2}){4,}")
 _HEX_LITERAL_RE = re.compile(r"\b0x([0-9a-fA-F]{2}){4,}\b")
 _URL_ENCODED_RE = re.compile(r"(%[0-9a-fA-F]{2}){3,}")
-_ROT13_INDICATOR_RE = re.compile(r"(rot13|caesar|cipher)\s*[:\-]?\s*([a-zA-Z\s]{10,})", re.IGNORECASE)
+_ROT13_INDICATOR_RE = re.compile(
+    r"(rot13|caesar|cipher)\s*[:\-]?\s*([a-zA-Z\s]{10,})", re.IGNORECASE
+)
 
 
 def normalize_confusables(text: str) -> str:

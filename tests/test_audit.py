@@ -49,28 +49,46 @@ def verifier() -> AuditVerifier:
 def populated_log(audit_log: SignedAuditLog) -> SignedAuditLog:
     """A log with 5 entries for testing."""
     audit_log.append(
-        event_type="tool_call", actor="agent", action="shell:exec",
-        target="/bin/ls", risk_score=10, outcome="allowed",
+        event_type="tool_call",
+        actor="agent",
+        action="shell:exec",
+        target="/bin/ls",
+        risk_score=10,
+        outcome="allowed",
     )
     audit_log.append(
-        event_type="scan_result", actor="system", action="scan:input",
-        target="user_msg_1", risk_score=75, outcome="blocked",
+        event_type="scan_result",
+        actor="system",
+        action="scan:input",
+        target="user_msg_1",
+        risk_score=75,
+        outcome="blocked",
         details={"pattern": "prompt_injection", "rule_id": "PI-001"},
     )
     audit_log.append(
-        event_type="containment_change", actor="system",
-        action="escalate", target="agent-007", risk_score=80,
-        outcome="warn", details={"from": "monitor", "to": "restrict"},
+        event_type="containment_change",
+        actor="system",
+        action="escalate",
+        target="agent-007",
+        risk_score=80,
+        outcome="warn",
+        details={"from": "monitor", "to": "restrict"},
     )
     audit_log.append(
-        event_type="policy_decision", actor="user",
-        action="policy:update", target="default_policy",
-        risk_score=0, outcome="allowed",
+        event_type="policy_decision",
+        actor="user",
+        action="policy:update",
+        target="default_policy",
+        risk_score=0,
+        outcome="allowed",
     )
     audit_log.append(
-        event_type="capability_grant", actor="user",
-        action="grant:file_read", target="agent-007",
-        risk_score=20, outcome="allowed",
+        event_type="capability_grant",
+        actor="user",
+        action="grant:file_read",
+        target="agent-007",
+        risk_score=20,
+        outcome="allowed",
     )
     return audit_log
 
@@ -83,17 +101,22 @@ def populated_log(audit_log: SignedAuditLog) -> SignedAuditLog:
 class TestSignedLogEntry:
     def test_entry_is_frozen(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         with pytest.raises(AttributeError):
             entry.sequence = 999  # type: ignore[misc]
 
     def test_to_dict_round_trip(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="scan_result", actor="system",
-            action="scan", target="msg",
-            risk_score=50, outcome="warn",
+            event_type="scan_result",
+            actor="system",
+            action="scan",
+            target="msg",
+            risk_score=50,
+            outcome="warn",
             details={"key": "value"},
         )
         d = entry.to_dict()
@@ -102,21 +125,33 @@ class TestSignedLogEntry:
 
     def test_to_dict_contains_all_fields(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="a", target="t",
+            event_type="tool_call",
+            actor="agent",
+            action="a",
+            target="t",
         )
         d = entry.to_dict()
         expected_keys = {
-            "sequence", "timestamp", "event_type", "actor",
-            "action", "target", "risk_score", "outcome",
-            "details", "prev_hash", "signature",
+            "sequence",
+            "timestamp",
+            "event_type",
+            "actor",
+            "action",
+            "target",
+            "risk_score",
+            "outcome",
+            "details",
+            "prev_hash",
+            "signature",
         }
         assert set(d.keys()) == expected_keys
 
     def test_details_default_empty_dict(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="a", target="t",
+            event_type="tool_call",
+            actor="agent",
+            action="a",
+            target="t",
         )
         assert entry.details == {}
 
@@ -129,33 +164,43 @@ class TestSignedLogEntry:
 class TestHMACSignature:
     def test_signature_is_hex_64_chars(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         assert len(entry.signature) == 64
         int(entry.signature, 16)  # must be valid hex
 
     def test_signature_verifies(self, audit_log: SignedAuditLog, verifier: AuditVerifier) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         assert verifier.verify_entry(entry) is True
 
     def test_wrong_key_fails_verification(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         wrong_verifier = AuditVerifier(secret_key="wrong-key")
         assert wrong_verifier.verify_entry(entry) is False
 
     def test_tampered_action_fails_signature(
-        self, audit_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        audit_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="safe_action", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="safe_action",
+            target="x",
         )
         # Tamper: change the action field
         tampered = SignedLogEntry(
@@ -174,11 +219,17 @@ class TestHMACSignature:
         assert verifier.verify_entry(tampered) is False
 
     def test_tampered_risk_score_fails(
-        self, audit_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        audit_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         entry = audit_log.append(
-            event_type="scan_result", actor="system",
-            action="scan", target="msg", risk_score=90, outcome="blocked",
+            event_type="scan_result",
+            actor="system",
+            action="scan",
+            target="msg",
+            risk_score=90,
+            outcome="blocked",
         )
         tampered = SignedLogEntry(
             sequence=entry.sequence,
@@ -196,12 +247,17 @@ class TestHMACSignature:
         assert verifier.verify_entry(tampered) is False
 
     def test_tampered_outcome_fails(
-        self, audit_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        audit_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="shell:exec", target="/etc/passwd",
-            risk_score=95, outcome="blocked",
+            event_type="tool_call",
+            actor="agent",
+            action="shell:exec",
+            target="/etc/passwd",
+            risk_score=95,
+            outcome="blocked",
         )
         tampered = SignedLogEntry(
             sequence=entry.sequence,
@@ -232,27 +288,35 @@ class TestHashChain:
 
     def test_first_entry_has_genesis_prev_hash(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         assert entry.prev_hash == HashChain.genesis_hash()
 
     def test_second_entry_chains_to_first(self, audit_log: SignedAuditLog) -> None:
         e1 = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="first", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="first",
+            target="x",
         )
         e2 = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="second", target="y",
+            event_type="tool_call",
+            actor="agent",
+            action="second",
+            target="y",
         )
         expected_hash = HashChain.compute_entry_hash(e1)
         assert e2.prev_hash == expected_hash
 
     def test_compute_entry_hash_is_deterministic(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         h1 = HashChain.compute_entry_hash(entry)
         h2 = HashChain.compute_entry_hash(entry)
@@ -271,14 +335,17 @@ class TestHashChain:
 
     def test_verify_chain_single_entry(self, audit_log: SignedAuditLog) -> None:
         audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="only", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="only",
+            target="x",
         )
         valid, broken = HashChain.verify_chain(audit_log.entries())
         assert valid is True
 
     def test_verify_chain_detects_modified_entry(
-        self, populated_log: SignedAuditLog,
+        self,
+        populated_log: SignedAuditLog,
     ) -> None:
         entries = populated_log.entries()
         # Tamper with entry at index 2 (middle of chain)
@@ -304,7 +371,8 @@ class TestHashChain:
         assert 3 in broken
 
     def test_verify_chain_detects_deleted_entry(
-        self, populated_log: SignedAuditLog,
+        self,
+        populated_log: SignedAuditLog,
     ) -> None:
         entries = populated_log.entries()
         # Delete entry at index 2
@@ -332,16 +400,20 @@ class TestSignedAuditLog:
 
     def test_append_returns_entry(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         assert isinstance(entry, SignedLogEntry)
         assert entry.sequence == 0
 
     def test_timestamps_are_iso_utc(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         # Should parse without error and contain UTC indicator
         assert "T" in entry.timestamp
@@ -349,8 +421,10 @@ class TestSignedAuditLog:
 
     def test_default_risk_score_and_outcome(self, audit_log: SignedAuditLog) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         assert entry.risk_score == 0
         assert entry.outcome == "allowed"
@@ -373,7 +447,9 @@ class TestPersistence:
             json.loads(line)
 
     def test_save_load_round_trip(
-        self, populated_log: SignedAuditLog, tmp_path: Path,
+        self,
+        populated_log: SignedAuditLog,
+        tmp_path: Path,
     ) -> None:
         path = tmp_path / "audit.jsonl"
         populated_log.save(path)
@@ -383,7 +459,9 @@ class TestPersistence:
         assert loaded.entries() == populated_log.entries()
 
     def test_load_continues_sequence(
-        self, populated_log: SignedAuditLog, tmp_path: Path,
+        self,
+        populated_log: SignedAuditLog,
+        tmp_path: Path,
     ) -> None:
         path = tmp_path / "audit.jsonl"
         populated_log.save(path)
@@ -391,13 +469,18 @@ class TestPersistence:
         loaded = SignedAuditLog(secret_key=SECRET)
         loaded.load(path)
         new_entry = loaded.append(
-            event_type="tool_call", actor="agent",
-            action="new", target="y",
+            event_type="tool_call",
+            actor="agent",
+            action="new",
+            target="y",
         )
         assert new_entry.sequence == 5
 
     def test_loaded_log_verifies(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier, tmp_path: Path,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
+        tmp_path: Path,
     ) -> None:
         path = tmp_path / "audit.jsonl"
         populated_log.save(path)
@@ -407,8 +490,10 @@ class TestPersistence:
     def test_save_creates_parent_dirs(self, audit_log: SignedAuditLog, tmp_path: Path) -> None:
         path = tmp_path / "deep" / "nested" / "audit.jsonl"
         audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="test", target="x",
+            event_type="tool_call",
+            actor="agent",
+            action="test",
+            target="x",
         )
         audit_log.save(path)
         assert path.exists()
@@ -421,7 +506,9 @@ class TestPersistence:
 
 class TestAuditVerifier:
     def test_valid_log_passes(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         result = verifier.verify_entries(populated_log.entries())
         assert result.valid is True
@@ -439,7 +526,9 @@ class TestAuditVerifier:
         assert result.total_entries == 0
 
     def test_detects_signature_tampering(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         entries = populated_log.entries()
         original = entries[1]
@@ -463,7 +552,9 @@ class TestAuditVerifier:
         assert 1 in result.invalid_signatures_at
 
     def test_detects_chain_break(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         entries = populated_log.entries()
         original = entries[2]
@@ -514,7 +605,10 @@ class TestAuditVerifier:
         assert 5 in result.sequence_errors_at
 
     def test_verify_file(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier, tmp_path: Path,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
+        tmp_path: Path,
     ) -> None:
         path = tmp_path / "audit.jsonl"
         populated_log.save(path)
@@ -522,7 +616,10 @@ class TestAuditVerifier:
         assert result.valid is True
 
     def test_verify_file_detects_file_tampering(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier, tmp_path: Path,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
+        tmp_path: Path,
     ) -> None:
         path = tmp_path / "audit.jsonl"
         populated_log.save(path)
@@ -538,7 +635,9 @@ class TestAuditVerifier:
         assert result.valid is False
 
     def test_summary_includes_failure_details(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         entries = populated_log.entries()
         original = entries[1]
@@ -567,7 +666,9 @@ class TestAuditVerifier:
 
 class TestTamperingDetection:
     def test_delete_first_entry(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         """Deleting the first entry breaks both chain and sequence."""
         entries = populated_log.entries()
@@ -576,7 +677,9 @@ class TestTamperingDetection:
         assert result.valid is False
 
     def test_delete_last_entry_still_valid_chain(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         """Deleting the last entry breaks sequence but chain of remaining
         entries is still intact (since the deleted entry's prev_hash
@@ -590,7 +693,9 @@ class TestTamperingDetection:
         assert result.total_entries == 4
 
     def test_reorder_entries(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         """Swapping two entries breaks both chain and sequence."""
         entries = populated_log.entries()
@@ -599,7 +704,9 @@ class TestTamperingDetection:
         assert result.valid is False
 
     def test_insert_forged_entry(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         """Inserting a forged entry breaks chain, sequence, and/or signature."""
         entries = populated_log.entries()
@@ -621,7 +728,9 @@ class TestTamperingDetection:
         assert result.valid is False
 
     def test_replay_old_entry(
-        self, populated_log: SignedAuditLog, verifier: AuditVerifier,
+        self,
+        populated_log: SignedAuditLog,
+        verifier: AuditVerifier,
     ) -> None:
         """Duplicating an entry breaks sequence monotonicity."""
         entries = populated_log.entries()
@@ -679,10 +788,13 @@ class TestThreadSafety:
 
 
 class TestKeyManagement:
-    def test_auto_generated_key_produces_valid_log(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_auto_generated_key_produces_valid_log(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """When no key is provided, one is generated and used consistently."""
         # Point the key file to a temp location
         import aigis.audit.signed_log as sl
+
         monkeypatch.setattr(sl, "_KEY_DIR", tmp_path)
         monkeypatch.setattr(sl, "_KEY_FILE", tmp_path / "audit_key")
 
@@ -701,9 +813,12 @@ class TestKeyManagement:
         result = verifier.verify_entries(log.entries())
         assert result.valid is True
 
-    def test_auto_key_reused_on_second_init(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_auto_key_reused_on_second_init(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """A second SignedAuditLog(secret_key=None) reuses the persisted key."""
         import aigis.audit.signed_log as sl
+
         monkeypatch.setattr(sl, "_KEY_DIR", tmp_path)
         monkeypatch.setattr(sl, "_KEY_FILE", tmp_path / "audit_key")
 
@@ -726,31 +841,44 @@ class TestEdgeCases:
     def test_large_details_dict(self, audit_log: SignedAuditLog, verifier: AuditVerifier) -> None:
         big_details = {f"key_{i}": f"value_{i}" * 100 for i in range(50)}
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action="big", target="x", details=big_details,
+            event_type="tool_call",
+            actor="agent",
+            action="big",
+            target="x",
+            details=big_details,
         )
         assert verifier.verify_entry(entry) is True
 
     def test_unicode_in_fields(self, audit_log: SignedAuditLog, verifier: AuditVerifier) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="エージェント",
-            action="日本語テスト", target="ターゲット",
+            event_type="tool_call",
+            actor="エージェント",
+            action="日本語テスト",
+            target="ターゲット",
             details={"memo": "テスト用データ 🛡️"},
         )
         assert verifier.verify_entry(entry) is True
 
-    def test_special_chars_in_action(self, audit_log: SignedAuditLog, verifier: AuditVerifier) -> None:
+    def test_special_chars_in_action(
+        self, audit_log: SignedAuditLog, verifier: AuditVerifier
+    ) -> None:
         entry = audit_log.append(
-            event_type="tool_call", actor="agent",
-            action='shell:exec("rm -rf /")', target="/",
-            risk_score=100, outcome="blocked",
+            event_type="tool_call",
+            actor="agent",
+            action='shell:exec("rm -rf /")',
+            target="/",
+            risk_score=100,
+            outcome="blocked",
         )
         assert verifier.verify_entry(entry) is True
 
     def test_verification_result_dataclass(self) -> None:
         r = VerificationResult(
-            valid=True, total_entries=0, checked_entries=0,
-            chain_valid=True, signature_valid=True,
+            valid=True,
+            total_entries=0,
+            checked_entries=0,
+            chain_valid=True,
+            signature_valid=True,
             summary="ok",
         )
         assert r.broken_chain_at == []

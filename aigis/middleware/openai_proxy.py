@@ -107,6 +107,7 @@ class _SecureCompletions:
                 response_dict = response.__dict__
             else:
                 import logging
+
                 logging.getLogger("aigis").warning(
                     "Cannot serialize OpenAI response for output scanning — "
                     "response type %s has no model_dump/to_dict. Blocking as precaution.",

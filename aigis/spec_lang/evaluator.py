@@ -98,7 +98,9 @@ class RuleEvaluator:
 
     def __init__(self, dsl: PolicyDSL) -> None:
         self._dsl = dsl
-        self._custom_predicates: dict[str, Callable[[EvaluationContext, str | int | float], bool]] = {}
+        self._custom_predicates: dict[
+            str, Callable[[EvaluationContext, str | int | float], bool]
+        ] = {}
 
     def register_predicate(
         self,
@@ -158,13 +160,15 @@ class RuleEvaluator:
 
             for predicate in rule.predicates:
                 passed, actual = self._evaluate_predicate(predicate, context)
-                predicate_results.append({
-                    "predicate_type": predicate.type,
-                    "expected": predicate.value,
-                    "actual": actual,
-                    "passed": passed,
-                    "negated": predicate.negate,
-                })
+                predicate_results.append(
+                    {
+                        "predicate_type": predicate.type,
+                        "expected": predicate.value,
+                        "actual": actual,
+                        "passed": passed,
+                        "negated": predicate.negate,
+                    }
+                )
                 if not passed:
                     all_passed = False
 

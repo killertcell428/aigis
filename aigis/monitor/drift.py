@@ -160,9 +160,7 @@ class DriftDetector:
             if baseline_mean == 0.0 and current_rate > 0:
                 # Tool never seen in baseline -- could be new or suspicious
                 if current_rate > 1.0:  # More than 1 call/min of unknown tool
-                    evidence.append(
-                        f"{tool}: {current_rate:.1f}/min (not in baseline)"
-                    )
+                    evidence.append(f"{tool}: {current_rate:.1f}/min (not in baseline)")
                     max_z_score = max(max_z_score, 3.0)
                 continue
 
@@ -246,9 +244,7 @@ class DriftDetector:
         return DriftAlert(
             drift_type="resource_shift",
             drift_score=drift_score,
-            description=(
-                f"Resource access pattern diverges {divergence_score:.0%} from baseline"
-            ),
+            description=(f"Resource access pattern diverges {divergence_score:.0%} from baseline"),
             evidence=evidence,
         )
 
@@ -296,9 +292,7 @@ class DriftDetector:
         if max_run_length < 3:
             return None
 
-        evidence = [
-            f"{a.resource} -> {a.target[:60]}" for a in best_run_actions
-        ]
+        evidence = [f"{a.resource} -> {a.target[:60]}" for a in best_run_actions]
         drift_score = min(max_run_length / 5.0, 1.0)
 
         return DriftAlert(

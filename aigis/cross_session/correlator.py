@@ -105,9 +105,7 @@ class CrossSessionCorrelator:
 
         return alerts
 
-    def _check_escalation_trend(
-        self, sessions: list[SessionRecord]
-    ) -> list[CorrelationAlert]:
+    def _check_escalation_trend(self, sessions: list[SessionRecord]) -> list[CorrelationAlert]:
         """Detect if risk scores or containment levels are increasing.
 
         Looks for monotonically increasing runs of at least 3 sessions
@@ -140,22 +138,26 @@ class CrossSessionCorrelator:
             if best_run_len >= 3:
                 involved = sessions[best_run_start : best_run_start + best_run_len]
                 run_scores = scores[best_run_start : best_run_start + best_run_len]
-                severity = "high" if run_scores[-1] >= 70 else "medium" if run_scores[-1] >= 40 else "low"
+                severity = (
+                    "high" if run_scores[-1] >= 70 else "medium" if run_scores[-1] >= 40 else "low"
+                )
 
-                alerts.append(CorrelationAlert(
-                    alert_type="escalation_trend",
-                    severity=severity,
-                    description=(
-                        f"Risk scores increasing across {best_run_len} consecutive sessions: "
-                        f"{run_scores[0]} -> {run_scores[-1]}"
-                    ),
-                    sessions_involved=[s.session_id for s in involved],
-                    evidence={
-                        "metric": "max_risk_score",
-                        "values": run_scores,
-                        "trend": "increasing",
-                    },
-                ))
+                alerts.append(
+                    CorrelationAlert(
+                        alert_type="escalation_trend",
+                        severity=severity,
+                        description=(
+                            f"Risk scores increasing across {best_run_len} consecutive sessions: "
+                            f"{run_scores[0]} -> {run_scores[-1]}"
+                        ),
+                        sessions_involved=[s.session_id for s in involved],
+                        evidence={
+                            "metric": "max_risk_score",
+                            "values": run_scores,
+                            "trend": "increasing",
+                        },
+                    )
+                )
 
         # --- Containment level trend ---
         if len(sessions) >= 3:
@@ -181,36 +183,35 @@ class CrossSessionCorrelator:
 
             if best_run_len >= 3:
                 involved = sessions[best_run_start : best_run_start + best_run_len]
-                level_names = [
-                    s.containment_max_level
-                    for s in involved
-                ]
+                level_names = [s.containment_max_level for s in involved]
                 severity = (
-                    "critical" if levels[best_run_start + best_run_len - 1] >= 4
-                    else "high" if levels[best_run_start + best_run_len - 1] >= 3
+                    "critical"
+                    if levels[best_run_start + best_run_len - 1] >= 4
+                    else "high"
+                    if levels[best_run_start + best_run_len - 1] >= 3
                     else "medium"
                 )
 
-                alerts.append(CorrelationAlert(
-                    alert_type="escalation_trend",
-                    severity=severity,
-                    description=(
-                        f"Containment levels escalating across {best_run_len} sessions: "
-                        f"{level_names[0]} -> {level_names[-1]}"
-                    ),
-                    sessions_involved=[s.session_id for s in involved],
-                    evidence={
-                        "metric": "containment_level",
-                        "values": level_names,
-                        "trend": "escalating",
-                    },
-                ))
+                alerts.append(
+                    CorrelationAlert(
+                        alert_type="escalation_trend",
+                        severity=severity,
+                        description=(
+                            f"Containment levels escalating across {best_run_len} sessions: "
+                            f"{level_names[0]} -> {level_names[-1]}"
+                        ),
+                        sessions_involved=[s.session_id for s in involved],
+                        evidence={
+                            "metric": "containment_level",
+                            "values": level_names,
+                            "trend": "escalating",
+                        },
+                    )
+                )
 
         return alerts
 
-    def _check_resource_drift(
-        self, sessions: list[SessionRecord]
-    ) -> list[CorrelationAlert]:
+    def _check_resource_drift(self, sessions: list[SessionRecord]) -> list[CorrelationAlert]:
         """Detect gradual shift in resource access patterns.
 
         Compares the resource histogram of recent sessions against the
@@ -243,28 +244,33 @@ class CrossSessionCorrelator:
 
         # Sensitive resources that are especially concerning
         sensitive_resources = {
-            "shell:exec", "network:send", "agent:spawn",
-            "file:write", "network:fetch",
+            "shell:exec",
+            "network:send",
+            "agent:spawn",
+            "file:write",
+            "network:fetch",
         }
 
         if new_resources:
             sensitive_new = new_resources & sensitive_resources
             severity = "high" if sensitive_new else "medium" if len(new_resources) > 2 else "low"
 
-            alerts.append(CorrelationAlert(
-                alert_type="resource_drift",
-                severity=severity,
-                description=(
-                    f"New resource types appeared in recent sessions: "
-                    f"{', '.join(sorted(new_resources))}"
-                ),
-                sessions_involved=[s.session_id for s in late],
-                evidence={
-                    "new_resources": sorted(new_resources),
-                    "early_resources": sorted(early_hist.keys()),
-                    "late_resources": sorted(late_hist.keys()),
-                },
-            ))
+            alerts.append(
+                CorrelationAlert(
+                    alert_type="resource_drift",
+                    severity=severity,
+                    description=(
+                        f"New resource types appeared in recent sessions: "
+                        f"{', '.join(sorted(new_resources))}"
+                    ),
+                    sessions_involved=[s.session_id for s in late],
+                    evidence={
+                        "new_resources": sorted(new_resources),
+                        "early_resources": sorted(early_hist.keys()),
+                        "late_resources": sorted(late_hist.keys()),
+                    },
+                )
+            )
 
         # Check distribution shift (for shared resources)
         shared = set(early_hist.keys()) & set(late_hist.keys())
@@ -278,28 +284,24 @@ class CrossSessionCorrelator:
                 late_pct = late_hist[res] / late_total
                 diff = abs(late_pct - early_pct)
                 if diff > 0.20:  # >20% shift
-                    shifts.append(
-                        f"{res}: {early_pct:.0%} -> {late_pct:.0%}"
-                    )
+                    shifts.append(f"{res}: {early_pct:.0%} -> {late_pct:.0%}")
 
             if shifts:
-                alerts.append(CorrelationAlert(
-                    alert_type="resource_drift",
-                    severity="medium",
-                    description=(
-                        "Resource distribution shifted significantly across sessions"
-                    ),
-                    sessions_involved=[s.session_id for s in sessions],
-                    evidence={
-                        "shifts": shifts,
-                    },
-                ))
+                alerts.append(
+                    CorrelationAlert(
+                        alert_type="resource_drift",
+                        severity="medium",
+                        description=("Resource distribution shifted significantly across sessions"),
+                        sessions_involved=[s.session_id for s in sessions],
+                        evidence={
+                            "shifts": shifts,
+                        },
+                    )
+                )
 
         return alerts
 
-    def _check_recurring_threats(
-        self, sessions: list[SessionRecord]
-    ) -> list[CorrelationAlert]:
+    def _check_recurring_threats(self, sessions: list[SessionRecord]) -> list[CorrelationAlert]:
         """Detect the same threat type appearing across multiple sessions.
 
         Groups alerts by type across sessions and flags any threat type
@@ -312,7 +314,11 @@ class CrossSessionCorrelator:
         for s in sessions:
             seen_types: set[str] = set()
             for alert in s.alerts:
-                alert_type = alert.get("drift_type") or alert.get("anomaly_type") or alert.get("alert_type", "")
+                alert_type = (
+                    alert.get("drift_type")
+                    or alert.get("anomaly_type")
+                    or alert.get("alert_type", "")
+                )
                 if alert_type and alert_type not in seen_types:
                     seen_types.add(alert_type)
                     if alert_type not in threat_sessions:
@@ -321,29 +327,25 @@ class CrossSessionCorrelator:
 
         for threat_type, session_ids in threat_sessions.items():
             if len(session_ids) >= 3:
-                severity = (
-                    "high" if len(session_ids) >= 5
-                    else "medium"
+                severity = "high" if len(session_ids) >= 5 else "medium"
+                alerts.append(
+                    CorrelationAlert(
+                        alert_type="recurring_threat",
+                        severity=severity,
+                        description=(
+                            f"Threat '{threat_type}' recurring across {len(session_ids)} sessions"
+                        ),
+                        sessions_involved=session_ids,
+                        evidence={
+                            "threat_type": threat_type,
+                            "occurrence_count": len(session_ids),
+                        },
+                    )
                 )
-                alerts.append(CorrelationAlert(
-                    alert_type="recurring_threat",
-                    severity=severity,
-                    description=(
-                        f"Threat '{threat_type}' recurring across "
-                        f"{len(session_ids)} sessions"
-                    ),
-                    sessions_involved=session_ids,
-                    evidence={
-                        "threat_type": threat_type,
-                        "occurrence_count": len(session_ids),
-                    },
-                ))
 
         return alerts
 
-    def _check_unusual_sessions(
-        self, sessions: list[SessionRecord]
-    ) -> list[CorrelationAlert]:
+    def _check_unusual_sessions(self, sessions: list[SessionRecord]) -> list[CorrelationAlert]:
         """Detect outlier sessions that deviate from the historical norm.
 
         Uses z-score analysis on total_actions, max_risk_score, and number
@@ -396,22 +398,20 @@ class CrossSessionCorrelator:
                     max_z = max(max_z, z)
 
             if reasons:
-                severity = (
-                    "high" if max_z > 3.0
-                    else "medium" if max_z > 2.5
-                    else "low"
+                severity = "high" if max_z > 3.0 else "medium" if max_z > 2.5 else "low"
+                alerts.append(
+                    CorrelationAlert(
+                        alert_type="unusual_session",
+                        severity=severity,
+                        description=(
+                            f"Session {session.session_id} deviates significantly from norm"
+                        ),
+                        sessions_involved=[session.session_id],
+                        evidence={
+                            "deviations": reasons,
+                            "max_z_score": round(max_z, 2),
+                        },
+                    )
                 )
-                alerts.append(CorrelationAlert(
-                    alert_type="unusual_session",
-                    severity=severity,
-                    description=(
-                        f"Session {session.session_id} deviates significantly from norm"
-                    ),
-                    sessions_involved=[session.session_id],
-                    evidence={
-                        "deviations": reasons,
-                        "max_z_score": round(max_z, 2),
-                    },
-                ))
 
         return alerts

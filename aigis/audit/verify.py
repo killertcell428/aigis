@@ -117,12 +117,7 @@ class AuditVerifier:
             if entries[i].timestamp < entries[i - 1].timestamp:
                 ts_errors.append(entries[i].sequence)
 
-        all_valid = (
-            not invalid_sigs
-            and chain_valid
-            and not seq_errors
-            and not ts_errors
-        )
+        all_valid = not invalid_sigs and chain_valid and not seq_errors and not ts_errors
 
         # Build summary
         parts: list[str] = []
@@ -131,21 +126,13 @@ class AuditVerifier:
             parts.append("All checks passed — no tampering detected.")
         else:
             if invalid_sigs:
-                parts.append(
-                    f"SIGNATURE FAILURE at sequence(s): {invalid_sigs}."
-                )
+                parts.append(f"SIGNATURE FAILURE at sequence(s): {invalid_sigs}.")
             if broken_chain:
-                parts.append(
-                    f"CHAIN BREAK at sequence(s): {broken_chain}."
-                )
+                parts.append(f"CHAIN BREAK at sequence(s): {broken_chain}.")
             if seq_errors:
-                parts.append(
-                    f"SEQUENCE ERROR at: {seq_errors}."
-                )
+                parts.append(f"SEQUENCE ERROR at: {seq_errors}.")
             if ts_errors:
-                parts.append(
-                    f"TIMESTAMP ORDER ERROR at: {ts_errors}."
-                )
+                parts.append(f"TIMESTAMP ORDER ERROR at: {ts_errors}.")
 
         return VerificationResult(
             valid=all_valid,
@@ -190,7 +177,5 @@ class AuditVerifier:
             "prev_hash": entry.prev_hash,
         }
         canonical = json.dumps(entry_data, sort_keys=True, ensure_ascii=False)
-        expected = hmac.new(
-            self._key, canonical.encode("utf-8"), hashlib.sha256
-        ).hexdigest()
+        expected = hmac.new(self._key, canonical.encode("utf-8"), hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected, entry.signature)

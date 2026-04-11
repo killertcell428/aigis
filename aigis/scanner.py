@@ -220,7 +220,11 @@ def _run_patterns(
 
     # Cap text length for custom regex to mitigate ReDoS on untrusted patterns
     _MAX_CUSTOM_REGEX_INPUT = 50_000
-    safe_normalized = normalized[:_MAX_CUSTOM_REGEX_INPUT] if len(normalized) > _MAX_CUSTOM_REGEX_INPUT else normalized
+    safe_normalized = (
+        normalized[:_MAX_CUSTOM_REGEX_INPUT]
+        if len(normalized) > _MAX_CUSTOM_REGEX_INPUT
+        else normalized
+    )
 
     if custom_rules:
         for rule in custom_rules:
@@ -294,9 +298,7 @@ def _run_patterns(
                     )
                 )
                 prev = category_scores.get(p.category, 0)
-                category_scores[p.category] = min(
-                    prev + p.base_score, p.base_score * 2
-                )
+                category_scores[p.category] = min(prev + p.base_score, p.base_score * 2)
 
     total = min(sum(category_scores.values()), 100)
     level = _score_to_level(total)
@@ -312,6 +314,7 @@ def _load_learned_rules() -> list[dict]:
     """Load learned defense patterns from auto-fix storage (if available)."""
     try:
         from aigis.auto_fix import load_learned_patterns
+
         return [
             {
                 "id": p["id"],

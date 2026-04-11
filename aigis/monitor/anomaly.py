@@ -70,11 +70,11 @@ class AnomalyDetector:
     # in order, indicates a potential security concern.
     ESCALATION_CHAINS: list[list[str]] = [
         ["file:read", "file:write", "shell:exec"],  # read -> write -> exec
-        ["file:read", "network:fetch"],              # read then exfil via fetch
-        ["file:read", "network:send"],               # read then send
-        ["shell:exec", "network:send"],              # exec then send
-        ["database:query", "network:send"],           # query then send
-        ["file:read", "shell:exec", "network:send"], # read -> exec -> send
+        ["file:read", "network:fetch"],  # read then exfil via fetch
+        ["file:read", "network:send"],  # read then send
+        ["shell:exec", "network:send"],  # exec then send
+        ["database:query", "network:send"],  # query then send
+        ["file:read", "shell:exec", "network:send"],  # read -> exec -> send
     ]
 
     # Severity mapping by chain pattern
@@ -142,10 +142,7 @@ class AnomalyDetector:
                     AnomalyAlert(
                         anomaly_type="privilege_escalation_chain",
                         severity=severity,
-                        description=(
-                            f"Dangerous action chain detected: "
-                            f"{' -> '.join(chain)}"
-                        ),
+                        description=(f"Dangerous action chain detected: {' -> '.join(chain)}"),
                         actions=matches,
                     )
                 )
@@ -222,9 +219,7 @@ class AnomalyDetector:
         for i in range(len(actions)):
             window_start = actions[i].timestamp
             window_end = window_start + 60.0
-            window_actions = [
-                a for a in actions[i:] if a.timestamp <= window_end
-            ]
+            window_actions = [a for a in actions[i:] if a.timestamp <= window_end]
 
             if len(window_actions) > max_per_minute:
                 # Determine severity based on how much it exceeds threshold

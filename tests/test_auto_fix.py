@@ -201,8 +201,15 @@ class TestFPVerification:
     def test_overly_broad_pattern_causes_fp(self, tmp_path):
         # Add an overly broad pattern that will match safe inputs
         save_learned_patterns(
-            [{"id": "broad_001", "name": "Too broad", "pattern": r"\b(the|is|a)\b",
-              "score": 50, "proposal_id": "broad_001"}],
+            [
+                {
+                    "id": "broad_001",
+                    "name": "Too broad",
+                    "pattern": r"\b(the|is|a)\b",
+                    "score": 50,
+                    "proposal_id": "broad_001",
+                }
+            ],
             tmp_path,
         )
         result = verify_no_regressions(storage_dir=tmp_path)

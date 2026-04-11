@@ -54,9 +54,7 @@ class BehaviorProfile:
         """
         d = asdict(self)
         # Convert tuples to lists for JSON serialization
-        d["typical_risk_scores"] = {
-            k: list(v) for k, v in self.typical_risk_scores.items()
-        }
+        d["typical_risk_scores"] = {k: list(v) for k, v in self.typical_risk_scores.items()}
         return d
 
     @classmethod
@@ -170,18 +168,14 @@ class BaselineBuilder:
                 tool_rates[tool].append(count / minutes if minutes > 0 else 0.0)
 
         tool_frequency = {
-            t: statistics.mean(rates) if rates else 0.0
-            for t, rates in tool_rates.items()
+            t: statistics.mean(rates) if rates else 0.0 for t, rates in tool_rates.items()
         }
         tool_frequency_stddev = {
-            t: statistics.stdev(rates) if len(rates) > 1 else 0.0
-            for t, rates in tool_rates.items()
+            t: statistics.stdev(rates) if len(rates) > 1 else 0.0 for t, rates in tool_rates.items()
         }
 
         # Resource distribution: percentage across all actions
-        total_actions = sum(
-            sum(obs.resource_counts.values()) for obs in self._observations
-        )
+        total_actions = sum(sum(obs.resource_counts.values()) for obs in self._observations)
         resource_totals: dict[str, int] = {}
         for obs in self._observations:
             for res, count in obs.resource_counts.items():

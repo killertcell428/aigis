@@ -28,8 +28,14 @@ from aigis.cross_session.store import SessionRecord, SessionStore
 # Regex patterns that detect time-based triggers in memory entries.
 _TEMPORAL_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(after|in)\s+\d+\s+(day|week|hour|month)s?\b", re.IGNORECASE),
-    re.compile(r"\b(next|this)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", re.IGNORECASE),
-    re.compile(r"\bon\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\b", re.IGNORECASE),
+    re.compile(
+        r"\b(next|this)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bon\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\b(tomorrow|tonight|next\s+week|next\s+month|next\s+session)\b", re.IGNORECASE),
     re.compile(r"\b(starting\s+from|beginning|from\s+now|from\s+this\s+point)\b", re.IGNORECASE),
     re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),  # ISO date in memory
@@ -39,13 +45,28 @@ _TEMPORAL_PATTERNS: list[re.Pattern[str]] = [
 # === Conditional activation patterns ===
 # Regex patterns that detect conditional logic in memory entries.
 _CONDITIONAL_PATTERNS: list[re.Pattern[str]] = [
-    re.compile(r"\b(when|whenever|if|once)\s+(the\s+)?(user|human|they)\s+(ask|mention|say|request|talk|bring\s+up)", re.IGNORECASE),
-    re.compile(r"\bif\s+(the\s+)?(topic|subject|question|conversation)\s+(is|involves|contains|about)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(when|whenever|if|once)\s+(the\s+)?(user|human|they)\s+(ask|mention|say|request|talk|bring\s+up)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bif\s+(the\s+)?(topic|subject|question|conversation)\s+(is|involves|contains|about)\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\b(upon|on)\s+(receiving|getting|seeing)\b", re.IGNORECASE),
     re.compile(r"\b(always|every\s+time|each\s+time|from\s+now\s+on)\b", re.IGNORECASE),
-    re.compile(r"\b(respond|reply|answer|output|return)\s+(with|by|using)\b.*\b(instead|always|secretly)\b", re.IGNORECASE),
-    re.compile(r"\b(override|bypass|ignore|disable|skip)\s+(the\s+)?(safety|security|guard|filter|check|restriction)\b", re.IGNORECASE),
-    re.compile(r"\b(remember|memorize|store|save)\s+(this|that|the\s+following)\s+(instruction|rule|command|directive)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(respond|reply|answer|output|return)\s+(with|by|using)\b.*\b(instead|always|secretly)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(override|bypass|ignore|disable|skip)\s+(the\s+)?(safety|security|guard|filter|check|restriction)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(remember|memorize|store|save)\s+(this|that|the\s+following)\s+(instruction|rule|command|directive)\b",
+        re.IGNORECASE,
+    ),
 ]
 
 # === High-risk action indicators in alerts ===
@@ -128,10 +149,7 @@ class SleeperDetector:
         """
         past = self._store.list_sessions(limit=500)
         # Exclude the current session from past sessions
-        past = [
-            s for s in past
-            if s.session_id != current_session.session_id
-        ]
+        past = [s for s in past if s.session_id != current_session.session_id]
 
         if not past:
             return []
@@ -181,30 +199,34 @@ class SleeperDetector:
 
             if suspicious_memories:
                 severity = (
-                    "critical" if activation_matches and current.max_risk_score >= 70
-                    else "high" if activation_matches
+                    "critical"
+                    if activation_matches and current.max_risk_score >= 70
+                    else "high"
+                    if activation_matches
                     else "medium"
                 )
 
-                alerts.append(SleeperAlert(
-                    alert_type="delayed_activation",
-                    severity=severity,
-                    description=(
-                        f"Session {past_session.session_id} planted "
-                        f"{len(suspicious_memories)} suspicious memory entries; "
-                        f"current session shows activation indicators: "
-                        f"{', '.join(activation_matches) if activation_matches else 'high risk score'}"
-                    ),
-                    planted_session=past_session.session_id,
-                    activated_session=current.session_id,
-                    evidence={
-                        "suspicious_memories": [
-                            m.get("content", "")[:200] for m in suspicious_memories
-                        ],
-                        "activation_indicators": sorted(activation_matches),
-                        "current_risk_score": current.max_risk_score,
-                    },
-                ))
+                alerts.append(
+                    SleeperAlert(
+                        alert_type="delayed_activation",
+                        severity=severity,
+                        description=(
+                            f"Session {past_session.session_id} planted "
+                            f"{len(suspicious_memories)} suspicious memory entries; "
+                            f"current session shows activation indicators: "
+                            f"{', '.join(activation_matches) if activation_matches else 'high risk score'}"
+                        ),
+                        planted_session=past_session.session_id,
+                        activated_session=current.session_id,
+                        evidence={
+                            "suspicious_memories": [
+                                m.get("content", "")[:200] for m in suspicious_memories
+                            ],
+                            "activation_indicators": sorted(activation_matches),
+                            "current_risk_score": current.max_risk_score,
+                        },
+                    )
+                )
 
         return alerts
 
@@ -233,20 +255,22 @@ class SleeperDetector:
                 if matched_patterns:
                     severity = "high" if len(matched_patterns) >= 2 else "medium"
 
-                    alerts.append(SleeperAlert(
-                        alert_type="delayed_activation",
-                        severity=severity,
-                        description=(
-                            f"Memory entry from session {past_session.session_id} "
-                            f"contains temporal triggers: {', '.join(matched_patterns)}"
-                        ),
-                        planted_session=past_session.session_id,
-                        activated_session=current.session_id,
-                        evidence={
-                            "memory_content": content[:300],
-                            "temporal_triggers": matched_patterns,
-                        },
-                    ))
+                    alerts.append(
+                        SleeperAlert(
+                            alert_type="delayed_activation",
+                            severity=severity,
+                            description=(
+                                f"Memory entry from session {past_session.session_id} "
+                                f"contains temporal triggers: {', '.join(matched_patterns)}"
+                            ),
+                            planted_session=past_session.session_id,
+                            activated_session=current.session_id,
+                            evidence={
+                                "memory_content": content[:300],
+                                "temporal_triggers": matched_patterns,
+                            },
+                        )
+                    )
 
         return alerts
 
@@ -275,29 +299,36 @@ class SleeperDetector:
                 if matched_patterns:
                     # Higher severity if the condition looks like it's overriding safety
                     has_override = any(
-                        p for p in matched_patterns
+                        p
+                        for p in matched_patterns
                         if re.search(r"override|bypass|ignore|disable|skip", p, re.IGNORECASE)
                     )
                     severity = (
-                        "critical" if has_override
-                        else "high" if len(matched_patterns) >= 2
+                        "critical"
+                        if has_override
+                        else "high"
+                        if len(matched_patterns) >= 2
                         else "medium"
                     )
 
-                    alerts.append(SleeperAlert(
-                        alert_type="conditional_trigger" if not has_override else "persistent_instruction",
-                        severity=severity,
-                        description=(
-                            f"Memory entry from session {past_session.session_id} "
-                            f"contains conditional logic: {', '.join(matched_patterns)}"
-                        ),
-                        planted_session=past_session.session_id,
-                        activated_session=current.session_id,
-                        evidence={
-                            "memory_content": content[:300],
-                            "conditional_patterns": matched_patterns,
-                        },
-                    ))
+                    alerts.append(
+                        SleeperAlert(
+                            alert_type="conditional_trigger"
+                            if not has_override
+                            else "persistent_instruction",
+                            severity=severity,
+                            description=(
+                                f"Memory entry from session {past_session.session_id} "
+                                f"contains conditional logic: {', '.join(matched_patterns)}"
+                            ),
+                            planted_session=past_session.session_id,
+                            activated_session=current.session_id,
+                            evidence={
+                                "memory_content": content[:300],
+                                "conditional_patterns": matched_patterns,
+                            },
+                        )
+                    )
 
         return alerts
 
@@ -312,11 +343,22 @@ class SleeperDetector:
             return False
 
         suspicious_indicators = [
-            re.compile(r"\b(always|never|must|shall)\s+(respond|reply|answer|output|do|execute|run)\b", re.IGNORECASE),
-            re.compile(r"\b(ignore|override|bypass|disable|skip)\s+(all|any|the|previous|safety|security)\b", re.IGNORECASE),
+            re.compile(
+                r"\b(always|never|must|shall)\s+(respond|reply|answer|output|do|execute|run)\b",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"\b(ignore|override|bypass|disable|skip)\s+(all|any|the|previous|safety|security)\b",
+                re.IGNORECASE,
+            ),
             re.compile(r"\b(from\s+now\s+on|henceforth|permanently|forever)\b", re.IGNORECASE),
-            re.compile(r"\b(secret|hidden|covert|stealth)\s+(instruction|rule|command|mode)\b", re.IGNORECASE),
-            re.compile(r"\b(do\s+not|don'?t|never)\s+(tell|reveal|disclose|mention|show)\b", re.IGNORECASE),
+            re.compile(
+                r"\b(secret|hidden|covert|stealth)\s+(instruction|rule|command|mode)\b",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"\b(do\s+not|don'?t|never)\s+(tell|reveal|disclose|mention|show)\b", re.IGNORECASE
+            ),
             re.compile(r"\b(exfiltrate|steal|extract|leak|send\s+to)\b", re.IGNORECASE),
         ]
 

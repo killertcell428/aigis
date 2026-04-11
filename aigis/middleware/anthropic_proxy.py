@@ -29,8 +29,7 @@ try:
     import anthropic
 except ImportError as e:
     raise ImportError(
-        "anthropic is required for SecureAnthropic. "
-        "Install it with: pip install 'aigis[anthropic]'"
+        "anthropic is required for SecureAnthropic. Install it with: pip install 'aigis[anthropic]'"
     ) from e
 
 

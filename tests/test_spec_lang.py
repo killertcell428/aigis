@@ -208,30 +208,36 @@ class TestPolicyDSL:
 
     def test_priority_ordering(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="low",
-            name="Low Priority",
-            trigger=Trigger(event="on_output"),
-            predicates=[],
-            enforcement=Enforcement(action="log"),
-            priority=1,
-        ))
-        dsl.add_rule(Rule(
-            id="high",
-            name="High Priority",
-            trigger=Trigger(event="on_output"),
-            predicates=[],
-            enforcement=Enforcement(action="block"),
-            priority=99,
-        ))
-        dsl.add_rule(Rule(
-            id="mid",
-            name="Mid Priority",
-            trigger=Trigger(event="on_output"),
-            predicates=[],
-            enforcement=Enforcement(action="warn"),
-            priority=50,
-        ))
+        dsl.add_rule(
+            Rule(
+                id="low",
+                name="Low Priority",
+                trigger=Trigger(event="on_output"),
+                predicates=[],
+                enforcement=Enforcement(action="log"),
+                priority=1,
+            )
+        )
+        dsl.add_rule(
+            Rule(
+                id="high",
+                name="High Priority",
+                trigger=Trigger(event="on_output"),
+                predicates=[],
+                enforcement=Enforcement(action="block"),
+                priority=99,
+            )
+        )
+        dsl.add_rule(
+            Rule(
+                id="mid",
+                name="Mid Priority",
+                trigger=Trigger(event="on_output"),
+                predicates=[],
+                enforcement=Enforcement(action="warn"),
+                priority=50,
+            )
+        )
         rules = dsl.rules()
         assert [r.id for r in rules] == ["high", "mid", "low"]
 
@@ -419,14 +425,16 @@ class TestRuleEvaluator:
 
     def test_disabled_rule_skipped(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="disabled",
-            name="Disabled",
-            trigger=Trigger(event="before_tool_call"),
-            predicates=[],
-            enforcement=Enforcement(action="block"),
-            enabled=False,
-        ))
+        dsl.add_rule(
+            Rule(
+                id="disabled",
+                name="Disabled",
+                trigger=Trigger(event="before_tool_call"),
+                predicates=[],
+                enforcement=Enforcement(action="block"),
+                enabled=False,
+            )
+        )
         evaluator = RuleEvaluator(dsl)
         ctx = EvaluationContext(tool_name="Bash")
         results = evaluator.evaluate("before_tool_call", ctx)
@@ -450,15 +458,17 @@ class TestRuleEvaluator:
 
     def test_negate_predicate_evaluation(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="negate_test",
-            name="Block non-trusted",
-            trigger=Trigger(event="before_tool_call"),
-            predicates=[
-                Predicate(type="taint_is", value="trusted", negate=True),
-            ],
-            enforcement=Enforcement(action="block", message="Not trusted"),
-        ))
+        dsl.add_rule(
+            Rule(
+                id="negate_test",
+                name="Block non-trusted",
+                trigger=Trigger(event="before_tool_call"),
+                predicates=[
+                    Predicate(type="taint_is", value="trusted", negate=True),
+                ],
+                enforcement=Enforcement(action="block", message="Not trusted"),
+            )
+        )
         evaluator = RuleEvaluator(dsl)
 
         # Untrusted should fire (negate: taint_is("trusted") -> False -> negated -> True)
@@ -475,22 +485,26 @@ class TestRuleEvaluator:
     def test_multiple_rules_all_evaluated(self):
         """All matching rules are returned, not just the first."""
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="rule_a",
-            name="Rule A",
-            trigger=Trigger(event="before_tool_call"),
-            predicates=[Predicate(type="risk_above", value=50)],
-            enforcement=Enforcement(action="warn"),
-            priority=10,
-        ))
-        dsl.add_rule(Rule(
-            id="rule_b",
-            name="Rule B",
-            trigger=Trigger(event="before_tool_call"),
-            predicates=[Predicate(type="risk_above", value=80)],
-            enforcement=Enforcement(action="block"),
-            priority=20,
-        ))
+        dsl.add_rule(
+            Rule(
+                id="rule_a",
+                name="Rule A",
+                trigger=Trigger(event="before_tool_call"),
+                predicates=[Predicate(type="risk_above", value=50)],
+                enforcement=Enforcement(action="warn"),
+                priority=10,
+            )
+        )
+        dsl.add_rule(
+            Rule(
+                id="rule_b",
+                name="Rule B",
+                trigger=Trigger(event="before_tool_call"),
+                predicates=[Predicate(type="risk_above", value=80)],
+                enforcement=Enforcement(action="block"),
+                priority=20,
+            )
+        )
         evaluator = RuleEvaluator(dsl)
         ctx = EvaluationContext(risk_score=90)
         results = evaluator.evaluate("before_tool_call", ctx)
@@ -510,13 +524,15 @@ class TestRuleEvaluator:
 class TestCustomPredicates:
     def test_register_and_evaluate(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="custom_test",
-            name="Custom Check",
-            trigger=Trigger(event="before_tool_call"),
-            predicates=[Predicate(type="is_admin", value="true")],
-            enforcement=Enforcement(action="allow", message="Admin access granted"),
-        ))
+        dsl.add_rule(
+            Rule(
+                id="custom_test",
+                name="Custom Check",
+                trigger=Trigger(event="before_tool_call"),
+                predicates=[Predicate(type="is_admin", value="true")],
+                enforcement=Enforcement(action="allow", message="Admin access granted"),
+            )
+        )
 
         evaluator = RuleEvaluator(dsl)
         evaluator.register_predicate(
@@ -535,13 +551,15 @@ class TestCustomPredicates:
 
     def test_unknown_predicate_fails(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="unknown",
-            name="Unknown Pred",
-            trigger=Trigger(event="before_tool_call"),
-            predicates=[Predicate(type="nonexistent_type", value="anything")],
-            enforcement=Enforcement(action="block"),
-        ))
+        dsl.add_rule(
+            Rule(
+                id="unknown",
+                name="Unknown Pred",
+                trigger=Trigger(event="before_tool_call"),
+                predicates=[Predicate(type="nonexistent_type", value="anything")],
+                enforcement=Enforcement(action="block"),
+            )
+        )
         evaluator = RuleEvaluator(dsl)
         ctx = EvaluationContext()
         result = evaluator.evaluate_first_match("before_tool_call", ctx)
@@ -557,9 +575,15 @@ class TestCustomPredicates:
 class TestBuiltinPredicates:
     def test_all_builtins_registered(self):
         expected = {
-            "resource_is", "target_matches", "risk_above", "risk_below",
-            "taint_is", "session_age_above", "action_count_above",
-            "tool_name_matches", "contains_pattern",
+            "resource_is",
+            "target_matches",
+            "risk_above",
+            "risk_below",
+            "taint_is",
+            "session_age_above",
+            "action_count_above",
+            "tool_name_matches",
+            "contains_pattern",
         }
         assert expected == set(BUILTIN_PREDICATES.keys())
 
@@ -789,13 +813,15 @@ class TestDefaultRulesIntegration:
 class TestToolMatching:
     def test_pipe_delimited_match(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="pipe_test",
-            name="Pipe Match",
-            trigger=Trigger(event="before_tool_call", tool_match="Bash|shell|execute"),
-            predicates=[],
-            enforcement=Enforcement(action="log"),
-        ))
+        dsl.add_rule(
+            Rule(
+                id="pipe_test",
+                name="Pipe Match",
+                trigger=Trigger(event="before_tool_call", tool_match="Bash|shell|execute"),
+                predicates=[],
+                enforcement=Enforcement(action="log"),
+            )
+        )
         evaluator = RuleEvaluator(dsl)
 
         for tool in ("Bash", "shell", "execute"):
@@ -806,13 +832,15 @@ class TestToolMatching:
 
     def test_wildcard_matches_all(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="wild",
-            name="Wildcard",
-            trigger=Trigger(event="before_tool_call", tool_match="*"),
-            predicates=[],
-            enforcement=Enforcement(action="log"),
-        ))
+        dsl.add_rule(
+            Rule(
+                id="wild",
+                name="Wildcard",
+                trigger=Trigger(event="before_tool_call", tool_match="*"),
+                predicates=[],
+                enforcement=Enforcement(action="log"),
+            )
+        )
         evaluator = RuleEvaluator(dsl)
 
         for tool in ("Bash", "Read", "Edit", "anything"):
@@ -822,13 +850,15 @@ class TestToolMatching:
 
     def test_glob_pattern_in_tool_match(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="glob_test",
-            name="Glob Tool",
-            trigger=Trigger(event="before_tool_call", tool_match="mcp_*"),
-            predicates=[],
-            enforcement=Enforcement(action="warn"),
-        ))
+        dsl.add_rule(
+            Rule(
+                id="glob_test",
+                name="Glob Tool",
+                trigger=Trigger(event="before_tool_call", tool_match="mcp_*"),
+                predicates=[],
+                enforcement=Enforcement(action="warn"),
+            )
+        )
         evaluator = RuleEvaluator(dsl)
 
         ctx_match = EvaluationContext(tool_name="mcp_server_tool")
@@ -842,20 +872,24 @@ class TestToolMatching:
 
     def test_empty_tool_name_only_matches_wildcard(self):
         dsl = PolicyDSL()
-        dsl.add_rule(Rule(
-            id="specific",
-            name="Specific Tool",
-            trigger=Trigger(event="before_tool_call", tool_match="Bash"),
-            predicates=[],
-            enforcement=Enforcement(action="block"),
-        ))
-        dsl.add_rule(Rule(
-            id="wildcard",
-            name="Wildcard",
-            trigger=Trigger(event="before_tool_call", tool_match="*"),
-            predicates=[],
-            enforcement=Enforcement(action="log"),
-        ))
+        dsl.add_rule(
+            Rule(
+                id="specific",
+                name="Specific Tool",
+                trigger=Trigger(event="before_tool_call", tool_match="Bash"),
+                predicates=[],
+                enforcement=Enforcement(action="block"),
+            )
+        )
+        dsl.add_rule(
+            Rule(
+                id="wildcard",
+                name="Wildcard",
+                trigger=Trigger(event="before_tool_call", tool_match="*"),
+                predicates=[],
+                enforcement=Enforcement(action="log"),
+            )
+        )
         evaluator = RuleEvaluator(dsl)
         ctx = EvaluationContext(tool_name="")
         results = evaluator.evaluate("before_tool_call", ctx)

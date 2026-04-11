@@ -246,53 +246,63 @@ def apply_proposals(
             if pid in existing_pattern_ids:
                 continue
 
-            patterns.append({
-                "id": pid,
-                "name": f"Learned: {proposal.description[:60]}",
-                "category": proposal.category,
-                "pattern": proposal.pattern,
-                "score": 35,
-                "owasp_ref": "OWASP LLM01: Prompt Injection",
-                "remediation_hint": f"Auto-detected pattern from adversarial testing: {proposal.description}",
-                "source": "adversarial_loop",
-                "proposal_id": proposal.proposal_id,
-            })
+            patterns.append(
+                {
+                    "id": pid,
+                    "name": f"Learned: {proposal.description[:60]}",
+                    "category": proposal.category,
+                    "pattern": proposal.pattern,
+                    "score": 35,
+                    "owasp_ref": "OWASP LLM01: Prompt Injection",
+                    "remediation_hint": f"Auto-detected pattern from adversarial testing: {proposal.description}",
+                    "source": "adversarial_loop",
+                    "proposal_id": proposal.proposal_id,
+                }
+            )
             existing_pattern_ids.add(pid)
-            applied.append(AppliedFix(
-                proposal_id=proposal.proposal_id,
-                fix_type="pattern",
-                description=proposal.description,
-                file_path=str(sdir / _LEARNED_PATTERNS_FILE),
-            ))
+            applied.append(
+                AppliedFix(
+                    proposal_id=proposal.proposal_id,
+                    fix_type="pattern",
+                    description=proposal.description,
+                    file_path=str(sdir / _LEARNED_PATTERNS_FILE),
+                )
+            )
 
         elif proposal.proposal_type == "new_similarity" and proposal.phrase:
             if proposal.phrase in existing_phrases:
                 continue
 
-            similarity.append({
-                "phrase": proposal.phrase,
-                "category": proposal.category,
-                "score": 35,
-                "source": "adversarial_loop",
-                "proposal_id": proposal.proposal_id,
-            })
+            similarity.append(
+                {
+                    "phrase": proposal.phrase,
+                    "category": proposal.category,
+                    "score": 35,
+                    "source": "adversarial_loop",
+                    "proposal_id": proposal.proposal_id,
+                }
+            )
             existing_phrases.add(proposal.phrase)
-            applied.append(AppliedFix(
-                proposal_id=proposal.proposal_id,
-                fix_type="similarity",
-                description=proposal.description,
-                file_path=str(sdir / _LEARNED_SIMILARITY_FILE),
-            ))
+            applied.append(
+                AppliedFix(
+                    proposal_id=proposal.proposal_id,
+                    fix_type="similarity",
+                    description=proposal.description,
+                    file_path=str(sdir / _LEARNED_SIMILARITY_FILE),
+                )
+            )
 
         elif proposal.proposal_type == "new_normalization":
             # Normalization changes require code modifications — log as note
-            applied.append(AppliedFix(
-                proposal_id=proposal.proposal_id,
-                fix_type="normalization_note",
-                description=proposal.description,
-                file_path="(requires manual code change in scanner.py)",
-                rollback_possible=False,
-            ))
+            applied.append(
+                AppliedFix(
+                    proposal_id=proposal.proposal_id,
+                    fix_type="normalization_note",
+                    description=proposal.description,
+                    file_path="(requires manual code change in scanner.py)",
+                    rollback_possible=False,
+                )
+            )
 
     # Persist
     if any(f.fix_type == "pattern" for f in applied):
@@ -309,12 +319,8 @@ def rollback_proposals(
 ) -> None:
     """Rollback applied fixes by removing them from learned defense files."""
     sdir = storage_dir or _DEFAULT_DIR
-    rollback_pattern_ids = {
-        f.proposal_id for f in applied if f.fix_type == "pattern"
-    }
-    rollback_similarity_ids = {
-        f.proposal_id for f in applied if f.fix_type == "similarity"
-    }
+    rollback_pattern_ids = {f.proposal_id for f in applied if f.fix_type == "pattern"}
+    rollback_similarity_ids = {f.proposal_id for f in applied if f.fix_type == "similarity"}
 
     if rollback_pattern_ids:
         patterns = load_learned_patterns(sdir)
@@ -373,11 +379,13 @@ def verify_no_regressions(
     for text in inputs:
         result = scan(text, custom_rules=custom_rules if custom_rules else None)
         if not result.is_safe:
-            false_positives.append({
-                "text": text,
-                "score": result.risk_score,
-                "rules": [r.rule_name for r in result.matched_rules],
-            })
+            false_positives.append(
+                {
+                    "text": text,
+                    "score": result.risk_score,
+                    "rules": [r.rule_name for r in result.matched_rules],
+                }
+            )
 
     return RegressionResult(
         passed=len(false_positives) == 0,
@@ -420,11 +428,13 @@ def run_auto_fix(
     for p in proposals:
         level = priority_order.get(p.priority, 0)
         if level < min_level:
-            result.skipped.append({
-                "proposal_id": p.proposal_id,
-                "description": p.description,
-                "reason": f"Below min priority ({p.priority} < {min_priority})",
-            })
+            result.skipped.append(
+                {
+                    "proposal_id": p.proposal_id,
+                    "description": p.description,
+                    "reason": f"Below min priority ({p.priority} < {min_priority})",
+                }
+            )
 
     # Apply proposals
     result.applied = apply_proposals(proposals, sdir, min_priority)
@@ -460,19 +470,21 @@ def _log_fix(result: AutoFixResult, storage_dir: Path) -> None:
         except (json.JSONDecodeError, Exception):
             log_entries = []
 
-    log_entries.append({
-        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
-        "applied_count": len(result.applied),
-        "skipped_count": len(result.skipped),
-        "regression_passed": result.regression.passed if result.regression else None,
-        "false_positive_count": result.regression.false_positive_count if result.regression else 0,
-        "rolled_back": result.rolled_back,
-        "fixes": [
-            {"id": f.proposal_id, "type": f.fix_type, "desc": f.description}
-            for f in result.applied
-        ],
-    })
-
-    log_path.write_text(
-        json.dumps(log_entries, ensure_ascii=False, indent=2), encoding="utf-8"
+    log_entries.append(
+        {
+            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+            "applied_count": len(result.applied),
+            "skipped_count": len(result.skipped),
+            "regression_passed": result.regression.passed if result.regression else None,
+            "false_positive_count": result.regression.false_positive_count
+            if result.regression
+            else 0,
+            "rolled_back": result.rolled_back,
+            "fixes": [
+                {"id": f.proposal_id, "type": f.fix_type, "desc": f.description}
+                for f in result.applied
+            ],
+        }
     )
+
+    log_path.write_text(json.dumps(log_entries, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -118,9 +118,13 @@ class MCPServerReport:
             "Tools:",
         ]
         for name, result in self.tool_results.items():
-            level_tag = "SAFE" if result.is_safe else (
-                "CRITICAL" if result.is_blocked else (
-                    "HIGH" if result.risk_level == "high" else "WARN"
+            level_tag = (
+                "SAFE"
+                if result.is_safe
+                else (
+                    "CRITICAL"
+                    if result.is_blocked
+                    else ("HIGH" if result.risk_level == "high" else "WARN")
                 )
             )
             perms = self.permission_summaries.get(name)
@@ -136,9 +140,7 @@ class MCPServerReport:
                 if perms.sensitive_data:
                     active.append("sensitive_data")
                 perm_str = f"  Permissions: {', '.join(active) or 'none'}"
-            lines.append(
-                f"  [{level_tag:>8}]  {name:<20} (score={result.risk_score}){perm_str}"
-            )
+            lines.append(f"  [{level_tag:>8}]  {name:<20} (score={result.risk_score}){perm_str}")
             for rule in result.matched_rules:
                 lines.append(f"             - {rule.rule_name}: {rule.owasp_ref}")
 
@@ -182,13 +184,9 @@ class MCPServerReport:
             "server_url": self.server_url,
             "trust_score": self.trust_score,
             "trust_level": self.trust_level,
-            "tools": {
-                name: result.to_dict()
-                for name, result in self.tool_results.items()
-            },
+            "tools": {name: result.to_dict() for name, result in self.tool_results.items()},
             "permissions": {
-                name: perms.to_dict()
-                for name, perms in self.permission_summaries.items()
+                name: perms.to_dict() for name, perms in self.permission_summaries.items()
             },
             "rug_pull_alerts": [
                 {
@@ -275,19 +273,24 @@ def detect_rug_pull(
         return None
 
     desc_changed = previous.description != current.description
-    schema_changed = (
-        json.dumps(previous.input_schema, sort_keys=True)
-        != json.dumps(current.input_schema, sort_keys=True)
+    schema_changed = json.dumps(previous.input_schema, sort_keys=True) != json.dumps(
+        current.input_schema, sort_keys=True
     )
 
     # Scan the new version for threats
     new_scan = scan_mcp_tool(
-        {"name": current.tool_name, "description": current.description,
-         "inputSchema": current.input_schema}
+        {
+            "name": current.tool_name,
+            "description": current.description,
+            "inputSchema": current.input_schema,
+        }
     )
     old_scan = scan_mcp_tool(
-        {"name": previous.tool_name, "description": previous.description,
-         "inputSchema": previous.input_schema}
+        {
+            "name": previous.tool_name,
+            "description": previous.description,
+            "inputSchema": previous.input_schema,
+        }
     )
 
     # Find new suspicious patterns that weren't in the old version
@@ -320,28 +323,70 @@ def detect_rug_pull(
 
 # Keywords for each permission category
 _FILE_SYSTEM_KEYWORDS = [
-    "read_file", "write_file", "delete_file", "list_directory",
-    "file_path", "directory", "folder", "mkdir", "rmdir",
-    "open_file", "save_file", "upload", "download",
-    "~/.ssh", "~/.aws", ".env", "/etc/",
+    "read_file",
+    "write_file",
+    "delete_file",
+    "list_directory",
+    "file_path",
+    "directory",
+    "folder",
+    "mkdir",
+    "rmdir",
+    "open_file",
+    "save_file",
+    "upload",
+    "download",
+    "~/.ssh",
+    "~/.aws",
+    ".env",
+    "/etc/",
 ]
 
 _NETWORK_KEYWORDS = [
-    "http", "https", "url", "fetch", "request", "api",
-    "send_email", "webhook", "socket", "connect",
-    "download", "upload", "post", "get_url",
+    "http",
+    "https",
+    "url",
+    "fetch",
+    "request",
+    "api",
+    "send_email",
+    "webhook",
+    "socket",
+    "connect",
+    "download",
+    "upload",
+    "post",
+    "get_url",
 ]
 
 _CODE_EXEC_KEYWORDS = [
-    "exec", "eval", "execute", "run_command", "shell",
-    "subprocess", "os.system", "bash", "cmd",
-    "run_code", "compile", "interpret",
+    "exec",
+    "eval",
+    "execute",
+    "run_command",
+    "shell",
+    "subprocess",
+    "os.system",
+    "bash",
+    "cmd",
+    "run_code",
+    "compile",
+    "interpret",
 ]
 
 _SENSITIVE_DATA_KEYWORDS = [
-    "credential", "secret", "password", "token", "api_key",
-    "private_key", "ssh_key", "aws_key", "database",
-    "connection_string", "auth", "session",
+    "credential",
+    "secret",
+    "password",
+    "token",
+    "api_key",
+    "private_key",
+    "ssh_key",
+    "aws_key",
+    "database",
+    "connection_string",
+    "auth",
+    "session",
 ]
 
 
@@ -472,9 +517,7 @@ def scan_mcp_server(
     if snapshot_dir:
         snapshot_path = Path(snapshot_dir)
         # Use server URL hash for filename (or 'local' for no URL)
-        server_hash = hashlib.sha256(
-            (server_url or "local").encode()
-        ).hexdigest()[:12]
+        server_hash = hashlib.sha256((server_url or "local").encode()).hexdigest()[:12]
         snapshot_file = snapshot_path / f"mcp_{server_hash}.json"
 
         previous_snapshots = load_snapshots(snapshot_file)

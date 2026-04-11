@@ -232,4 +232,6 @@ class TestMonitoringReport:
     def test_owasp_mapping_completeness(self):
         """Ensure all aigis categories map to an OWASP item."""
         for cat, owasp_id in CATEGORY_TO_OWASP.items():
-            assert owasp_id in OWASP_LLM_TOP10, f"Category {cat} maps to unknown OWASP ID {owasp_id}"
+            assert owasp_id in OWASP_LLM_TOP10, (
+                f"Category {cat} maps to unknown OWASP ID {owasp_id}"
+            )

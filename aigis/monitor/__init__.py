@@ -189,10 +189,26 @@ class SecurityMonitor:
         layers = list(detection_layers or [])
 
         for rule in getattr(scan_result, "matched_rules", []):
-            cat = getattr(rule, "category", "") if hasattr(rule, "category") else rule.get("category", "")
-            rid = getattr(rule, "rule_id", "") if hasattr(rule, "rule_id") else rule.get("rule_id", "")
-            oref = getattr(rule, "owasp_ref", "") if hasattr(rule, "owasp_ref") else rule.get("owasp_ref", "")
-            rname = getattr(rule, "rule_name", "") if hasattr(rule, "rule_name") else rule.get("rule_name", "")
+            cat = (
+                getattr(rule, "category", "")
+                if hasattr(rule, "category")
+                else rule.get("category", "")
+            )
+            rid = (
+                getattr(rule, "rule_id", "")
+                if hasattr(rule, "rule_id")
+                else rule.get("rule_id", "")
+            )
+            oref = (
+                getattr(rule, "owasp_ref", "")
+                if hasattr(rule, "owasp_ref")
+                else rule.get("owasp_ref", "")
+            )
+            rname = (
+                getattr(rule, "rule_name", "")
+                if hasattr(rule, "rule_name")
+                else rule.get("rule_name", "")
+            )
 
             if cat and cat not in categories:
                 categories.append(cat)
@@ -264,29 +280,30 @@ class SecurityMonitor:
 
         total = len(records)
         blocked = sum(1 for r in records if r["is_blocked"])
-        review = sum(1 for r in records if r["risk_level"] in ("medium", "high") and not r["is_blocked"])
+        review = sum(
+            1 for r in records if r["risk_level"] in ("medium", "high") and not r["is_blocked"]
+        )
         allowed = total - blocked - review
 
         # Detection = blocked + review (any threat flagged at medium or above)
         detected = blocked + review
 
         # Threats that slipped through entirely (has matched rules but risk <= 30)
-        slipped = sum(
-            1 for r in records
-            if r.get("matched_rule_ids") and r["risk_score"] <= 30
-        )
+        slipped = sum(1 for r in records if r.get("matched_rule_ids") and r["risk_score"] <= 30)
         detection_rate = detected / (detected + slipped) if (detected + slipped) > 0 else 1.0
 
         # ASR: proportion of attack attempts that were NOT detected
         # (inspired by ai-scanner: lower ASR = better defense)
         scans_with_matches = [r for r in records if r["matched_rule_ids"]]
         detected_attacks = sum(
-            1 for r in scans_with_matches
+            1
+            for r in scans_with_matches
             if r["risk_score"] > 30  # medium or above = detected
         )
         asr = (
             (len(scans_with_matches) - detected_attacks) / len(scans_with_matches)
-            if scans_with_matches else 0.0
+            if scans_with_matches
+            else 0.0
         )
 
         # Risk distribution
@@ -340,6 +357,7 @@ class SecurityMonitor:
         learned_count = 0
         try:
             from aigis.auto_fix import load_learned_patterns
+
             learned = load_learned_patterns()
             learned_count = len(learned)
             auto_fix_count = sum(1 for p in learned if p.get("auto_applied", False))
@@ -412,13 +430,15 @@ class SecurityMonitor:
         for day in sorted(daily.keys()):
             d = daily[day]
             bypassed = d["total"] - d["detected"]
-            result.append({
-                "date": day,
-                "total_attacks": d["total"],
-                "bypassed": bypassed,
-                "blocked": d["detected"],
-                "asr": bypassed / d["total"] if d["total"] > 0 else 0.0,
-            })
+            result.append(
+                {
+                    "date": day,
+                    "total_attacks": d["total"],
+                    "bypassed": bypassed,
+                    "blocked": d["detected"],
+                    "asr": bypassed / d["total"] if d["total"] > 0 else 0.0,
+                }
+            )
         return result
 
     def category_heatmap(self, days: int = 30) -> dict[str, dict[str, int]]:
@@ -489,9 +509,12 @@ class SecurityMonitor:
                 **data,
                 "unique_features": unique_features.get(owasp_id, []),
                 "protection_level": (
-                    "active" if data["blocked"] > 0
-                    else "monitored" if data["detections"] > 0
-                    else "pattern-ready" if data["covered"]
+                    "active"
+                    if data["blocked"] > 0
+                    else "monitored"
+                    if data["detections"] > 0
+                    else "pattern-ready"
+                    if data["covered"]
                     else "not-covered"
                 ),
             }

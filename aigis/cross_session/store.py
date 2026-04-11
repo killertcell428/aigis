@@ -88,6 +88,7 @@ class SessionStore:
         injection, null bytes, and symlink attacks.
         """
         import re as _re
+
         # Strip null bytes and control characters
         safe_id = session_id.replace("\x00", "")
         # Allow only alphanumeric, hyphens, underscores

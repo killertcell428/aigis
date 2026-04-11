@@ -307,6 +307,7 @@ class BehavioralMonitor:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         import json
+
         with open(path, "w", encoding="utf-8") as f:
             json.dump(self._baseline.to_dict(), f, indent=2, ensure_ascii=False)
 

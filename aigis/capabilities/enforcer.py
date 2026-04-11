@@ -21,12 +21,14 @@ if TYPE_CHECKING:
 # Tools that affect control flow must never be driven by untrusted data.
 # MCP tool calls are included because MCP tools can execute arbitrary
 # actions on remote servers (file I/O, network, code execution).
-_CONTROL_FLOW_RESOURCES = frozenset({
-    "shell:exec",
-    "agent:spawn",
-    "code:eval",
-    "mcp:tool_call",
-})
+_CONTROL_FLOW_RESOURCES = frozenset(
+    {
+        "shell:exec",
+        "agent:spawn",
+        "code:eval",
+        "mcp:tool_call",
+    }
+)
 
 # Mapping from tool names (lowercase) to (resource_type, target_key) pairs.
 # Lookup is case-insensitive; see _map_tool().

@@ -50,7 +50,9 @@ class Vaporizer:
     recording a failure.
     """
 
-    def __init__(self, *, max_retries: int = _MAX_RETRIES, backoff_base: float = _BACKOFF_BASE_S) -> None:
+    def __init__(
+        self, *, max_retries: int = _MAX_RETRIES, backoff_base: float = _BACKOFF_BASE_S
+    ) -> None:
         self._max_retries = max_retries
         self._backoff_base = backoff_base
 
@@ -167,7 +169,7 @@ class Vaporizer:
                 return True
             except PermissionError:
                 if attempt < self._max_retries:
-                    delay = self._backoff_base * (2 ** attempt)
+                    delay = self._backoff_base * (2**attempt)
                     logger.debug(
                         "Retry %d/%d deleting %s (sleeping %.3fs)",
                         attempt + 1,

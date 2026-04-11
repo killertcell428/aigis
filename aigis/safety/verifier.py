@@ -253,8 +253,7 @@ class SafetyVerifier:
                 )
                 if not matched_any:
                     violations.append(
-                        f"Action {action!r} on target {target!r} "
-                        f"not covered by any allowed effect"
+                        f"Action {action!r} on target {target!r} not covered by any allowed effect"
                     )
                     return ProofCertificate(
                         spec_name=spec.name,

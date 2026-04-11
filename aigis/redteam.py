@@ -474,10 +474,7 @@ def _mutate_emoji_interleave(text: str, _rng: random.Random) -> str:
 
 def _mutate_case_mix(text: str, _rng: random.Random) -> str:
     """Randomize character casing."""
-    return "".join(
-        c.upper() if _rng.random() > 0.5 else c.lower()
-        for c in text
-    )
+    return "".join(c.upper() if _rng.random() > 0.5 else c.lower() for c in text)
 
 
 def _mutate_prefix_suffix(text: str, _rng: random.Random) -> str:
@@ -594,7 +591,9 @@ class RedTeamReportGenerator:
             lines.append("Significant detection gaps found:")
             for r in result.category_results:
                 if r.block_rate < 80:
-                    lines.append(f"- **{r.category}**: {r.block_rate:.0f}% block rate needs improvement")
+                    lines.append(
+                        f"- **{r.category}**: {r.block_rate:.0f}% block rate needs improvement"
+                    )
 
         return "\n".join(lines)
 

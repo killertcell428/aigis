@@ -27,7 +27,18 @@ class TestToolActionMap:
         assert TOOL_ACTION_MAP["Agent"] == "agent:spawn"
 
     def test_all_expected_tools_present(self):
-        expected = {"Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebFetch", "WebSearch", "Agent", "NotebookEdit"}
+        expected = {
+            "Bash",
+            "Read",
+            "Write",
+            "Edit",
+            "Glob",
+            "Grep",
+            "WebFetch",
+            "WebSearch",
+            "Agent",
+            "NotebookEdit",
+        }
         assert set(TOOL_ACTION_MAP.keys()) == expected
 
 

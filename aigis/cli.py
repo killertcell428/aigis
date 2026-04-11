@@ -73,13 +73,17 @@ def main(argv: list[str] | None = None) -> int:
     report_p.add_argument("--days", type=int, default=30, help="Report period in days")
     report_p.add_argument("--format", choices=["text", "json", "html", "markdown"], default="text")
     report_p.add_argument(
-        "--output", "-o", metavar="PATH",
+        "--output",
+        "-o",
+        metavar="PATH",
         help="Save report to file (auto-detects format from extension: .html/.md/.json)",
     )
 
     # aig monitor
     monitor_p = sub.add_parser("monitor", help="Security monitoring dashboard")
-    monitor_p.add_argument("--hours", type=float, default=24, help="Look-back period in hours (default: 24)")
+    monitor_p.add_argument(
+        "--hours", type=float, default=24, help="Look-back period in hours (default: 24)"
+    )
     monitor_p.add_argument("--json", dest="json_output", action="store_true", help="Output as JSON")
     monitor_p.add_argument("--asr-trend", action="store_true", help="Show ASR trend over time")
     monitor_p.add_argument("--days", type=int, default=30, help="Days for trend data (default: 30)")
@@ -159,33 +163,23 @@ def main(argv: list[str] | None = None) -> int:
     # aig redteam
     red_p = sub.add_parser("redteam", help="Automated red team testing")
     red_p.add_argument("--category", help="Test only this category")
-    red_p.add_argument(
-        "--count", type=int, default=10, help="Attacks per category (default: 10)"
-    )
+    red_p.add_argument("--count", type=int, default=10, help="Attacks per category (default: 10)")
     red_p.add_argument("--seed", type=int, help="Random seed for reproducibility")
     red_p.add_argument("--json", dest="json_output", action="store_true", help="Output as JSON")
-    red_p.add_argument(
-        "--adaptive", action="store_true", help="Run adaptive mutation mode"
-    )
+    red_p.add_argument("--adaptive", action="store_true", help="Run adaptive mutation mode")
     red_p.add_argument(
         "--rounds", type=int, default=3, help="Max mutation rounds for adaptive mode (default: 3)"
     )
+    red_p.add_argument("--report", action="store_true", help="Generate vulnerability report")
     red_p.add_argument(
-        "--report", action="store_true", help="Generate vulnerability report"
-    )
-    red_p.add_argument(
-        "--report-format", choices=["markdown", "html"], default="markdown",
+        "--report-format",
+        choices=["markdown", "html"],
+        default="markdown",
         help="Report format (default: markdown)",
     )
-    red_p.add_argument(
-        "--report-path", metavar="PATH", help="Report output path"
-    )
-    red_p.add_argument(
-        "--target-url", metavar="URL", help="HTTP endpoint to test against"
-    )
-    red_p.add_argument(
-        "--multi-step", action="store_true", help="Include multi-step attack chains"
-    )
+    red_p.add_argument("--report-path", metavar="PATH", help="Report output path")
+    red_p.add_argument("--target-url", metavar="URL", help="HTTP endpoint to test against")
+    red_p.add_argument("--multi-step", action="store_true", help="Include multi-step attack chains")
 
     # aig adversarial-loop
     adv_p = sub.add_parser("adversarial-loop", help="Run attack-defend-improve cycle")
@@ -201,30 +195,30 @@ def main(argv: list[str] | None = None) -> int:
     adv_p.add_argument(
         "--no-evolve", action="store_true", help="Disable bypass evolution between rounds"
     )
+    adv_p.add_argument("--report", action="store_true", help="Generate full report")
     adv_p.add_argument(
-        "--report", action="store_true", help="Generate full report"
-    )
-    adv_p.add_argument(
-        "--report-format", choices=["markdown", "json"], default="markdown",
+        "--report-format",
+        choices=["markdown", "json"],
+        default="markdown",
         help="Report format (default: markdown)",
     )
+    adv_p.add_argument("--report-path", metavar="PATH", help="Report output path")
+    adv_p.add_argument("--proposals", metavar="PATH", help="Save defense proposals to JSON file")
     adv_p.add_argument(
-        "--report-path", metavar="PATH", help="Report output path"
+        "--auto-fix",
+        action="store_true",
+        help="Auto-apply high/medium priority proposals, verify no FP regressions, rollback if needed",
     )
     adv_p.add_argument(
-        "--proposals", metavar="PATH", help="Save defense proposals to JSON file"
+        "--min-priority",
+        choices=["low", "medium", "high"],
+        default="medium",
+        help="Minimum priority for auto-fix (default: medium)",
     )
     adv_p.add_argument(
-        "--auto-fix", action="store_true",
-        help="Auto-apply high/medium priority proposals, verify no FP regressions, rollback if needed"
-    )
-    adv_p.add_argument(
-        "--min-priority", choices=["low", "medium", "high"], default="medium",
-        help="Minimum priority for auto-fix (default: medium)"
-    )
-    adv_p.add_argument(
-        "--no-rollback", action="store_true",
-        help="Do not auto-rollback on false positive regressions"
+        "--no-rollback",
+        action="store_true",
+        help="Do not auto-rollback on false positive regressions",
     )
 
     # aig benchmark
@@ -244,10 +238,14 @@ def main(argv: list[str] | None = None) -> int:
         "--threshold", type=int, default=1, help="Minimum score to count as detected (default: 1)"
     )
     bench_p.add_argument(
-        "--report", action="store_true", help="Generate Markdown latency report (requires --latency)"
+        "--report",
+        action="store_true",
+        help="Generate Markdown latency report (requires --latency)",
     )
     bench_p.add_argument(
-        "--report-path", metavar="PATH", default="benchmark_report.md",
+        "--report-path",
+        metavar="PATH",
+        default="benchmark_report.md",
         help="Output path for latency report (default: benchmark_report.md)",
     )
     bench_p.add_argument(
@@ -594,7 +592,9 @@ def cmd_monitor(args: argparse.Namespace) -> int:
         print(f"{'Date':<12} {'Attacks':>8} {'Blocked':>8} {'Bypassed':>9} {'ASR':>6}")
         print("-" * 60)
         for t in trend:
-            print(f"{t['date']:<12} {t['total_attacks']:>8} {t['blocked']:>8} {t['bypassed']:>9} {t['asr']:>5.1%}")
+            print(
+                f"{t['date']:<12} {t['total_attacks']:>8} {t['blocked']:>8} {t['bypassed']:>9} {t['asr']:>5.1%}"
+            )
         return 0
 
     # Default: snapshot
@@ -950,7 +950,9 @@ def cmd_adversarial_loop(args: argparse.Namespace) -> int:
         elif fix_result.applied:
             applied_patterns = sum(1 for f in fix_result.applied if f.fix_type == "pattern")
             applied_similarity = sum(1 for f in fix_result.applied if f.fix_type == "similarity")
-            print(f"\nDefenses strengthened: {applied_patterns} patterns, {applied_similarity} similarity phrases")
+            print(
+                f"\nDefenses strengthened: {applied_patterns} patterns, {applied_similarity} similarity phrases"
+            )
 
     # Exit 1 if any bypasses found (useful for CI)
     return 0 if report.total_bypassed == 0 else 1
@@ -978,7 +980,10 @@ def cmd_mcp(args: argparse.Namespace) -> int:
             raw = sys.stdin.read()
 
     if not raw or not raw.strip():
-        print("Error: no input provided. Pass JSON string, --file, or pipe from stdin.", file=sys.stderr)
+        print(
+            "Error: no input provided. Pass JSON string, --file, or pipe from stdin.",
+            file=sys.stderr,
+        )
         return 2
 
     # Parse JSON
@@ -1024,8 +1029,7 @@ def cmd_mcp(args: argparse.Namespace) -> int:
 
     # Standard per-tool scan (original behavior)
     results = {
-        tool.get("name", f"tool_{i}"): scan_mcp_tool(tool)
-        for i, tool in enumerate(tools_list)
+        tool.get("name", f"tool_{i}"): scan_mcp_tool(tool) for i, tool in enumerate(tools_list)
     }
 
     if getattr(args, "json_output", False):
