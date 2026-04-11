@@ -910,7 +910,7 @@ class TestFullWorkflow:
         monitor.record_action("Bash", "shell:exec", "cat /etc/shadow", risk_score=80)
         monitor.record_action("Network", "network:send", "https://evil.com", risk_score=90)
 
-        alerts = monitor.check()
+        monitor.check()
         report = monitor.report()
 
         assert report.total_actions == 12

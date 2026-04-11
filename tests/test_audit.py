@@ -28,7 +28,6 @@ from aigis.audit import (
     VerificationResult,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -711,7 +710,7 @@ class TestKeyManagement:
         log1 = SignedAuditLog(secret_key=None)
         e1 = log1.append(event_type="a", actor="x", action="a", target="t")
 
-        log2 = SignedAuditLog(secret_key=None)
+        SignedAuditLog(secret_key=None)
         # log2 should use the same key, so it can verify log1's entries
         key = (tmp_path / "audit_key").read_text(encoding="utf-8").strip()
         verifier = AuditVerifier(secret_key=key)

@@ -1,8 +1,7 @@
 """Tests for the adversarial loop module."""
 
 import json
-
-import pytest
+import random
 
 from aigis.adversarial_loop import (
     AdversarialLoop,
@@ -10,15 +9,14 @@ from aigis.adversarial_loop import (
     DefenseProposal,
     LoopReport,
     RoundResult,
-    analyze_bypasses,
     _apply_advanced_mutation,
     _extract_common_ngrams,
-    _mutate_unicode_math,
     _mutate_context_sandwich,
     _mutate_negation_frame,
     _mutate_question_frame,
+    _mutate_unicode_math,
+    analyze_bypasses,
 )
-import random
 
 
 class TestAdvancedMutations:

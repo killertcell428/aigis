@@ -8,12 +8,8 @@ Tests cover:
 - End-to-end sleeper attack simulation (plant Monday, activate Friday)
 """
 
-import json
-import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-
-import pytest
 
 from aigis.cross_session.correlator import CorrelationAlert, CrossSessionCorrelator
 from aigis.cross_session.sleeper import SleeperAlert, SleeperDetector
@@ -793,11 +789,7 @@ class TestTopLevelImports:
 
     def test_imports_from_top_level(self):
         from aigis import (
-            CorrelationAlert,
-            CrossSessionCorrelator,
-            SessionRecord,
             SessionStore,
-            SleeperAlert,
             SleeperDetector,
         )
         assert SessionStore is not None

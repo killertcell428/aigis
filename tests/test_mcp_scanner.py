@@ -1,6 +1,5 @@
 """Tests for aigis.mcp_scanner — MCP server-level security analysis."""
 
-import json
 import tempfile
 from pathlib import Path
 

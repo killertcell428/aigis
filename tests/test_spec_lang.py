@@ -5,18 +5,16 @@ import tempfile
 from pathlib import Path
 
 from aigis.spec_lang import (
-    EvaluationContext,
     Enforcement,
+    EvaluationContext,
     PolicyDSL,
     Predicate,
     Rule,
-    RuleEvaluationResult,
     RuleEvaluator,
     Trigger,
 )
 from aigis.spec_lang.defaults import DEFAULT_RULES
 from aigis.spec_lang.stdlib import BUILTIN_PREDICATES
-
 
 # ---------------------------------------------------------------------------
 # Dataclass construction

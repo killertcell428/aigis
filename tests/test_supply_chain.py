@@ -21,7 +21,6 @@ from aigis.supply_chain import (
 )
 from aigis.supply_chain.verify import _version_in_range
 
-
 # =========================================================================
 # Sample MCP tool definitions for testing
 # =========================================================================

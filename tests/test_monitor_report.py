@@ -7,11 +7,11 @@ from pathlib import Path
 from aigis.monitor import (
     CATEGORY_TO_OWASP,
     OWASP_LLM_TOP10,
-    SecurityMonitor,
     ScanRecord,
+    SecurityMonitor,
 )
 from aigis.report import MonitoringReport
-from aigis.scanner import ScanResult, scan
+from aigis.scanner import scan
 
 
 class TestSecurityMonitor:

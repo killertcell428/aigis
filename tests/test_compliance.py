@@ -2,10 +2,10 @@
 
 from aigis.compliance import (
     ComplianceItem,
-    get_compliance_report,
-    get_compliance_summary,
     _build_compliance_items,
     _group_by_regulation,
+    get_compliance_report,
+    get_compliance_summary,
 )
 
 

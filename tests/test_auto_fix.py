@@ -2,11 +2,10 @@
 
 import json
 
-import pytest
-
+from aigis.adversarial_loop import DefenseProposal
 from aigis.auto_fix import (
-    AutoFixResult,
     AppliedFix,
+    AutoFixResult,
     RegressionResult,
     apply_proposals,
     load_learned_patterns,
@@ -17,7 +16,6 @@ from aigis.auto_fix import (
     save_learned_similarity,
     verify_no_regressions,
 )
-from aigis.adversarial_loop import DefenseProposal
 
 
 class TestLearnedStorage:
