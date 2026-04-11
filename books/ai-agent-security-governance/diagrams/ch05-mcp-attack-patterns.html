@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 800px; height: 440px; padding: 32px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: #ffffff; color: #1a202c;
+}
+h2 { font-size: 16px; color: #2d3748; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #e53e3e; }
+
+.container { display: flex; gap: 20px; height: 350px; }
+
+/* 中央のアーキテクチャ図 */
+.arch { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; position: relative; }
+
+.box {
+  padding: 10px 20px; border-radius: 8px; text-align: center;
+  font-size: 12px; font-weight: 600; width: 180px;
+}
+.box-user { background: #ebf8ff; border: 1px solid #bee3f8; color: #2b6cb0; }
+.box-agent { background: #1a2940; color: #63b3ed; border: 1px solid #2d4a6f; font-size: 13px; }
+.box-mcp { background: #f7fafc; border: 1px solid #e2e8f0; color: #4a5568; }
+.box-ext { background: #fff5f5; border: 1px solid #fed7d7; color: #e53e3e; }
+
+.arrow-down { color: #cbd5e0; font-size: 16px; }
+
+.trust-line {
+  width: 200px; border-top: 2px dashed #e53e3e; margin: 2px 0;
+  position: relative;
+}
+.trust-label {
+  position: absolute; top: -8px; right: -80px;
+  font-size: 9px; color: #e53e3e; font-weight: 700;
+  background: #fff; padding: 0 4px;
+}
+
+/* 右側の攻撃パターン */
+.attacks { width: 300px; display: flex; flex-direction: column; gap: 10px; }
+.attack {
+  padding: 12px 14px; border-radius: 8px; border-left: 4px solid;
+  background: #fafafa;
+}
+.attack-1 { border-left-color: #e53e3e; }
+.attack-2 { border-left-color: #d69e2e; }
+.attack-3 { border-left-color: #805ad5; }
+.attack-title { font-size: 12px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+.attack-desc { font-size: 10px; color: #718096; line-height: 1.5; }
+.attack-impact { font-size: 9px; color: #e53e3e; font-weight: 600; margin-top: 4px; }
+
+.stat-bar {
+  margin-top: 8px; padding: 10px 14px; border-radius: 8px;
+  background: #1a2940; color: #fff;
+  display: flex; justify-content: space-around; text-align: center;
+}
+.stat-item .stat-num { font-size: 20px; font-weight: 700; color: #fc8181; }
+.stat-item .stat-label { font-size: 9px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+</style>
+</head>
+<body>
+<h2>MCPサーバーの3つの攻撃パターン</h2>
+<div class="container">
+  <div class="arch">
+    <div class="box box-user">👤 ユーザー</div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-agent">🤖 AIエージェント<br><span style="font-size:10px;color:rgba(255,255,255,0.5)">（Claude Code等）</span></div>
+    <div class="arrow-down">▼</div>
+    <div class="trust-line"><span class="trust-label">⚠ 信頼境界</span></div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-mcp">🔌 MCPサーバー<br><span style="font-size:10px;color:#a0aec0">tool description → LLMコンテキスト</span></div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-ext">🌐 外部サービス・データ</div>
+
+    <div class="stat-bar" style="position:absolute;bottom:0;left:0;right:0;">
+      <div class="stat-item">
+        <div class="stat-num">30+</div>
+        <div class="stat-label">CVE（60日間）</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">43%</div>
+        <div class="stat-label">脆弱サーバー率</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">437K</div>
+        <div class="stat-label">影響環境数</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="attacks">
+    <div class="attack attack-1">
+      <div class="attack-title">❶ Tool Poisoning（ツール汚染）</div>
+      <div class="attack-desc">tool descriptionに悪意ある指示を埋め込む。LLMはdescriptionをシステム指示と同等に扱う</div>
+      <div class="attack-impact">→ SSH鍵・APIキーの窃取</div>
+    </div>
+    <div class="attack attack-2">
+      <div class="attack-title">❷ External Prompt Injection</div>
+      <div class="attack-desc">MCPが取得する外部データ（Webページ等）に隠し指示を埋め込む</div>
+      <div class="attack-impact">→ エージェントの動作乗っ取り</div>
+    </div>
+    <div class="attack attack-3">
+      <div class="attack-title">❸ Cross-Tool Hijacking</div>
+      <div class="attack-desc">1つの悪意あるツールのdescriptionが、他の正当なツールの動作を汚染する</div>
+      <div class="attack-impact">→ 全ツール経由のデータ流出</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

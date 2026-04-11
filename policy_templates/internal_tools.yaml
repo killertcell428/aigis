@@ -1,0 +1,39 @@
+# Aigis Policy — Internal Tools (Default)
+#
+# Use this for:
+#   - Employee-facing chatbots (HR, IT helpdesk)
+#   - Internal knowledge base assistants
+#   - Company wiki / documentation bots
+#   - Low-risk internal automation
+#
+# Note: This policy mirrors the built-in "default" policy but with
+# company-specific custom rules added as a starting point.
+# Employees are generally trusted, so threshold is more permissive.
+#
+name: internal_tools
+auto_block_threshold: 81   # default
+auto_allow_threshold: 30
+
+custom_rules:
+  # Block attempts to access HR/payroll data outside normal flows
+  - id: it_payroll_extraction
+    name: Payroll / Salary Data Extraction
+    pattern: "(salary\s+of\s+(all\s+)?employees|payroll\s+data|show\s+(all\s+)?salaries"
+            "|給与\s*(データ|一覧)|全\s*(社員|従業員)\s*(の)?\s*(給料|年収))"
+    score_delta: 45
+    enabled: true
+
+  # Block attempts to obtain other employees' credentials
+  - id: it_credential_fishing
+    name: Employee Credential Fishing
+    pattern: "(what\s+is\s+\w+'s\s+password|reset\s+(all\s+)?(passwords|credentials)\s+for"
+            "|他\s*(の)?\s*(社員|従業員)\s*(の)?\s*(パスワード|認証情報))"
+    score_delta: 50
+    enabled: true
+
+  # Warn on large data exports
+  - id: it_bulk_export
+    name: Bulk Data Export Request
+    pattern: "(export\s+all|dump\s+(the\s+)?database|全\s*(データ|レコード)\s*(を)?\s*(エクスポート|出力))"
+    score_delta: 35
+    enabled: true

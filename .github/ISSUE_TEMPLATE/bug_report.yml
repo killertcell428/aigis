@@ -1,0 +1,85 @@
+name: "🐛 Bug Report"
+description: "Report a detection false positive, false negative, or crash"
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill in as much detail as possible.
+
+  - type: input
+    id: version
+    attributes:
+      label: aigis version
+      description: Run `pip show aigis` to get the version
+      placeholder: "0.4.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bug_type
+    attributes:
+      label: Bug Type
+      options:
+        - False Positive (safe input was flagged)
+        - False Negative (attack was not detected)
+        - Crash / Exception
+        - Performance issue
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      placeholder: "A clear description of what happened vs. what you expected"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Please provide a minimal code snippet to reproduce the issue
+      render: python
+      placeholder: |
+        from aigis import Guard
+        guard = Guard()
+        result = guard.check_input("your input here")
+        print(result)
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: "What should have happened?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: "What actually happened? Include any error messages or stack traces."
+    validations:
+      required: true
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version
+      placeholder: "3.11.8"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: "Ubuntu 22.04 / Windows 11 / macOS 14"
+    validations:
+      required: false

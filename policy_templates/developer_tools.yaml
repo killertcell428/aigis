@@ -1,0 +1,49 @@
+# Aigis Policy — Developer Tools / Code Assistants
+#
+# Use this for:
+#   - AI code assistants (Copilot-style tools)
+#   - CI/CD pipeline helpers
+#   - Internal developer bots (security scanning, PR review)
+#   - IaC generation assistants
+#
+# Note: Developers need latitude for legitimate security research,
+# so the threshold is more permissive. The custom rules block only
+# clearly malicious patterns that no legitimate dev workflow needs.
+#
+name: developer_tools
+auto_block_threshold: 86   # permissive-ish — devs need latitude
+auto_allow_threshold: 30
+
+custom_rules:
+  # Block live credential injection into generated code
+  - id: dev_hardcode_secret
+    name: Hardcoded Secret in Code Generation Request
+    pattern: "(hardcode\s+(the\s+)?(api\s+key|password|secret|token)|put\s+(my\s+)?"
+            "(api_key|password|secret)\s*=\s*['\"][\w\-]{10,}['\"]"
+            "|シークレット\s*(を)?\s*(ハードコード|直書き))"
+    score_delta: 50
+    enabled: true
+
+  # Block requests to generate malware / exploits
+  - id: dev_malware_gen
+    name: Malware / Exploit Generation Request
+    pattern: "(write\s+(a\s+)?(ransomware|keylogger|rootkit|backdoor|exploit)"
+            "|generate\s+(malware|virus|trojan)|マルウェア\s*(を)?\s*(作成|生成)"
+            "|エクスプロイト\s*(コード)?\s*(を)?\s*(作って|書いて))"
+    score_delta: 80
+    enabled: true
+
+  # Warn on requests to disable security controls in IaC
+  - id: dev_security_disabled
+    name: Security Control Disabled in IaC
+    pattern: "(disable\s+(encryption|mfa|2fa|firewall|ssl|tls)"
+            "|security_groups?\s*=\s*\[\]|セキュリティ\s*(を)?\s*(無効|オフ))"
+    score_delta: 40
+    enabled: true
+
+  # Block prompt injection embedded in code comments / strings
+  - id: dev_code_injection
+    name: Prompt Injection via Code String
+    pattern: "(?:\"|\').*(?:ignore|disregard)\s+(?:previous|all)\s+instructions.*(?:\"|\')"
+    score_delta: 45
+    enabled: true

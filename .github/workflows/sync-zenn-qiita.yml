@@ -1,0 +1,53 @@
+# Auto-sync: Zenn articles (articles/) → Qiita (public/) → auto-publish
+name: Sync Zenn to Qiita
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'articles/**'
+  schedule:
+    # Every day at 00:00 UTC (09:00 JST) — catch any missed syncs
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync_and_publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Sync Zenn → Qiita format
+        run: python scripts/sync_zenn_to_qiita.py --apply
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet public/ && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit synced articles
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/
+          git commit -m "sync: auto-sync Zenn articles to Qiita format"
+          git push
+
+      - name: Publish to Qiita
+        if: steps.changes.outputs.changed == 'true'
+        uses: increments/qiita-cli/actions/publish@v1
+        with:
+          qiita-token: ${{ secrets.QIITA_TOKEN }}
+          root: "."

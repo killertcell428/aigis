@@ -1,0 +1,35 @@
+title: "AIエージェント・セキュリティ＆ガバナンス実践ガイド"
+summary: "自律的AIエージェントを企業に安全に導入するための体系的ガイド。OWASP Agentic Top 10、MCPセキュリティ、NHI管理、ゼロトラスト設計、EU AI Act・日本AI事業者ガイドライン対応まで、基礎から実践まで網羅する完全版ハンドブック。"
+topics: ["ai", "security", "llm", "agent", "governance"]
+published: true
+price: 1500
+toc_depth: 2
+chapters:
+  # ── 第I部：基礎知識編 — AIエージェントセキュリティの地図を手に入れる ──
+  - s1-threats
+  - 01-introduction
+  - 02-paradigm-shift
+  - 03-owasp-agentic-top10
+  # ── 第II部：応用編 — 技術で守る：攻撃と防御の実際 ──
+  - s2-design
+  - 04-prompt-injection
+  - 05-mcp-security
+  - 06-nhi-and-zerotrust
+  - 07-multi-agent-security
+  - 08-sandbox-and-code-execution
+  # ── 第III部：実践編 — 組織に導入する ──
+  - s3-implementation
+  - 09-governance-structure
+  - 10-human-in-the-loop
+  - 11-audit-and-observability
+  - 12-red-teaming
+  - 13-enterprise-roadmap
+  # ── 第IV部：最新動向 — いま起きていること ──
+  - s4-trends
+  - 14-real-world-incidents
+  - 15-supply-chain-security
+  # ── 第V部：未来編 — これから何が起きるか ──
+  - s5-future
+  - 16-legal-liability
+  - 17-agi-governance
+  - 18-agent-ecosystem-future

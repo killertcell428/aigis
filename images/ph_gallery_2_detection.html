@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1270px; height: 760px; background: linear-gradient(180deg, #0f172a 0%, #1a1f3a 100%); font-family: system-ui, -apple-system, sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .header { text-align: center; margin-bottom: 48px; }
+  .label { color: #60a5fa; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 12px; }
+  h2 { color: #fff; font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+  .sub { color: #64748b; font-size: 18px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 0 60px; width: 100%; max-width: 1150px; }
+  .card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid #334155; border-radius: 16px; padding: 28px; transition: all 0.2s; }
+  .card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; }
+  .card h3 { color: #f1f5f9; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .card p { color: #64748b; font-size: 13px; line-height: 1.5; }
+  .card .count { color: #94a3b8; font-size: 12px; font-weight: 600; margin-top: 12px; padding-top: 12px; border-top: 1px solid #1e293b; }
+  .icon-red { background: rgba(239,68,68,0.15); }
+  .icon-purple { background: rgba(168,85,247,0.15); }
+  .icon-yellow { background: rgba(234,179,8,0.15); }
+  .icon-green { background: rgba(34,197,94,0.15); }
+  .icon-blue { background: rgba(59,130,246,0.15); }
+  .icon-orange { background: rgba(249,115,22,0.15); }
+  .icon-cyan { background: rgba(6,182,212,0.15); }
+  .bottom-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .owasp-badge { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 32px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 12px; padding: 12px 24px; }
+  .owasp-badge span { color: #34d399; font-size: 15px; font-weight: 600; }
+</style>
+</head><body>
+<div class="header">
+  <div class="label">Detection Coverage</div>
+  <h2>64 Patterns Across 7 Categories</h2>
+  <div class="sub">Every rule mapped to OWASP LLM Top 10 with remediation hints</div>
+</div>
+<div class="grid">
+  <div class="card">
+    <div class="card-icon icon-red">&#x1f6e1;</div>
+    <h3>Prompt Injection</h3>
+    <p>Ignore-previous, role hijacking, instruction override, DAN</p>
+    <div class="count">10 patterns &middot; OWASP LLM01</div>
+  </div>
+  <div class="card">
+    <div class="card-icon icon-purple">&#x1f3ad;</div>
+    <h3>Jailbreak Bypass</h3>
+    <p>Evil roleplay, developer mode, grandma exploit, no-restrictions</p>
+    <div class="count">6 patterns &middot; OWASP LLM01</div>
+  </div>
+  <div class="card">
+    <div class="card-icon icon-yellow">&#x1f511;</div>
+    <h3>PII Leakage</h3>
+    <p>Credit cards, SSN, API keys, My Number, JP phone, bank accounts</p>
+    <div class="count">12 patterns &middot; OWASP LLM06</div>
+  </div>
+  <div class="card">
+    <div class="card-icon icon-green">&#x1f489;</div>
+    <h3>SQL Injection</h3>
+    <p>UNION SELECT, DROP TABLE, stored procs, stacked queries</p>
+    <div class="count">8 patterns &middot; OWASP LLM02</div>
+  </div>
+  <div class="card">
+    <div class="card-icon icon-blue">&#x1f4e4;</div>
+    <h3>Data Exfiltration</h3>
+    <p>Unauthorized data transfer, encoding tricks, URL smuggling</p>
+    <div class="count">5 patterns &middot; OWASP LLM06</div>
+  </div>
+  <div class="card">
+    <div class="card-icon icon-orange">&#x1f513;</div>
+    <h3>Prompt Leak</h3>
+    <p>System prompt extraction, verbatim repetition, indirect inquiry</p>
+    <div class="count">7 patterns &middot; OWASP LLM07</div>
+  </div>
+  <div class="card">
+    <div class="card-icon icon-cyan">&#x1f4a5;</div>
+    <h3>Token Exhaustion</h3>
+    <p>Repetition flooding, Unicode noise, null-byte stuffing, context overflow</p>
+    <div class="count">5 patterns &middot; OWASP LLM10</div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border-color:#22c55e44;">
+    <div style="color:#34d399;font-size:36px;font-weight:800;margin-bottom:4px;">100%</div>
+    <div style="color:#64748b;font-size:14px;">Benchmark Precision</div>
+    <div style="color:#475569;font-size:12px;margin-top:4px;">53/53 attacks &middot; 0 false positives</div>
+  </div>
+</div>
+</body></html>

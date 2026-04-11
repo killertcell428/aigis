@@ -1,0 +1,43 @@
+# Aigis Policy — E-commerce / Retail
+#
+# Use this for:
+#   - Product recommendation chatbots
+#   - Customer service / returns / order tracking bots
+#   - Shopping assistants
+#   - Review moderation
+#
+name: ecommerce
+auto_block_threshold: 76   # moderate-strict
+auto_allow_threshold: 25
+
+custom_rules:
+  # Block competitor price manipulation requests
+  - id: ec_competitor_scrape
+    name: Competitor Price / Data Scraping Request
+    pattern: "(scrape\s+(competitor|amazon|rakuten)|競合\s*(の)?\s*(価格|データ)\s*(を)?\s*(取得|スクレイプ))"
+    score_delta: 40
+    enabled: true
+
+  # Block promo code abuse attempts
+  - id: ec_promo_abuse
+    name: Promo Code / Discount Abuse
+    pattern: "(generate\s+(coupon|promo\s+code|discount\s+code)|bypass\s+(payment|checkout)"
+            "|クーポン\s*(を)?\s*(生成|作成)|割引\s*(コード)?\s*(を)?\s*(不正))"
+    score_delta: 50
+    enabled: true
+
+  # Detect fake review generation
+  - id: ec_fake_review
+    name: Fake Review Generation
+    pattern: "(write\s+(fake|fabricated)\s+review|generate\s+\d+\s+star\s+review"
+            "|フェイク\s*レビュー|偽\s*(の)?\s*レビュー\s*(を)?\s*(書いて|作って))"
+    score_delta: 45
+    enabled: true
+
+  # Block order data extraction
+  - id: ec_order_data
+    name: Order / Customer Data Extraction
+    pattern: "(list\s+all\s+(customer|order)|export\s+(customer|order)\s+data"
+            "|注文\s*(データ|一覧)\s*(を)?\s*(全部|すべて)\s*(出して|取得))"
+    score_delta: 40
+    enabled: true

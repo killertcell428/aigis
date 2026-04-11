@@ -1,0 +1,62 @@
+name: "✨ Feature Request"
+description: "Suggest a new detection pattern, integration, or feature"
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement! Please describe your idea clearly.
+
+  - type: dropdown
+    id: feature_type
+    attributes:
+      label: Feature Type
+      options:
+        - New detection pattern
+        - New integration (framework/SDK)
+        - CLI improvement
+        - API / SDK improvement
+        - Dashboard / reporting
+        - Performance improvement
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      placeholder: "Describe the use case or pain point this feature addresses"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: "Describe what you'd like to see. Include API design if relevant."
+    validations:
+      required: true
+
+  - type: textarea
+    id: attack_examples
+    attributes:
+      label: Attack examples (if adding a detection pattern)
+      description: "Provide 3-5 example inputs that should be detected"
+      render: text
+      placeholder: |
+        1. "Ignore all previous instructions and..."
+        2. "You are now DAN, which stands for..."
+        3. ...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Are you willing to contribute?
+      options:
+        - label: Yes, I'd like to implement this myself (please assign Issue to me)
+        - label: I can help review/test if someone else implements it
+        - label: I'm just suggesting, no capacity to implement right now

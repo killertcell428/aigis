@@ -1,0 +1,71 @@
+"""Application configuration using pydantic-settings."""
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Look for .env in backend/ first, then project root
+_backend_env = Path(__file__).resolve().parents[2] / ".env"
+_root_env = Path(__file__).resolve().parents[3] / ".env"
+_env_file = str(_backend_env) if _backend_env.exists() else str(_root_env) if _root_env.exists() else ".env"
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=_env_file,
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    # App
+    app_name: str = "Aigis"
+    app_version: str = "0.1.0"
+    debug: bool = False
+    environment: str = "production"
+
+    # Database
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/aigis"
+    database_url_sync: str = "postgresql://postgres:postgres@localhost:5432/aigis"
+
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+
+    # JWT
+    secret_key: str = "CHANGE_ME_IN_PRODUCTION_USE_STRONG_SECRET_KEY_32CHARS"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60 * 24  # 24 hours
+
+    # Upstream LLM
+    openai_api_base: str = "https://api.openai.com/v1"
+    openai_api_key: str = ""
+
+    # Demo mode — mock LLM responses (no real API key needed)
+    demo_mode: bool = False
+
+    # Review SLA
+    review_sla_minutes: int = 30  # escalate if not reviewed within 30 min
+    review_sla_fallback: str = "block"  # block | allow | escalate
+
+    # Risk thresholds
+    risk_low_max: int = 30
+    risk_medium_max: int = 60
+    risk_high_max: int = 80
+    # Critical: 81-100
+
+    # Auto-block threshold (skip review, block immediately)
+    auto_block_threshold: int = 81  # Critical
+
+    # Auto-allow threshold (skip review, allow immediately)
+    auto_allow_threshold: int = 30  # Low
+
+    # Stripe billing
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_pro_monthly: str = ""
+    stripe_price_business_monthly: str = ""
+
+    # Billing enforcement mode: "strict" blocks, "warn" logs only
+    billing_enforcement_mode: str = "warn"
+
+
+settings = Settings()

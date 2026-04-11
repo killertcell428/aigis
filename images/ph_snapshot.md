@@ -1,0 +1,290 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - link "Product Hunt Logo" [ref=e6] [cursor=pointer]:
+            - /url: /
+            - img [ref=e7]
+          - generic [ref=e11]:
+            - img [ref=e12]
+            - textbox "Search" [ref=e14] [cursor=pointer]:
+              - /placeholder: Search ( ctrl + k )
+        - navigation "Main Navigation" [ref=e15]:
+          - list [ref=e16]:
+            - listitem [ref=e17]
+            - listitem [ref=e21]
+            - listitem [ref=e25]
+            - listitem [ref=e29]
+            - listitem [ref=e33]
+        - generic [ref=e35]:
+          - link "Subscribe" [ref=e36] [cursor=pointer]:
+            - /url: /newsletters?ref=header_nav&campaign=weekly_newsletter&source=header_nav
+            - img [ref=e37]
+            - text: Subscribe
+          - button "Sign in" [ref=e39] [cursor=pointer]:
+            - img [ref=e40]
+            - text: Sign in
+    - generic [ref=e44]:
+      - main [ref=e45]:
+        - link:
+          - /url: /sponsor
+          - text: Promoted
+        - link:
+          - /url: /sponsor
+          - text: Promoted
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e49]
+            - link "Visit website" [ref=e80] [cursor=pointer]:
+              - /url: https://gethandle.ai/?ref=producthunt
+          - generic [ref=e81]:
+            - img [ref=e82]
+            - link "Design & Creative" [ref=e86] [cursor=pointer]:
+              - /url: /categories/design-creative
+            - generic [ref=e87]
+            - generic [ref=e91]
+          - generic [ref=e96]: Point and fix. Refine UI directly in your browser instead of endlessly re-prompting your agent. Works with Claude Code, Codex, Cursor and others.
+          - list [ref=e97]:
+            - listitem [ref=e98]
+            - listitem [ref=e101]
+            - listitem [ref=e105]
+            - listitem [ref=e109]
+            - listitem [ref=e112]
+            - listitem [ref=e121]
+        - generic [ref=e125]:
+          - generic [ref=e126]:
+            - text: This is the 2nd launch from Handle.
+            - link "View more" [ref=e127] [cursor=pointer]:
+              - /url: /products/tonkotsu/launches
+          - generic [ref=e131]:
+            - img "Handle Extension" [ref=e132]
+            - generic [ref=e133]
+            - button "Visit" [ref=e138] [cursor=pointer]
+          - generic [ref=e141]: Point and fix. Refine UI directly in your browser instead of endlessly re-prompting your agent. Works with Claude Code, Codex, Cursor and others.
+          - generic [ref=e144]:
+            - img [ref=e145] [cursor=pointer]
+            - generic [ref=e149]
+          - generic [ref=e160]:
+            - generic [ref=e161]: Free
+            - generic [ref=e163]
+          - generic [ref=e174]:
+            - img [ref=e176]
+            - generic [ref=e178]: Launch Team
+            - generic [ref=e179]
+          - generic [ref=e1667]:
+            - generic [ref=e1669] [cursor=pointer]
+            - generic [ref=e1678]
+            - generic [ref=e1687]
+        - generic [ref=e962]:
+          - heading "Previous Handle Launches" [level=2] [ref=e963]
+          - generic [ref=e965] [cursor=pointer]:
+            - img "Tonkotsu" [ref=e966]
+            - generic [ref=e967]
+            - 'button "Tonkotsu was ranked #1 of the day for January 23rd, 2026" [ref=e978]'
+            - button "65" [ref=e980]
+            - button "403" [ref=e985]
+        - generic [ref=e990]:
+          - heading "Forum Threads" [level=2] [ref=e991]
+          - generic [ref=e992]:
+            - generic [ref=e993]
+            - generic [ref=e1011]
+          - generic [ref=e1022]:
+            - generic [ref=e1023]
+            - generic [ref=e1046]
+          - generic [ref=e1057]:
+            - generic [ref=e1058]
+            - generic [ref=e1075]
+          - link "View all" [ref=e1086] [cursor=pointer]:
+            - /url: /p/tonkotsu
+        - generic [ref=e1088]:
+          - generic [ref=e1089]:
+            - generic [ref=e1090]
+            - generic [ref=e1110]
+          - generic [ref=e1208]:
+            - img [ref=e1209]
+            - generic [ref=e1211]: Review Handle?
+            - button "Leave a review" [ref=e1212] [cursor=pointer]
+        - generic [ref=e1213]:
+          - generic [ref=e1214]:
+            - generic [ref=e1215]: Reviews
+            - generic [ref=e1219] [cursor=pointer]
+          - generic [ref=e1225]:
+            - generic [ref=e1226]
+            - generic [ref=e1232]
+        - button "View all" [ref=e1314] [cursor=pointer]
+      - complementary [ref=e1315]:
+        - generic [ref=e1316]:
+          - generic [ref=e1318]: Launching Today
+          - generic [ref=e1319]:
+            - generic [ref=e1320]
+            - button "Upvote • 134 points" [ref=e1334] [cursor=pointer]
+        - generic [ref=e1339]:
+          - button "Follow Handle" [ref=e1340] [cursor=pointer]:
+            - img [ref=e1341]
+            - generic [ref=e1343]: Follow Handle
+          - button "Add to collection" [ref=e1344] [cursor=pointer]:
+            - img [ref=e1345]
+            - generic [ref=e1347]: Add to collection
+          - button "Share" [ref=e1348] [cursor=pointer]:
+            - img [ref=e1349]
+            - generic [ref=e1351]: Share
+          - button "Analytics" [ref=e1352] [cursor=pointer]:
+            - img [ref=e1353]
+            - generic [ref=e1355]: Analytics
+        - generic [ref=e1356]:
+          - generic [ref=e1358]: Company Info
+          - link "gethandle.ai" [ref=e1359] [cursor=pointer]:
+            - /url: https://gethandle.ai/?ref=producthunt
+            - img [ref=e1360]
+            - generic [ref=e1362]: gethandle.ai
+          - link "GitHub" [ref=e1363] [cursor=pointer]:
+            - /url: https://github.com/tonkotsu-ai/handle?ref=producthunt
+            - img [ref=e1364]
+            - generic [ref=e1366]: GitHub
+        - generic [ref=e1367]:
+          - generic [ref=e1368]: Handle Info
+          - generic [ref=e1369]:
+            - img [ref=e1370]
+            - text: Launched in 2026
+          - link "View 2 launches" [ref=e1374] [cursor=pointer]:
+            - /url: /products/tonkotsu#launches
+        - generic [ref=e1375]:
+          - generic [ref=e1376]: Forum
+          - link "p/tonkotsu" [ref=e1377] [cursor=pointer]:
+            - /url: /p/tonkotsu
+            - img [ref=e1378]
+            - generic [ref=e1381]: p/tonkotsu
+        - generic [ref=e1382]:
+          - generic [ref=e1383]: Awards
+          - 'button "Tonkotsu was ranked #1 of the day for January 23rd, 2026" [ref=e1385] [cursor=pointer]':
+            - 'img "Tonkotsu was ranked #1 of the day for January 23rd, 2026" [ref=e1386]'
+          - link "View all" [ref=e1387] [cursor=pointer]:
+            - /url: /products/tonkotsu/awards
+            - generic [ref=e1388]: View all
+            - img [ref=e1389]
+        - generic [ref=e2441]:
+          - generic [ref=e2442]: Social
+          - link "X" [ref=e2443] [cursor=pointer]:
+            - /url: https://x.com/handledotai
+            - img [ref=e2444]
+            - text: X
+        - generic [ref=e1397]:
+          - heading "Similar Products" [level=2] [ref=e1398]
+          - generic [ref=e1399]:
+            - generic [ref=e1400]
+            - generic [ref=e1415]
+            - generic [ref=e1430]
+            - generic [ref=e1445]
+            - generic [ref=e1460]
+          - link "View more" [ref=e1475] [cursor=pointer]:
+            - /url: /products/tonkotsu/alternatives
+            - generic [ref=e1476]: View more
+            - img [ref=e1477]
+    - contentinfo [ref=e1479]:
+      - generic [ref=e1480]:
+        - generic [ref=e1481]: Top Product Categories
+        - generic [ref=e1482]:
+          - generic [ref=e1483]:
+            - heading "Engineering & Development" [level=3] [ref=e1484]
+            - list [ref=e1486]
+          - generic [ref=e1493]:
+            - heading "LLMs" [level=3] [ref=e1494]
+            - list [ref=e1496]
+          - generic [ref=e1503]:
+            - heading "Productivity" [level=3] [ref=e1504]
+            - list [ref=e1506]
+          - generic [ref=e1517]:
+            - heading "Marketing & Sales" [level=3] [ref=e1518]
+            - list [ref=e1520]
+          - generic [ref=e1525]:
+            - heading "Design & Creative" [level=3] [ref=e1526]
+            - list [ref=e1528]
+          - generic [ref=e1537]:
+            - heading "Social & Community" [level=3] [ref=e1538]
+            - list [ref=e1540]
+          - generic [ref=e1547]:
+            - heading "Finance" [level=3] [ref=e1548]
+            - list [ref=e1550]
+          - generic [ref=e1557]:
+            - heading "AI Agents" [level=3] [ref=e1558]
+            - list [ref=e1560]
+            - link "See All Categories >>" [ref=e1563] [cursor=pointer]:
+              - /url: /categories?ref=footer
+      - generic [ref=e1566]:
+        - generic [ref=e1567]:
+          - heading "Trending categories" [level=3] [ref=e1568]
+          - list [ref=e1569]:
+            - listitem [ref=e1570]
+            - listitem [ref=e1572]
+            - listitem [ref=e1574]
+            - listitem [ref=e1576]
+            - listitem [ref=e1578]
+            - listitem [ref=e1580]
+            - listitem [ref=e1582]
+        - generic [ref=e1584]:
+          - heading "Top reviewed" [level=3] [ref=e1585]
+          - list [ref=e1586]:
+            - listitem [ref=e1587]
+            - listitem [ref=e1589]
+            - listitem [ref=e1591]
+            - listitem [ref=e1593]
+            - listitem [ref=e1595]
+            - listitem [ref=e1597]
+            - listitem [ref=e1599]
+            - listitem [ref=e1601]
+        - generic [ref=e1603]:
+          - heading "Trending products" [level=3] [ref=e1604]
+          - list [ref=e1605]:
+            - listitem [ref=e1606]
+            - listitem [ref=e1608]
+            - listitem [ref=e1610]
+            - listitem [ref=e1612]
+            - listitem [ref=e1614]
+            - listitem [ref=e1616]
+            - listitem [ref=e1618]
+            - listitem [ref=e1620]
+        - generic [ref=e1622]:
+          - heading "Top forum threads" [level=3] [ref=e1623]
+          - list [ref=e1624]:
+            - listitem [ref=e1625]
+            - listitem [ref=e1627]
+            - listitem [ref=e1629]
+            - listitem [ref=e1631]
+            - listitem [ref=e1633]
+            - listitem [ref=e1635]
+            - listitem [ref=e1637]
+            - listitem [ref=e1639]
+      - generic [ref=e1643]:
+        - generic [ref=e1644]: © 2026 Product Hunt
+        - generic [ref=e1645]:
+          - link "Newsletter" [ref=e1646] [cursor=pointer]:
+            - /url: /newsletters
+          - link "Apps" [ref=e1647] [cursor=pointer]:
+            - /url: /apps
+          - link "About" [ref=e1648] [cursor=pointer]:
+            - /url: /about
+          - link "FAQ" [ref=e1649] [cursor=pointer]:
+            - /url: https://help.producthunt.com
+          - link "Terms" [ref=e1650] [cursor=pointer]:
+            - /url: /legal#terms
+          - link "Privacy & Cookies" [ref=e1651] [cursor=pointer]:
+            - /url: /legal#privacy
+          - link "Privacy Choices" [ref=e1652] [cursor=pointer]:
+            - /url: /privacy/do-not-sell
+          - link "Advertise" [ref=e1653] [cursor=pointer]:
+            - /url: /sponsor?utm_content=sf
+          - link "llms.txt" [ref=e1654] [cursor=pointer]:
+            - /url: /llms.txt
+          - generic [ref=e1655]:
+            - text: "Contact us:"
+            - link "hello@producthunt.com" [ref=e1656] [cursor=pointer]:
+              - /url: mailto:hello@producthunt.com
+        - generic [ref=e1657]:
+          - link [ref=e1658] [cursor=pointer]:
+            - /url: https://x.com/ProductHunt
+            - img [ref=e1659]
+          - link [ref=e1661] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/producthunt
+            - img [ref=e1662]
+  - alert [ref=e2447]

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 500px; height: 700px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: linear-gradient(160deg, #0f1923 0%, #1a2940 40%, #1e3a5f 100%);
+  color: #fff;
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+/* 背景のグリッドパターン */
+body::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 0;
+}
+/* 装飾ノード */
+.node { position: absolute; border-radius: 50%; z-index: 1; }
+.node-1 { width: 120px; height: 120px; top: 80px; right: -30px; border: 2px solid rgba(66,153,225,0.3); }
+.node-2 { width: 80px; height: 80px; top: 200px; right: 40px; border: 2px solid rgba(237,100,100,0.25); }
+.node-3 { width: 60px; height: 60px; bottom: 180px; left: -10px; border: 2px solid rgba(72,187,120,0.3); }
+.node-4 { width: 100px; height: 100px; bottom: 80px; right: -20px; border: 2px solid rgba(66,153,225,0.2); }
+/* 接続線 */
+.line { position: absolute; z-index: 1; }
+.line-1 { top: 140px; right: 30px; width: 80px; height: 1px; background: rgba(66,153,225,0.2); transform: rotate(45deg); }
+.line-2 { bottom: 200px; left: 20px; width: 100px; height: 1px; background: rgba(72,187,120,0.15); transform: rotate(-30deg); }
+
+.content { position: relative; z-index: 2; display: flex; flex-direction: column; height: 100%; padding: 40px 36px; }
+
+.top-label {
+  font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,0.5);
+  text-transform: uppercase; margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+}
+
+.shield-icon {
+  width: 48px; height: 48px; margin: 24px 0 20px 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.shield-icon svg { width: 48px; height: 48px; }
+
+.title-area { flex: 0; margin-bottom: 20px; }
+.title-main {
+  font-size: 32px; font-weight: 800; line-height: 1.35;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #ffffff 0%, #a0c4ff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.title-sub {
+  font-size: 16px; font-weight: 400; color: rgba(255,255,255,0.7);
+  margin-top: 10px; line-height: 1.5;
+}
+
+.tag-area { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0; }
+.tag {
+  font-size: 10px; padding: 4px 10px; border-radius: 3px;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.1); letter-spacing: 1px;
+}
+
+.stats {
+  margin-top: auto; display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.stat-item { }
+.stat-num { font-size: 22px; font-weight: 700; color: #63b3ed; }
+.stat-label { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+.bottom-bar {
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.author { font-size: 11px; color: rgba(255,255,255,0.5); }
+.update-badge {
+  font-size: 9px; padding: 3px 8px; border-radius: 3px;
+  background: rgba(237,100,100,0.2); color: #fc8181;
+  border: 1px solid rgba(237,100,100,0.3);
+}
+</style>
+</head>
+<body>
+<div class="node node-1"></div>
+<div class="node node-2"></div>
+<div class="node node-3"></div>
+<div class="node node-4"></div>
+<div class="line line-1"></div>
+<div class="line line-2"></div>
+
+<div class="content">
+  <div class="top-label">AI Agent Security &amp; Governance</div>
+
+  <div class="shield-icon">
+    <svg viewBox="0 0 48 48" fill="none">
+      <path d="M24 4L6 12v12c0 11.1 7.7 21.5 18 24 10.3-2.5 18-12.9 18-24V12L24 4z" fill="none" stroke="rgba(99,179,237,0.6)" stroke-width="2"/>
+      <path d="M24 10L12 16v8c0 7.4 5.1 14.3 12 16 6.9-1.7 12-8.6 12-16v-8L24 10z" fill="rgba(99,179,237,0.1)" stroke="rgba(99,179,237,0.3)" stroke-width="1"/>
+      <path d="M20 24l4 4 8-8" stroke="#63b3ed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="title-area">
+    <div class="title-main">AIエージェント<br>セキュリティ＆<br>ガバナンス<br>実践ガイド</div>
+    <div class="title-sub">企業のための体系的導入・運用マニュアル</div>
+  </div>
+
+  <div class="tag-area">
+    <span class="tag">OWASP Agentic Top 10</span>
+    <span class="tag">MCP / A2A</span>
+    <span class="tag">NHI管理</span>
+    <span class="tag">総務省ガイドライン</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-num">18</div>
+      <div class="stat-label">CHAPTERS</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">10+</div>
+      <div class="stat-label">実例・インシデント</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">50+</div>
+      <div class="stat-label">チェックリスト項目</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">毎月</div>
+      <div class="stat-label">更新</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <span class="author">2026年4月 初版</span>
+    <span class="update-badge">MONTHLY UPDATE</span>
+  </div>
+</div>
+</body>
+</html>

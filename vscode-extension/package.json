@@ -1,0 +1,182 @@
+{
+  "name": "vscode-aigis",
+  "displayName": "Aigis",
+  "description": "Detect prompt injection, PII leaks, jailbreaks and OWASP LLM Top 10 threats directly in your editor",
+  "version": "0.1.0",
+  "publisher": "aigis",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aigis/aigis"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "security",
+    "llm",
+    "prompt injection",
+    "owasp",
+    "ai safety"
+  ],
+  "icon": "resources/icon.png",
+  "activationEvents": [
+    "onLanguage:python",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiGuardian.scanSelection",
+        "title": "Scan with Aigis",
+        "category": "Aigis",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "aiGuardian.scanFile",
+        "title": "Scan File with Aigis",
+        "category": "Aigis",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "aiGuardian.clearDiagnostics",
+        "title": "Clear Aigis Diagnostics",
+        "category": "Aigis"
+      },
+      {
+        "command": "aiGuardian.showOutput",
+        "title": "Show Aigis Output",
+        "category": "Aigis"
+      },
+      {
+        "command": "aiGuardian.openSettings",
+        "title": "Open Aigis Settings",
+        "category": "Aigis"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "aiGuardian.scanSelection",
+          "when": "editorHasSelection && (editorLangId == 'python' || editorLangId == 'javascript' || editorLangId == 'typescript' || editorLangId == 'javascriptreact' || editorLangId == 'typescriptreact')",
+          "group": "1_modification@100"
+        },
+        {
+          "command": "aiGuardian.scanFile",
+          "when": "editorLangId == 'python' || editorLangId == 'javascript' || editorLangId == 'typescript' || editorLangId == 'javascriptreact' || editorLangId == 'typescriptreact'",
+          "group": "1_modification@101"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "aiGuardian.scanFile",
+          "when": "editorLangId == 'python' || editorLangId == 'javascript' || editorLangId == 'typescript'",
+          "group": "navigation"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "aiGuardianSidebar",
+          "title": "Aigis",
+          "icon": "resources/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "aiGuardianSidebar": [
+        {
+          "type": "webview",
+          "id": "aiGuardian.resultsView",
+          "name": "Scan Results",
+          "icon": "resources/sidebar-icon.svg",
+          "contextualTitle": "Aigis Results"
+        },
+        {
+          "id": "aiGuardian.policyView",
+          "name": "Project Policy",
+          "icon": "resources/sidebar-icon.svg"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Aigis",
+      "properties": {
+        "aiGuardian.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to the Python executable that has aigis installed. Use 'python', 'python3', or an absolute path to a virtual-environment interpreter.",
+          "scope": "machine-overridable"
+        },
+        "aiGuardian.autoScan": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically scan string literals in Python/JS/TS files on save.",
+          "scope": "resource"
+        },
+        "aiGuardian.blockThreshold": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+          ],
+          "default": "HIGH",
+          "description": "Minimum risk level that shows an Error diagnostic (below this is Warning).",
+          "scope": "resource"
+        },
+        "aiGuardian.maxStringLength": {
+          "type": "number",
+          "default": 4096,
+          "minimum": 64,
+          "maximum": 32768,
+          "description": "Maximum character length of a string literal to scan. Longer strings are skipped to avoid performance issues.",
+          "scope": "resource"
+        },
+        "aiGuardian.scanDebounceMs": {
+          "type": "number",
+          "default": 1500,
+          "minimum": 500,
+          "maximum": 10000,
+          "description": "Debounce delay (ms) before auto-scanning after document changes.",
+          "scope": "resource"
+        },
+        "aiGuardian.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Aigis status bar item.",
+          "scope": "window"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.3.0"
+  }
+}

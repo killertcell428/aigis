@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+[ab][0-9]+"  # alpha/beta tags
+
+permissions:
+  contents: write   # GitHub Release creation
+  id-token: write   # PyPI Trusted Publishing (OIDC)
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # opt-in to Node.js 24 runners
+
+jobs:
+  # ── 1. Build ──────────────────────────────────────────────────────────────
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prev-tag: ${{ steps.prev-tag.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history for changelog generation
+
+      - name: Resolve version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Find previous tag
+        id: prev-tag
+        run: |
+          PREV=$(git tag --sort=-version:refname | grep -v "^${GITHUB_REF_NAME}$" | head -1)
+          echo "tag=${PREV}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build wheel + sdist
+        run: python -m build
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  # ── 2. Publish to PyPI ────────────────────────────────────────────────────
+  publish-pypi:
+    name: Publish → PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/aigis
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # No username/password needed — uses OIDC trusted publishing.
+        # Configure at: https://pypi.org/manage/project/aigis/settings/publishing/
+
+  # ── 3. GitHub Release with auto-changelog ─────────────────────────────────
+  github-release:
+    name: Create GitHub Release
+    needs: [build, publish-pypi]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        env:
+          PREV_TAG: ${{ needs.build.outputs.prev-tag }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          # Group commits by conventional-commit prefix
+          FEATURES=$(git log $RANGE --pretty=format:"- %s (%h)" --no-merges \
+            --grep="^feat" | head -20)
+          FIXES=$(git log $RANGE --pretty=format:"- %s (%h)" --no-merges \
+            --grep="^fix" | head -20)
+          OTHERS=$(git log $RANGE --pretty=format:"- %s (%h)" --no-merges \
+            --invert-grep --grep="^feat\|^fix\|^chore\|^ci\|^docs" | head -10)
+
+          {
+            echo "body<<CHANGELOG_EOF"
+            if [ -n "$FEATURES" ]; then
+              echo "### New Features"
+              echo "$FEATURES"
+              echo ""
+            fi
+            if [ -n "$FIXES" ]; then
+              echo "### Bug Fixes"
+              echo "$FIXES"
+              echo ""
+            fi
+            if [ -n "$OTHERS" ]; then
+              echo "### Other Changes"
+              echo "$OTHERS"
+              echo ""
+            fi
+            echo "### Installation"
+            echo '```bash'
+            echo "pip install aigis==${{ needs.build.outputs.version }}"
+            echo '```'
+            if [ -n "$PREV_TAG" ]; then
+              echo ""
+              echo "**Full Changelog**: https://github.com/killertcell428/aigis/compare/${PREV_TAG}...${VERSION}"
+            fi
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "aigis ${{ github.ref_name }}"
+          body: ${{ steps.changelog.outputs.body }}
+          files: dist/*
+          make_latest: true
+          generate_release_notes: true   # appends GitHub auto-notes after our body

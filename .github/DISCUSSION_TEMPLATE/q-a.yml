@@ -1,0 +1,29 @@
+title: "[Q&A]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask anything about aigis. Check the [documentation](https://github.com/killertcell428/aigis#readme)
+        and [existing discussions](https://github.com/killertcell428/aigis/discussions?discussions_q=category%3AQ%26A)
+        first — your question may already be answered.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: Be as specific as possible. Include a code snippet if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Describe what you've already attempted.
+
+  - type: input
+    id: version
+    attributes:
+      label: aigis version
+      placeholder: "0.1.0"

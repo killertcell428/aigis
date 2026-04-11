@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 800px; height: 420px; padding: 32px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: #ffffff; color: #1a202c;
+}
+h2 { font-size: 16px; color: #2d3748; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #805ad5; }
+
+.main { display: flex; gap: 20px; }
+
+.flow-col { flex: 1; }
+.flow-step {
+  display: flex; gap: 12px; padding: 10px 14px; border-radius: 8px;
+  margin-bottom: 6px; align-items: flex-start;
+}
+.flow-icon {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #fff;
+}
+.fi-1 { background: #718096; }
+.fi-2 { background: #d69e2e; }
+.fi-3 { background: #e53e3e; }
+.fi-4 { background: #1a2940; }
+
+.flow-content { flex: 1; }
+.flow-title { font-size: 12px; font-weight: 700; color: #2d3748; margin-bottom: 2px; }
+.flow-desc { font-size: 10px; color: #718096; line-height: 1.4; }
+
+.arrow-d { text-align: center; color: #cbd5e0; font-size: 12px; margin: 2px 0; padding-left: 18px; }
+
+.vs-box {
+  margin-top: 12px; padding: 12px; border-radius: 8px;
+  display: flex; gap: 8px;
+}
+.vs-left {
+  flex: 1; padding: 10px; border-radius: 6px;
+  background: #f7fafc; border: 1px solid #e2e8f0;
+}
+.vs-right {
+  flex: 1; padding: 10px; border-radius: 6px;
+  background: #fff5f5; border: 1px solid #fed7d7;
+}
+.vs-title { font-size: 10px; font-weight: 700; margin-bottom: 4px; }
+.vs-left .vs-title { color: #4a5568; }
+.vs-right .vs-title { color: #c53030; }
+.vs-item { font-size: 9px; color: #718096; line-height: 1.6; }
+
+.stats-col { width: 240px; display: flex; flex-direction: column; gap: 10px; }
+.stat-card {
+  padding: 14px; border-radius: 8px; text-align: center;
+}
+.sc-1 { background: #1a2940; color: #fff; }
+.sc-2 { background: #fff5f5; border: 1px solid #fed7d7; }
+.sc-3 { background: #fffff0; border: 1px solid #fefcbf; }
+
+.stat-big { font-size: 28px; font-weight: 800; }
+.sc-1 .stat-big { color: #fc8181; }
+.sc-2 .stat-big { color: #e53e3e; }
+.sc-3 .stat-big { color: #d69e2e; }
+.stat-desc { font-size: 10px; margin-top: 4px; }
+.sc-1 .stat-desc { color: rgba(255,255,255,0.6); }
+.sc-2 .stat-desc { color: #718096; }
+.sc-3 .stat-desc { color: #718096; }
+
+.scenario-box {
+  padding: 10px 14px; border-radius: 8px;
+  background: #faf5ff; border: 1px solid #e9d8fd;
+}
+.scenario-title { font-size: 10px; font-weight: 700; color: #6b46c1; margin-bottom: 6px; }
+.scenario-list { font-size: 9px; color: #718096; line-height: 1.8; }
+</style>
+</head>
+<body>
+<h2>AIメモリ汚染（Memory Poisoning）— 永続的な判断歪曲</h2>
+<div class="main">
+  <div class="flow-col">
+    <div class="flow-step" style="background:#f7fafc;border:1px solid #e2e8f0;">
+      <div class="flow-icon fi-1">📄</div>
+      <div class="flow-content">
+        <div class="flow-title">❶ 挿入（Insertion）</div>
+        <div class="flow-desc">攻撃者がWebページ/ドキュメントに非表示テキストを埋め込む<br>white-on-white、CSS hidden、HTMLメタタグ</div>
+      </div>
+    </div>
+    <div class="arrow-d">▼</div>
+    <div class="flow-step" style="background:#fffaf0;border:1px solid #fefcbf;">
+      <div class="flow-icon fi-2">🔄</div>
+      <div class="flow-content">
+        <div class="flow-title">❷ 吸収（Absorption）</div>
+        <div class="flow-desc">RAGの自動クロールまたはユーザーリクエストで<br>非表示テキストがベクトルDBに取り込まれる</div>
+      </div>
+    </div>
+    <div class="arrow-d">▼</div>
+    <div class="flow-step" style="background:#fff5f5;border:1px solid #fed7d7;">
+      <div class="flow-icon fi-3">💀</div>
+      <div class="flow-content">
+        <div class="flow-title">❸ 永続化（Persistence）</div>
+        <div class="flow-desc">汚染データがベクトルDBに格納。以後の<strong>すべての検索クエリ</strong>に影響し続ける</div>
+      </div>
+    </div>
+    <div class="arrow-d">▼</div>
+    <div class="flow-step" style="background:#1a2940;border:1px solid #2d4a6f;color:#fff;">
+      <div class="flow-icon fi-4">🔁</div>
+      <div class="flow-content">
+        <div class="flow-title" style="color:#fc8181;">❹ 拡散（Amplification）</div>
+        <div class="flow-desc" style="color:rgba(255,255,255,0.6);">AIが繰り返し利用することで汚染が「知識」として拡散・強化。除去は外科的に困難</div>
+      </div>
+    </div>
+
+    <div class="vs-box">
+      <div class="vs-left">
+        <div class="vs-title">プロンプトインジェクション</div>
+        <div class="vs-item">一時的（セッション内のみ）<br>セッション終了で消滅<br>検知・対処が比較的容易</div>
+      </div>
+      <div class="vs-right">
+        <div class="vs-title">メモリ汚染</div>
+        <div class="vs-item">永続的（DB格納）<br>全セッションに影響<br>検知・除去が極めて困難</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-col">
+    <div class="stat-card sc-1">
+      <div class="stat-big">50+</div>
+      <div class="stat-desc">被害確認企業数<br><span style="font-size:8px;opacity:0.5">Microsoft Security Blog 2026.02</span></div>
+    </div>
+    <div class="stat-card sc-2">
+      <div class="stat-big">87%</div>
+      <div class="stat-desc">意思決定への影響率<br>（汚染後4時間以内）</div>
+    </div>
+    <div class="stat-card sc-3">
+      <div class="stat-big">4h</div>
+      <div class="stat-desc">汚染が組織全体に<br>拡散するまでの時間</div>
+    </div>
+    <div class="scenario-box">
+      <div class="scenario-title">攻撃シナリオ例</div>
+      <div class="scenario-list">
+        🏢 競合製品のレピュテーション操作<br>
+        🔐 セキュリティ判断の歪曲<br>
+        📊 企業意思決定の操作<br>
+        💊 調達・購買の誘導
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

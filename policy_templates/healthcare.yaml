@@ -1,0 +1,58 @@
+# Aigis Policy — Healthcare / Medical
+#
+# Use this for:
+#   - Telehealth chatbots (triage, symptom checkers)
+#   - Electronic health record (EHR) assistants
+#   - Prescription management systems
+#   - Mental health support apps
+#
+# Regulatory context: HIPAA (US), 個人情報保護法 (JP), 医療法
+#
+# Threat model:
+#   - PHI (Protected Health Information) extraction
+#   - Prompt injection to generate dangerous medical advice
+#   - Impersonation of medical professionals
+#   - Suicide/self-harm content
+#
+name: healthcare
+auto_block_threshold: 61   # strict — patient data requires the highest protection
+auto_allow_threshold: 20
+
+custom_rules:
+  # Block extraction of patient record data
+  - id: hc_patient_id
+    name: Patient ID / Medical Record Number Request
+    pattern: "(patient\s+id|medical\s+record\s*(number|#)|mrn|診察番号|患者\s*ID|カルテ番号)"
+    score_delta: 50
+    enabled: true
+
+  # Block diagnosis or prescription requests that bypass clinician oversight
+  - id: hc_diagnosis_request
+    name: Unauthorized Diagnosis / Prescription
+    pattern: "(diagnose\s+me|what\s+medication\s+should|prescribe|処方\s*して|診断\s*して"
+            "|薬\s*を\s*(出して|処方して))"
+    score_delta: 40
+    enabled: true
+
+  # Detect drug dosage override attempts
+  - id: hc_dosage_override
+    name: Drug Dosage Override Attempt
+    pattern: "(increase\s+(the\s+)?dose|override\s+dosage|maximum\s+safe\s+dose|過剰投与|用量\s*(を|の)\s*(増やす|変更))"
+    score_delta: 55
+    enabled: true
+
+  # Block self-harm content generation
+  - id: hc_self_harm
+    name: Self-Harm / Suicide Method Content
+    pattern: "(how\s+to\s+(kill\s+myself|commit\s+suicide|overdose\s+on)|自殺\s*(方法|の仕方)"
+            "|自傷\s*(方法|の仕方)|薬\s*(を|で)\s*(大量|過剰)\s*(に)?\s*(飲む|摂取))"
+    score_delta: 80
+    enabled: true
+
+  # Block extraction of physician credentials
+  - id: hc_physician_impersonation
+    name: Physician Impersonation
+    pattern: "(act\s+as\s+(a\s+)?(doctor|physician|medical professional)|医師\s*(として|に)\s*(なって|振る舞って)"
+            "|診察\s*(し|を)\s*(て|する)\s*(ください|ね))"
+    score_delta: 45
+    enabled: true

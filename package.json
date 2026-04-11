@@ -1,0 +1,36 @@
+{
+  "name": "aigis",
+  "version": "1.3.1",
+  "description": "<p align=\"center\">\r   <img src=\"https://raw.githubusercontent.com/killertcell428/aigis/main/.github/shield.svg\" alt=\"Aigis\" width=\"120\" />\r </p>",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "zenn:preview": "npx zenn preview",
+    "zenn:new:article": "npx zenn new:article",
+    "zenn:new:book": "npx zenn new:book",
+    "zenn:list:articles": "npx zenn list:articles"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/killertcell428/aigis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/killertcell428/aigis/issues"
+  },
+  "homepage": "https://github.com/killertcell428/aigis#readme",
+  "dependencies": {
+    "zenn-cli": "^0.4.7"
+  },
+  "devDependencies": {
+    "@qiita/qiita-cli": "^1.8.0"
+  }
+}

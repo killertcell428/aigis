@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 800px; height: 420px; padding: 32px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: #ffffff; color: #1a202c;
+}
+h2 { font-size: 16px; color: #2d3748; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #38a169; }
+
+.roadmap { display: flex; gap: 12px; height: 340px; }
+
+.phase {
+  flex: 1; border-radius: 12px; padding: 16px; display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+.phase::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+}
+
+.p0 { background: #f7fafc; border: 1px solid #e2e8f0; }
+.p0::before { background: #718096; }
+.p1 { background: #ebf8ff; border: 1px solid #bee3f8; }
+.p1::before { background: #2b6cb0; }
+.p2 { background: #fffff0; border: 1px solid #fefcbf; }
+.p2::before { background: #d69e2e; }
+.p3 { background: #f0fff4; border: 1px solid #c6f6d5; }
+.p3::before { background: #38a169; }
+
+.phase-header { margin-bottom: 10px; }
+.phase-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; margin-bottom: 4px; }
+.p0 .phase-label { color: #718096; }
+.p1 .phase-label { color: #2b6cb0; }
+.p2 .phase-label { color: #d69e2e; }
+.p3 .phase-label { color: #38a169; }
+
+.phase-title { font-size: 14px; font-weight: 700; color: #2d3748; margin-bottom: 2px; }
+.phase-period { font-size: 10px; color: #a0aec0; }
+
+.phase-items { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.phase-item {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: 10px; color: #4a5568; line-height: 1.4;
+}
+.item-check {
+  width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; margin-top: 1px;
+}
+.p0 .item-check { background: #edf2f7; border: 1px solid #cbd5e0; color: #718096; }
+.p1 .item-check { background: #bee3f8; border: 1px solid #90cdf4; color: #2b6cb0; }
+.p2 .item-check { background: #fefcbf; border: 1px solid #f6e05e; color: #d69e2e; }
+.p3 .item-check { background: #c6f6d5; border: 1px solid #9ae6b4; color: #38a169; }
+
+.phase-milestone {
+  margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06);
+  font-size: 9px; color: #a0aec0; font-style: italic;
+}
+
+.bottom-note {
+  margin-top: 8px; padding: 8px 14px; border-radius: 8px;
+  background: #1a2940; color: rgba(255,255,255,0.7);
+  font-size: 10px; text-align: center;
+}
+.bottom-note strong { color: #63b3ed; }
+</style>
+</head>
+<body>
+<h2>企業導入ロードマップ — フェーズ別実装計画</h2>
+<div class="roadmap">
+  <div class="phase p0">
+    <div class="phase-header">
+      <div class="phase-label">PHASE 0</div>
+      <div class="phase-title">現状把握</div>
+      <div class="phase-period">1〜2週間</div>
+    </div>
+    <div class="phase-items">
+      <div class="phase-item"><div class="item-check">□</div>AIエージェント利用状況の棚卸</div>
+      <div class="phase-item"><div class="item-check">□</div>MCPサーバー・APIキーの一覧</div>
+      <div class="phase-item"><div class="item-check">□</div>OWASP Agentic Top 10で脅威評価</div>
+      <div class="phase-item"><div class="item-check">□</div>総務省GL 8要件のギャップ分析</div>
+    </div>
+    <div class="phase-milestone">成果物: リスクマトリクス</div>
+  </div>
+
+  <div class="phase p1">
+    <div class="phase-header">
+      <div class="phase-label">PHASE 1</div>
+      <div class="phase-title">基盤構築</div>
+      <div class="phase-period">1ヶ月</div>
+    </div>
+    <div class="phase-items">
+      <div class="phase-item"><div class="item-check">□</div>利用ポリシーの策定</div>
+      <div class="phase-item"><div class="item-check">□</div>CLAUDE.md / .claudeignore 標準化</div>
+      <div class="phase-item"><div class="item-check">□</div>ログ記録の開始</div>
+      <div class="phase-item"><div class="item-check">□</div>APIキー個人分離</div>
+      <div class="phase-item"><div class="item-check">□</div>インシデント対応計画</div>
+    </div>
+    <div class="phase-milestone">成果物: セキュリティ基盤</div>
+  </div>
+
+  <div class="phase p2">
+    <div class="phase-header">
+      <div class="phase-label">PHASE 2</div>
+      <div class="phase-title">防御強化</div>
+      <div class="phase-period">2〜3ヶ月</div>
+    </div>
+    <div class="phase-items">
+      <div class="phase-item"><div class="item-check">□</div>入出力フィルタリング導入</div>
+      <div class="phase-item"><div class="item-check">□</div>セキュリティフック自動化</div>
+      <div class="phase-item"><div class="item-check">□</div>CI/CD脆弱性スキャン統合</div>
+      <div class="phase-item"><div class="item-check">□</div>MCPサーバー承認プロセス</div>
+    </div>
+    <div class="phase-milestone">成果物: 自動化された防御</div>
+  </div>
+
+  <div class="phase p3">
+    <div class="phase-header">
+      <div class="phase-label">PHASE 3</div>
+      <div class="phase-title">ガバナンス成熟化</div>
+      <div class="phase-period">4〜6ヶ月</div>
+    </div>
+    <div class="phase-items">
+      <div class="phase-item"><div class="item-check">□</div>NHI管理のIAM統合</div>
+      <div class="phase-item"><div class="item-check">□</div>SIEM統合・異常検知</div>
+      <div class="phase-item"><div class="item-check">□</div>総務省GL全8要件対応完了</div>
+      <div class="phase-item"><div class="item-check">□</div>四半期セキュリティ研修</div>
+    </div>
+    <div class="phase-milestone">成果物: 成熟したガバナンス</div>
+  </div>
+</div>
+<div class="bottom-note"><strong>段階的な導入</strong>により、セキュリティと生産性を両立。一度にすべてを整備しようとしない。</div>
+</body>
+</html>

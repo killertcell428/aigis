@@ -1,0 +1,47 @@
+# Aigis Policy — Education / EdTech
+#
+# Use this for:
+#   - Student-facing AI tutors
+#   - Homework assistance bots
+#   - Online learning platforms
+#   - University Q&A systems
+#
+# Threat model:
+#   - Academic dishonesty (essay writing, exam cheating)
+#   - Exposure of minor students to inappropriate content
+#   - Data extraction of student records (FERPA in US, 個人情報保護法 in JP)
+#
+name: education
+auto_block_threshold: 71   # moderate — students need some latitude but safety matters
+auto_allow_threshold: 25
+
+custom_rules:
+  # Detect essay/homework completion requests
+  - id: edu_academic_dishonesty
+    name: Academic Dishonesty Request
+    pattern: "(write\s+(my\s+)?(essay|thesis|homework|assignment|report)\s+for\s+me"
+            "|完成\s*させて|レポート\s*(を)?\s*(書いて|代わりに)|宿題\s*(を)?\s*(やって|してくれ))"
+    score_delta: 35
+    enabled: true
+
+  # Block exam answer leakage
+  - id: edu_exam_cheating
+    name: Exam Answer Extraction
+    pattern: "(answer\s+(key|sheet|for\s+the\s+test)|cheat\s+(on|sheet)|試験\s*(答え|解答)"
+            "|テスト\s*(の)?\s*(答え|カンニング))"
+    score_delta: 45
+    enabled: true
+
+  # Block student PII extraction (FERPA / 個人情報保護)
+  - id: edu_student_pii
+    name: Student Record Data Extraction
+    pattern: "(student\s+id|student\s+(records?|grades?|gpa)|学籍番号|成績\s*(データ|一覧))"
+    score_delta: 50
+    enabled: true
+
+  # Block age-inappropriate content for K-12
+  - id: edu_adult_content
+    name: Age-Inappropriate Content Request
+    pattern: "(explicit\s+(sexual|violent)|nsfw|18\+\s+content|アダルト|成人向け\s*(コンテンツ|動画))"
+    score_delta: 70
+    enabled: true

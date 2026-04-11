@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 800px; height: 400px; padding: 32px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: #ffffff; color: #1a202c;
+}
+h2 { font-size: 16px; color: #2d3748; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #d69e2e; }
+
+.main { display: flex; gap: 32px; align-items: flex-start; }
+
+/* Venn diagram area */
+.venn-area { width: 320px; height: 300px; position: relative; }
+
+.venn-circle {
+  position: absolute; border-radius: 50%;
+  width: 200px; height: 200px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; text-align: center; line-height: 1.4;
+}
+.vc-user {
+  left: 10px; top: 30px;
+  background: rgba(43,108,176,0.12); border: 2px solid rgba(43,108,176,0.4);
+  color: #2b6cb0;
+}
+.vc-agent {
+  left: 110px; top: 30px;
+  background: rgba(229,62,62,0.1); border: 2px solid rgba(229,62,62,0.35);
+  color: #e53e3e;
+}
+
+/* Intersection label */
+.intersection-label {
+  position: absolute; left: 110px; top: 105px; width: 100px;
+  text-align: center; z-index: 2;
+}
+.il-badge {
+  display: inline-block; padding: 4px 10px; border-radius: 6px;
+  background: #38a169; color: #fff; font-size: 10px; font-weight: 700;
+}
+.il-text { font-size: 9px; color: #276749; margin-top: 4px; }
+
+.formula {
+  position: absolute; bottom: 10px; left: 0; right: 0;
+  text-align: center; font-size: 13px; font-weight: 600; color: #4a5568;
+  background: #f7fafc; padding: 8px; border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.formula span { color: #38a169; }
+
+/* Right side: risk levels */
+.right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+.risk-level {
+  padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 12px;
+}
+.rl-num {
+  width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+}
+
+.rl-1 { background: #f0fff4; border: 1px solid #c6f6d5; }
+.rl-1 .rl-num { background: #38a169; }
+.rl-2 { background: #f7fafc; border: 1px solid #e2e8f0; }
+.rl-2 .rl-num { background: #4299e1; }
+.rl-3 { background: #fffaf0; border: 1px solid #fefcbf; }
+.rl-3 .rl-num { background: #d69e2e; }
+.rl-4 { background: #fff5f5; border: 1px solid #fed7d7; }
+.rl-4 .rl-num { background: #e53e3e; }
+
+.rl-content { flex: 1; }
+.rl-title { font-size: 11px; font-weight: 700; color: #2d3748; margin-bottom: 2px; }
+.rl-desc { font-size: 9px; color: #718096; }
+.rl-examples { font-size: 9px; color: #a0aec0; font-family: monospace; margin-top: 2px; }
+
+.anti-box {
+  padding: 10px 14px; border-radius: 8px;
+  background: #1a2940; color: #fff; margin-top: 4px;
+}
+.anti-title { font-size: 10px; font-weight: 700; color: #fc8181; margin-bottom: 4px; }
+.anti-list { font-size: 9px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+</style>
+</head>
+<body>
+<h2>エージェント権限設計 — 交差モデルとリスクレベル</h2>
+<div class="main">
+  <div class="venn-area">
+    <div class="venn-circle vc-user">
+      <div style="margin-right:40px">👤<br>ユーザー権限<br><span style="font-size:9px;font-weight:400">部門A読み書き<br>部門B読み取り</span></div>
+    </div>
+    <div class="venn-circle vc-agent">
+      <div style="margin-left:40px">🤖<br>エージェント権限<br><span style="font-size:9px;font-weight:400">全社読み取り<br>書き込みなし</span></div>
+    </div>
+    <div class="intersection-label">
+      <div class="il-badge">実効権限</div>
+      <div class="il-text">部門A読み取り<br>のみ</div>
+    </div>
+    <div class="formula">実効権限 = ユーザー権限 <span>∩</span> エージェント権限</div>
+  </div>
+
+  <div class="right">
+    <div class="risk-level rl-1">
+      <div class="rl-num">1</div>
+      <div class="rl-content">
+        <div class="rl-title">自動承認</div>
+        <div class="rl-desc">許可パス内の読み取り、git status、テスト実行</div>
+      </div>
+    </div>
+    <div class="risk-level rl-2">
+      <div class="rl-num">2</div>
+      <div class="rl-content">
+        <div class="rl-title">ログ記録 + 自動承認</div>
+        <div class="rl-desc">ファイル書き込み、パッケージインストール</div>
+      </div>
+    </div>
+    <div class="risk-level rl-3">
+      <div class="rl-num">3</div>
+      <div class="rl-content">
+        <div class="rl-title">人間の承認が必要</div>
+        <div class="rl-desc">ファイル削除、外部通信、新APIキー使用、本番操作</div>
+      </div>
+    </div>
+    <div class="risk-level rl-4">
+      <div class="rl-num">4</div>
+      <div class="rl-content">
+        <div class="rl-title">禁止</div>
+        <div class="rl-examples">rm -rf / sudo / chmod 777 / cat ~/.ssh/</div>
+      </div>
+    </div>
+    <div class="anti-box">
+      <div class="anti-title">❌ アンチパターン</div>
+      <div class="anti-list">
+        • 「とりあえず全権限」でデプロイ<br>
+        • 共有APIキーで権限追跡不能<br>
+        • セキュリティをモデル側に丸投げ
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

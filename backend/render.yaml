@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: aigis-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEBUG
+        value: "true"
+      - key: DATABASE_URL
+        value: "sqlite+aiosqlite:///./demo.db"
+      - key: SECRET_KEY
+        generateValue: true

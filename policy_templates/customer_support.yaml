@@ -1,0 +1,43 @@
+# Aigis Policy — Customer Support / Helpdesk
+#
+# Use this for:
+#   - Customer-facing support chatbots
+#   - SaaS helpdesk / ticketing integrations
+#   - Automated email response systems
+#
+name: customer_support
+auto_block_threshold: 76   # moderate-strict
+auto_allow_threshold: 25
+
+custom_rules:
+  # Block attempts to get free/discounted service through the chatbot
+  - id: cs_free_service_extraction
+    name: Unauthorized Service/Refund Request
+    pattern: "(give\s+me\s+free|refund\s+without|無料\s*(に\s*して|にして)"
+            "|返金\s*(なし|せずに)|タダ\s*(で|にして))"
+    score_delta: 30
+    enabled: true
+
+  # Block competitor comparison fishing
+  - id: cs_competitor_comparison
+    name: Competitor Disparagement Request
+    pattern: "(why\s+is\s+(your\s+company|product)\s+(worse|bad|terrible)\s+compared\s+to"
+            "|競合他社\s*(より|と比べて)\s*(どう|どこが)\s*(悪い|ひどい))"
+    score_delta: 25
+    enabled: true
+
+  # Detect social engineering attempts
+  - id: cs_social_engineering
+    name: Social Engineering via Support Channel
+    pattern: "(i\s+am\s+(from\s+)?(the\s+)?(executive\s+team|ceo\s+office|management)"
+            "|urgently\s+need\s+(admin|root|system)\s+access|緊急\s*(に)?\s*(管理者|アクセス))"
+    score_delta: 50
+    enabled: true
+
+  # Block PII extraction of other customers
+  - id: cs_other_customer_pii
+    name: Other Customer Data Extraction
+    pattern: "(show\s+me\s+(another|other)\s+customer|access\s+(user|account)\s+(number\s*)?\d+"
+            "|他\s*(の)?\s*(顧客|ユーザー)\s*(の)?\s*(情報|データ)\s*(を)?\s*(見せて|教えて))"
+    score_delta: 55
+    enabled: true

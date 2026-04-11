@@ -1,0 +1,55 @@
+# Aigis Policy — Finance / Banking
+#
+# Use this for:
+#   - Banking chatbots (customer service, account queries)
+#   - Trading assistants (market data, order placement)
+#   - Payment processing apps
+#   - Insurance claim assistants
+#
+# Regulatory context: PCI-DSS, FSA (金融庁), J-SOX
+#
+# Threat model:
+#   - Data exfiltration of account numbers, card data, routing numbers
+#   - Prompt injection to bypass transaction limits or KYC checks
+#   - Social engineering via AI to impersonate advisors
+#
+name: finance
+auto_block_threshold: 61   # strict — financial data requires high protection
+auto_allow_threshold: 20
+
+custom_rules:
+  # Block any attempt to request raw account / card data
+  - id: fin_account_number
+    name: Bank Account Number Request
+    pattern: "(account\s+number|口座番号|routing\s+number|iban|swift\s*code|sort\s+code)"
+    score_delta: 45
+    enabled: true
+
+  # Block card-related extraction attempts
+  - id: fin_card_data
+    name: Card Data Extraction
+    pattern: "(card\s*(number|details|info)|cvv|cvc|expir(y|ation)|全カード番号)"
+    score_delta: 55
+    enabled: true
+
+  # Detect trading manipulation language
+  - id: fin_market_manipulation
+    name: Market Manipulation Attempt
+    pattern: "(pump\s+and\s+dump|insider\s+(trading|info)|front[- ]running|価格操作|インサイダー)"
+    score_delta: 70
+    enabled: true
+
+  # Block instructions to bypass compliance checks
+  - id: fin_compliance_bypass
+    name: Compliance / KYC Bypass
+    pattern: "(bypass\s+(kyc|aml|compliance|verification)|skip\s+(verification|identity\s+check)"
+            "|本人確認\s*(を|の)\s*(スキップ|無視|回避))"
+    score_delta: 60
+    enabled: true
+
+  # Detect requests for wire transfer instructions
+  - id: fin_wire_transfer
+    name: Wire Transfer Instruction Request
+    pattern: "(wire\s+transfer|send\s+money\s+to|transfer\s+funds|振込|送金\s*先)"
+    score_delta: 35
+    enabled: true

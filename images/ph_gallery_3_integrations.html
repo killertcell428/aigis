@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1270px; height: 760px; background: #0f172a; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .header { text-align: center; margin-bottom: 56px; }
+  .label { color: #60a5fa; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 12px; }
+  h2 { color: #fff; font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+  .sub { color: #64748b; font-size: 18px; }
+  .flow { display: flex; align-items: center; gap: 0; margin-bottom: 56px; }
+  .node { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; padding: 24px 32px; min-width: 160px; }
+  .node-app { background: rgba(30,41,59,0.8); border: 1px solid #334155; }
+  .node-guard { background: linear-gradient(135deg, #1e40af, #3b82f6); border: 2px solid #60a5fa; min-width: 200px; padding: 32px; box-shadow: 0 0 40px rgba(59,130,246,0.3); }
+  .node-llm { background: rgba(30,41,59,0.8); border: 1px solid #334155; }
+  .node-title { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .node-sub { color: #94a3b8; font-size: 12px; }
+  .node-guard .node-title { font-size: 22px; }
+  .node-guard .node-sub { color: #bfdbfe; }
+  .arrow { color: #3b82f6; font-size: 28px; margin: 0 16px; }
+  .integrations { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; max-width: 1000px; }
+  .int-card { background: rgba(30,41,59,0.6); border: 1px solid #1e293b; border-radius: 12px; padding: 20px 28px; display: flex; align-items: center; gap: 14px; }
+  .int-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; }
+  .int-name { color: #e2e8f0; font-size: 15px; font-weight: 600; }
+  .int-type { color: #64748b; font-size: 11px; }
+  .bg-fa { background: #059669; }
+  .bg-lc { background: #2563eb; }
+  .bg-lg { background: #7c3aed; }
+  .bg-oa { background: #000; border: 1px solid #333; }
+  .bg-an { background: #d97706; }
+  .bg-gh { background: #333; }
+  .bg-vs { background: #0078d4; }
+  .bg-pc { background: #e11d48; }
+  .tagline { color: #34d399; font-size: 16px; font-weight: 600; margin-top: 40px; }
+</style>
+</head><body>
+<div class="header">
+  <div class="label">Drop-in Integration</div>
+  <h2>Works With Your Existing Stack</h2>
+  <div class="sub">No code changes needed. Add middleware or change base_url.</div>
+</div>
+
+<div class="flow">
+  <div class="node node-app">
+    <div class="node-title">Your App</div>
+    <div class="node-sub">Python / Any SDK</div>
+  </div>
+  <div class="arrow">&#x2192;</div>
+  <div class="node node-guard">
+    <svg width="36" height="42" viewBox="0 0 120 140" style="margin-bottom:8px;">
+      <path d="M60 8 L108 28 L108 65 C108 95 85 118 60 132 C35 118 12 95 12 65 L12 28 Z" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="3"/>
+      <path d="M45 72 L55 82 L78 55" stroke="#34d399" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="node-title">AI Guardian</div>
+    <div class="node-sub">Scan &middot; Block &middot; Log</div>
+  </div>
+  <div class="arrow">&#x2192;</div>
+  <div class="node node-llm">
+    <div class="node-title">LLM</div>
+    <div class="node-sub">OpenAI / Anthropic / Any</div>
+  </div>
+</div>
+
+<div class="integrations">
+  <div class="int-card">
+    <div class="int-icon bg-fa">FA</div>
+    <div><div class="int-name">FastAPI</div><div class="int-type">Middleware</div></div>
+  </div>
+  <div class="int-card">
+    <div class="int-icon bg-lc">LC</div>
+    <div><div class="int-name">LangChain</div><div class="int-type">Callback</div></div>
+  </div>
+  <div class="int-card">
+    <div class="int-icon bg-lg">LG</div>
+    <div><div class="int-name">LangGraph</div><div class="int-type">GuardNode</div></div>
+  </div>
+  <div class="int-card">
+    <div class="int-icon bg-oa">OA</div>
+    <div><div class="int-name">OpenAI</div><div class="int-type">SecureOpenAI proxy</div></div>
+  </div>
+  <div class="int-card">
+    <div class="int-icon bg-an">AN</div>
+    <div><div class="int-name">Anthropic</div><div class="int-type">SecureAnthropic proxy</div></div>
+  </div>
+  <div class="int-card">
+    <div class="int-icon bg-gh">GH</div>
+    <div><div class="int-name">GitHub Actions</div><div class="int-type">CI Workflow</div></div>
+  </div>
+  <div class="int-card">
+    <div class="int-icon bg-vs">VS</div>
+    <div><div class="int-name">VS Code</div><div class="int-type">Extension</div></div>
+  </div>
+  <div class="int-card">
+    <div class="int-icon bg-pc">PC</div>
+    <div><div class="int-name">pre-commit</div><div class="int-type">Hook</div></div>
+  </div>
+</div>
+<div class="tagline">pip install aig-guardian &mdash; zero dependencies required</div>
+</body></html>

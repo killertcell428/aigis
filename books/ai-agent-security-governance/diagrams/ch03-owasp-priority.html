@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 800px; height: 520px; padding: 32px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: #ffffff; color: #1a202c;
+}
+h2 { font-size: 16px; color: #2d3748; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #2b6cb0; }
+.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.card {
+  border-radius: 8px; padding: 12px; min-height: 120px;
+  display: flex; flex-direction: column;
+}
+.card-id { font-size: 10px; font-weight: 700; opacity: 0.7; margin-bottom: 4px; }
+.card-name { font-size: 11px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+.card-example { font-size: 9px; opacity: 0.7; line-height: 1.4; margin-top: auto; }
+
+.critical { background: #fff5f5; border: 1px solid #feb2b2; }
+.critical .card-id { color: #e53e3e; }
+.critical .card-name { color: #c53030; }
+
+.high { background: #fffaf0; border: 1px solid #fefcbf; }
+.high .card-id { color: #d69e2e; }
+.high .card-name { color: #975a16; }
+
+.medium { background: #f7fafc; border: 1px solid #e2e8f0; }
+.medium .card-id { color: #718096; }
+.medium .card-name { color: #4a5568; }
+
+.priority-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.priority-label {
+  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 4px;
+  flex-shrink: 0; width: 100px; text-align: center;
+}
+.p-critical { background: #e53e3e; color: #fff; }
+.p-high { background: #d69e2e; color: #fff; }
+.p-medium { background: #a0aec0; color: #fff; }
+.priority-line { flex: 1; height: 1px; background: #e2e8f0; }
+
+.section { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<h2>OWASP Agentic Top 10 — 日本企業の優先度マップ</h2>
+
+<div class="section">
+  <div class="priority-row">
+    <div class="priority-label p-critical">最優先（即時）</div>
+    <div class="priority-line"></div>
+  </div>
+  <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="card critical">
+      <div class="card-id">ASI01</div>
+      <div class="card-name">エージェント目的<br>ハイジャック</div>
+      <div class="card-example">例: EchoLeak<br>ゼロクリックメール攻撃</div>
+    </div>
+    <div class="card critical">
+      <div class="card-id">ASI10</div>
+      <div class="card-name">ガバナンス<br>ギャップ</div>
+      <div class="card-example">例: 監査証跡の不在<br>総務省GL必須対応</div>
+    </div>
+    <div class="card critical">
+      <div class="card-id">ASI03</div>
+      <div class="card-name">アイデンティティ<br>権限の悪用</div>
+      <div class="card-example">例: NHI管理の未整備<br>侵害の68%がNHI関連</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="priority-row">
+    <div class="priority-label p-high">次の優先（3ヶ月）</div>
+    <div class="priority-line"></div>
+  </div>
+  <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="card high">
+      <div class="card-id">ASI04</div>
+      <div class="card-name">メモリ汚染</div>
+      <div class="card-example">87%の意思決定に影響<br>50社以上が被害確認</div>
+    </div>
+    <div class="card high">
+      <div class="card-id">ASI02</div>
+      <div class="card-name">ツール不正利用</div>
+      <div class="card-example">MCP連携の増加に<br>伴うリスク拡大</div>
+    </div>
+    <div class="card high">
+      <div class="card-id">ASI06</div>
+      <div class="card-name">エージェント間<br>認証の脆弱性</div>
+      <div class="card-example">A2Aプロトコルの<br>偽装・中間者攻撃</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="priority-row">
+    <div class="priority-label p-medium">中長期（6ヶ月）</div>
+    <div class="priority-line"></div>
+  </div>
+  <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="card medium">
+      <div class="card-id">ASI05</div>
+      <div class="card-name">計画エラーの連鎖</div>
+    </div>
+    <div class="card medium">
+      <div class="card-id">ASI07</div>
+      <div class="card-name">プロンプト漏洩</div>
+    </div>
+    <div class="card medium">
+      <div class="card-id">ASI08</div>
+      <div class="card-name">過剰リソース取得</div>
+    </div>
+    <div class="card medium">
+      <div class="card-id">ASI09</div>
+      <div class="card-name">コンテキスト操作</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

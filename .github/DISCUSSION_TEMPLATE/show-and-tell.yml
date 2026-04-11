@@ -1,0 +1,36 @@
+title: "[Show & Tell]: "
+labels: ["show-and-tell"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Show the community how you're using aigis! Share your integration, custom policy,
+        or anything you've built on top of the library.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What did you build?
+      description: Describe what you created and why.
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code / configuration snippet
+      description: Share the most interesting part of your implementation.
+      render: python
+
+  - type: textarea
+    id: lessons
+    attributes:
+      label: Lessons learned
+      description: Any gotchas, tips, or insights that would help others?
+
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: Repository, blog post, demo, or gist (optional)
+      placeholder: "https://..."

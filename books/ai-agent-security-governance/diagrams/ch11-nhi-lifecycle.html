@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 800px; height: 440px; padding: 32px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: #ffffff; color: #1a202c;
+}
+h2 { font-size: 16px; color: #2d3748; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #2b6cb0; }
+
+.content { display: flex; gap: 20px; }
+
+.left { flex: 1; }
+.comparison-grid {
+  display: grid; grid-template-columns: 120px 1fr 1fr;
+  gap: 0; font-size: 10px;
+}
+.cg-header {
+  padding: 8px 10px; font-weight: 700; font-size: 11px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.cg-h1 { color: #4a5568; }
+.cg-h2 { background: #ebf8ff; color: #2b6cb0; text-align: center; }
+.cg-h3 { background: #fff5f5; color: #c53030; text-align: center; }
+
+.cg-cell {
+  padding: 7px 10px; border-bottom: 1px solid #f0f0f0;
+  line-height: 1.4;
+}
+.cg-label { font-weight: 600; color: #4a5568; background: #fafafa; }
+.cg-human { color: #2b6cb0; }
+.cg-agent { color: #c53030; }
+
+.gap-indicator {
+  margin-top: 16px; padding: 12px 14px; border-radius: 8px;
+  background: #fff5f5; border: 1px solid #fed7d7;
+}
+.gap-title { font-size: 11px; font-weight: 700; color: #c53030; margin-bottom: 6px; }
+.gap-items { font-size: 10px; color: #718096; line-height: 1.8; }
+
+.right { width: 260px; display: flex; flex-direction: column; gap: 10px; }
+
+.stat-card {
+  padding: 14px; border-radius: 8px; text-align: center;
+}
+.sc-dark { background: #1a2940; color: #fff; }
+.sc-light { background: #f7fafc; border: 1px solid #e2e8f0; }
+
+.stat-big { font-size: 28px; font-weight: 800; }
+.sc-dark .stat-big { color: #fc8181; }
+.sc-light .stat-big { color: #2b6cb0; }
+.stat-label { font-size: 10px; margin-top: 4px; }
+.sc-dark .stat-label { color: rgba(255,255,255,0.6); }
+.sc-light .stat-label { color: #718096; }
+
+.principle-box {
+  padding: 12px; border-radius: 8px;
+  background: #f0fff4; border: 1px solid #c6f6d5;
+}
+.principle-title { font-size: 11px; font-weight: 700; color: #276749; margin-bottom: 6px; }
+.principle-list { font-size: 10px; color: #4a5568; line-height: 2; }
+.principle-num {
+  display: inline-block; width: 18px; height: 18px; border-radius: 50%;
+  background: #38a169; color: #fff; text-align: center; line-height: 18px;
+  font-size: 9px; font-weight: 700; margin-right: 4px;
+}
+</style>
+</head>
+<body>
+<h2>NHIライフサイクル管理 — 人間アカウント vs AIエージェント</h2>
+<div class="content">
+  <div class="left">
+    <div class="comparison-grid">
+      <div class="cg-header cg-h1">観点</div>
+      <div class="cg-header cg-h2">👤 人間の開発者</div>
+      <div class="cg-header cg-h3">🤖 AIセッション（現状）</div>
+
+      <div class="cg-cell cg-label">アイデンティティ</div>
+      <div class="cg-cell cg-human">SSO/IdPで管理</div>
+      <div class="cg-cell cg-agent">共有APIキー（ID無し）</div>
+
+      <div class="cg-cell cg-label">権限スコープ</div>
+      <div class="cg-cell cg-human">ロールベース（明示的）</div>
+      <div class="cg-cell cg-agent">無制限（ツール範囲内）</div>
+
+      <div class="cg-cell cg-label">監査ログ</div>
+      <div class="cg-cell cg-human">組織全体に統合</div>
+      <div class="cg-cell cg-agent">ローカルのみ</div>
+
+      <div class="cg-cell cg-label">ライフサイクル</div>
+      <div class="cg-cell cg-human">HR起点（入社/退社）</div>
+      <div class="cg-cell cg-agent">管理なし</div>
+
+      <div class="cg-cell cg-label">インシデント対応</div>
+      <div class="cg-cell cg-human">アカウント無効化</div>
+      <div class="cg-cell cg-agent">対応手段なし</div>
+
+      <div class="cg-cell cg-label">ライフスパン</div>
+      <div class="cg-cell cg-human">月〜年単位</div>
+      <div class="cg-cell cg-agent">分〜時間単位</div>
+    </div>
+
+    <div class="gap-indicator">
+      <div class="gap-title">⚠ 管理ギャップ</div>
+      <div class="gap-items">
+        AIエージェントは人間の45倍のNHI数を生成するが、<br>
+        ガバナンス成熟度は逆転している。<br>
+        セッション単位のきめ細かい管理が必要。
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="stat-card sc-dark">
+      <div class="stat-big">68%</div>
+      <div class="stat-label">侵害のうちNHI関連<br><span style="font-size:8px;opacity:0.5">Verizon DBIR 2025</span></div>
+    </div>
+    <div class="stat-card sc-light">
+      <div class="stat-big">45x</div>
+      <div class="stat-label">人間に対するNHIの比率<br><span style="font-size:8px;color:#a0aec0">CyberArk Survey</span></div>
+    </div>
+    <div class="principle-box">
+      <div class="principle-title">4つの管理原則</div>
+      <div class="principle-list">
+        <span class="principle-num">1</span>最小権限<br>
+        <span class="principle-num">2</span>Just-in-Timeアクセス<br>
+        <span class="principle-num">3</span>監査可能性<br>
+        <span class="principle-num">4</span>アイデンティティ分離
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Example .pre-commit-config.yaml — add Aigis hooks to your project
+#
+# Installation:
+#   pip install pre-commit
+#   pre-commit install
+#
+# Then copy/paste the relevant hook(s) below into your own .pre-commit-config.yaml
+
+repos:
+  # ----------------------------------------------------------------
+  # Aigis — LLM security scanning
+  # ----------------------------------------------------------------
+  - repo: https://github.com/killertcell428/aigis
+    rev: v0.6.1  # pin to a specific release tag
+    hooks:
+      # Scan prompt/template files for injection attacks and PII
+      - id: aigis-scan
+        # Optional: restrict to specific directories
+        # files: ^(prompts/|templates/|system_prompts/)
+
+      # Optional: also scan Python source files for hardcoded prompts
+      # - id: aigis-scan-python
+      #   files: ^src/

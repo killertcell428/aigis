@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 800px; height: 500px; padding: 32px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: #ffffff; color: #1a202c;
+}
+h2 { font-size: 16px; color: #2d3748; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 2px solid #2b6cb0; }
+.diagram { display: flex; gap: 24px; height: 400px; }
+.left { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.layer {
+  flex: 1; border-radius: 8px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 14px;
+  position: relative; transition: all 0.2s;
+}
+.layer-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.layer-content { flex: 1; }
+.layer-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.layer-desc { font-size: 10px; color: #718096; line-height: 1.4; }
+.layer-ref { font-size: 9px; color: #a0aec0; margin-top: 2px; }
+
+.l5 { background: #ebf8ff; border: 1px solid #bee3f8; }
+.l5 .layer-num { background: #2b6cb0; }
+.l5 .layer-title { color: #2b6cb0; }
+
+.l4 { background: #f0fff4; border: 1px solid #c6f6d5; }
+.l4 .layer-num { background: #38a169; }
+.l4 .layer-title { color: #276749; }
+
+.l3 { background: #fffff0; border: 1px solid #fefcbf; }
+.l3 .layer-num { background: #d69e2e; }
+.l3 .layer-title { color: #975a16; }
+
+.l2 { background: #fff5f5; border: 1px solid #fed7d7; }
+.l2 .layer-num { background: #e53e3e; }
+.l2 .layer-title { color: #c53030; }
+
+.l1 { background: #faf5ff; border: 1px solid #e9d8fd; }
+.l1 .layer-num { background: #805ad5; }
+.l1 .layer-title { color: #6b46c1; }
+
+.right { width: 220px; display: flex; flex-direction: column; gap: 8px; }
+.comparison { flex: 1; border-radius: 8px; padding: 14px; }
+.comp-llm { background: #f7fafc; border: 1px solid #e2e8f0; }
+.comp-agent { background: #1a2940; color: #fff; border: 1px solid #2d4a6f; }
+.comp-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+.comp-agent .comp-title { color: #63b3ed; }
+.comp-item { font-size: 10px; line-height: 1.8; color: #718096; }
+.comp-agent .comp-item { color: rgba(255,255,255,0.7); }
+.comp-item span { font-weight: 600; }
+.comp-agent .comp-item span { color: #fc8181; }
+
+.arrow-label {
+  text-align: center; font-size: 10px; color: #a0aec0; padding: 4px 0;
+  border-top: 1px dashed #e2e8f0; border-bottom: 1px dashed #e2e8f0;
+}
+</style>
+</head>
+<body>
+<h2>AIエージェントの多層防御アーキテクチャ</h2>
+<div class="diagram">
+  <div class="left">
+    <div class="layer l5">
+      <div class="layer-num">5</div>
+      <div class="layer-content">
+        <div class="layer-title">ガバナンス・法規制対応</div>
+        <div class="layer-desc">ポリシー策定、総務省ガイドライン、EU AI Act準拠、コンプライアンスレポート</div>
+        <div class="layer-ref">→ Part 3（第11〜13章）</div>
+      </div>
+    </div>
+    <div class="layer l4">
+      <div class="layer-num">4</div>
+      <div class="layer-content">
+        <div class="layer-title">チーム運用・監査</div>
+        <div class="layer-desc">操作ログ集約、異常検知、月次レビュー、インシデント対応フロー</div>
+        <div class="layer-ref">→ Part 4（第14〜16章）</div>
+      </div>
+    </div>
+    <div class="layer l3">
+      <div class="layer-num">3</div>
+      <div class="layer-content">
+        <div class="layer-title">権限設計・NHI管理</div>
+        <div class="layer-desc">最小権限の原則、Just-in-Time認証、アイデンティティ分離、権限の交差設計</div>
+        <div class="layer-ref">→ Part 3（第11〜12章）</div>
+      </div>
+    </div>
+    <div class="layer l2">
+      <div class="layer-num">2</div>
+      <div class="layer-content">
+        <div class="layer-title">プロトコルセキュリティ</div>
+        <div class="layer-desc">MCP信頼境界、A2A認証、RAGソース管理、サプライチェーン検証</div>
+        <div class="layer-ref">→ Part 2（第5〜9章）</div>
+      </div>
+    </div>
+    <div class="layer l1">
+      <div class="layer-num">1</div>
+      <div class="layer-content">
+        <div class="layer-title">入出力フィルタリング</div>
+        <div class="layer-desc">プロンプトインジェクション検知、機密情報漏洩防止、リスクスコアリング</div>
+        <div class="layer-ref">→ Part 2（第4章）</div>
+      </div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="comparison comp-llm">
+      <div class="comp-title">従来のLLMセキュリティ</div>
+      <div class="comp-item"><span>対象:</span> テキスト出力</div>
+      <div class="comp-item"><span>防御:</span> ガードレール1層</div>
+      <div class="comp-item"><span>影響:</span> 不適切な回答</div>
+      <div class="comp-item"><span>時間:</span> 単一リクエスト</div>
+    </div>
+    <div class="arrow-label">↓ パラダイムシフト ↓</div>
+    <div class="comparison comp-agent">
+      <div class="comp-title">AIエージェントセキュリティ</div>
+      <div class="comp-item"><span>対象:</span> システム操作</div>
+      <div class="comp-item"><span>防御:</span> 多層防御（5層）</div>
+      <div class="comp-item"><span>影響:</span> データ漏洩・改竄</div>
+      <div class="comp-item"><span>時間:</span> 長時間自律セッション</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,26 @@
+- id: aigis-scan
+  name: Aigis — scan files for LLM security threats
+  description: >
+    Scans staged files for prompt injection, PII leaks, jailbreaks, and other
+    OWASP LLM Top 10 threats using Aigis (aigis).
+  language: python
+  entry: aig
+  args: [scan, --file]
+  additional_dependencies: [aigis]
+  types: [text]
+  # By default, scan only prompt/template files.
+  # Override with `files:` in your .pre-commit-config.yaml to scan Python source.
+  files: \.(txt|md|yaml|yml|json|jinja|jinja2|j2|prompt)$
+  pass_filenames: true
+
+- id: aigis-scan-python
+  name: Aigis — scan Python files for hardcoded LLM prompts
+  description: >
+    Scans Python source files for hardcoded prompts that may contain security
+    threats. Useful for catching developer mistakes before they reach production.
+  language: python
+  entry: aig
+  args: [scan, --file]
+  additional_dependencies: [aigis]
+  types: [python]
+  pass_filenames: true

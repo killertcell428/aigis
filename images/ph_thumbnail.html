@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 240px; height: 240px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
+  .container { text-align: center; }
+  .shield { width: 80px; height: 93px; margin: 0 auto 12px; filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)); }
+  .name { color: #fff; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .tagline { color: #93c5fd; font-size: 10px; font-weight: 500; letter-spacing: 0.5px; }
+</style>
+</head><body>
+<div class="container">
+  <svg class="shield" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140">
+    <defs>
+      <linearGradient id="shieldGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#1e40af"/>
+      </linearGradient>
+      <linearGradient id="innerGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.3"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0.1"/>
+      </linearGradient>
+    </defs>
+    <path d="M60 8 L108 28 L108 65 C108 95 85 118 60 132 C35 118 12 95 12 65 L12 28 Z" fill="url(#shieldGrad)" stroke="#1e3a8a" stroke-width="2"/>
+    <path d="M60 18 L98 35 L98 63 C98 88 78 108 60 120 C42 108 22 88 22 63 L22 35 Z" fill="url(#innerGrad)"/>
+    <text x="60" y="62" text-anchor="middle" font-family="system-ui" font-size="28" font-weight="800" fill="white" letter-spacing="2">AI</text>
+    <line x1="35" y1="78" x2="85" y2="78" stroke="white" stroke-width="2" opacity="0.6"/>
+    <line x1="40" y1="86" x2="80" y2="86" stroke="white" stroke-width="1.5" opacity="0.4"/>
+    <line x1="45" y1="94" x2="75" y2="94" stroke="white" stroke-width="1" opacity="0.3"/>
+    <path d="M45 72 L55 82 L78 55" stroke="#34d399" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  </svg>
+  <div class="name">AI Guardian</div>
+  <div class="tagline">LLM SECURITY MIDDLEWARE</div>
+</div>
+</body></html>

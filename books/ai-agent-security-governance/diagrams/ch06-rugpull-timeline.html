@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 800px; height: 380px; padding: 32px;
+  font-family: 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: #ffffff; color: #1a202c;
+}
+h2 { font-size: 16px; color: #2d3748; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 2px solid #d69e2e; }
+
+.timeline { position: relative; display: flex; justify-content: space-between; align-items: flex-start; padding: 0 20px; }
+.timeline::before {
+  content: ''; position: absolute; top: 30px; left: 40px; right: 40px;
+  height: 3px; background: linear-gradient(90deg, #38a169, #38a169 30%, #e53e3e 30%, #e53e3e);
+  border-radius: 2px;
+}
+
+.phase { text-align: center; width: 160px; position: relative; z-index: 1; }
+.phase-dot {
+  width: 20px; height: 20px; border-radius: 50%; margin: 20px auto 12px;
+  border: 3px solid #fff; box-shadow: 0 0 0 2px;
+}
+.dot-safe { background: #38a169; box-shadow: 0 0 0 2px #38a169; }
+.dot-danger { background: #e53e3e; box-shadow: 0 0 0 2px #e53e3e; }
+.dot-alert { background: #d69e2e; box-shadow: 0 0 0 2px #d69e2e; }
+
+.phase-day { font-size: 11px; font-weight: 700; color: #4a5568; margin-bottom: 4px; }
+.phase-title { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+.phase-desc { font-size: 9px; color: #718096; line-height: 1.5; }
+
+.safe-title { color: #276749; }
+.danger-title { color: #c53030; }
+.alert-title { color: #975a16; }
+
+.defense-table {
+  margin-top: 24px; width: 100%; border-collapse: collapse;
+  font-size: 11px;
+}
+.defense-table th {
+  background: #f7fafc; padding: 8px 12px; text-align: left;
+  border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #4a5568;
+}
+.defense-table td {
+  padding: 6px 12px; border-bottom: 1px solid #f0f0f0;
+}
+.defense-table .method { font-weight: 600; color: #2d3748; }
+.eff-yes { color: #38a169; font-weight: 700; }
+.eff-no { color: #e53e3e; font-weight: 700; }
+.eff-partial { color: #d69e2e; font-weight: 700; }
+.reason { color: #718096; font-size: 10px; }
+
+.etdi-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  background: #38a169; color: #fff; font-size: 9px; font-weight: 700;
+}
+</style>
+</head>
+<body>
+<h2>MCPラグプル攻撃 — 承認後に豹変するツール</h2>
+
+<div class="timeline">
+  <div class="phase">
+    <div class="phase-dot dot-safe"></div>
+    <div class="phase-day">Day 1</div>
+    <div class="phase-title safe-title">安全なツール公開</div>
+    <div class="phase-desc">正常に動作するMCPサーバーを公開。ソースコードも問題なし</div>
+  </div>
+  <div class="phase">
+    <div class="phase-dot dot-safe"></div>
+    <div class="phase-day">Day 2-3</div>
+    <div class="phase-title safe-title">ユーザーが承認</div>
+    <div class="phase-desc">コードレビュー実施。安全と判断し、ホワイトリストに追加</div>
+  </div>
+  <div class="phase">
+    <div class="phase-dot dot-danger"></div>
+    <div class="phase-day">Day 8</div>
+    <div class="phase-title danger-title">サーバー側で改竄</div>
+    <div class="phase-desc">tool descriptionに悪意ある指示を密かに追加。ユーザーに通知なし</div>
+  </div>
+  <div class="phase">
+    <div class="phase-dot dot-alert"></div>
+    <div class="phase-day">Day 9〜</div>
+    <div class="phase-title alert-title">被害の発生</div>
+    <div class="phase-desc">承認済みのため再チェックなし。機密データが外部に流出</div>
+  </div>
+</div>
+
+<table class="defense-table">
+  <tr>
+    <th>防御策</th>
+    <th>承認時</th>
+    <th>実行時</th>
+    <th>ラグプルへの有効性</th>
+  </tr>
+  <tr>
+    <td class="method">コードレビュー</td>
+    <td class="eff-yes">✅ 有効</td>
+    <td class="eff-no">❌ 再レビューなし</td>
+    <td class="reason">承認時≠実行時</td>
+  </tr>
+  <tr>
+    <td class="method">ホワイトリスト管理</td>
+    <td class="eff-yes">✅ 有効</td>
+    <td class="eff-no">❌ 定義変更を検知しない</td>
+    <td class="reason">同名ツール・異なる動作</td>
+  </tr>
+  <tr>
+    <td class="method">ネットワーク監視</td>
+    <td>—</td>
+    <td class="eff-partial">⚠️ 部分的</td>
+    <td class="reason">正常通信に紛れる</td>
+  </tr>
+  <tr>
+    <td class="method">ETDI署名検証 <span class="etdi-badge">推奨</span></td>
+    <td class="eff-yes">✅ 有効</td>
+    <td class="eff-yes">✅ 有効</td>
+    <td class="reason">改竄を暗号的に検知</td>
+  </tr>
+</table>
+</body>
+</html>

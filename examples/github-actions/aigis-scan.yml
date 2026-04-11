@@ -1,0 +1,104 @@
+# Aigis — GitHub Actions CI workflow
+#
+# Drop this file into .github/workflows/ in your repository to automatically
+# scan LLM prompt files for security threats on every push and pull request.
+#
+# Usage:
+#   1. Copy this file to .github/workflows/aigis-scan.yml
+#   2. Adjust the `scan-paths` input to match your prompt file locations
+#   3. Optionally set `fail-on` to control when the job fails
+#
+# Requires: Python 3.11+, aigis installed
+
+name: Aigis Security Scan
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  aigis-scan:
+    name: Scan LLM prompts for security threats
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Install the latest stable release from PyPI
+      - name: Install Aigis
+        run: pip install aigis
+
+      # Run the built-in benchmark to verify detection accuracy
+      # This step is optional but confirms the installation is working
+      - name: Verify installation
+        run: aig benchmark
+
+      # Scan prompt files for threats
+      # Customize the file paths to match your project structure
+      - name: Scan system prompts
+        run: |
+          EXIT_CODE=0
+
+          for file in \
+            prompts/*.txt \
+            prompts/*.md \
+            system_prompts/*.txt \
+            data/prompts/*.txt; do
+            # Skip if glob matched no files
+            [ -f "$file" ] || continue
+
+            echo "Scanning: $file"
+            result=$(aig scan --file "$file" --json 2>/dev/null || true)
+
+            # Parse JSON result
+            score=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['risk_score'])")
+            level=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['risk_level'])")
+            blocked=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['blocked'])")
+
+            if [ "$blocked" = "True" ]; then
+              echo "::error file=$file::BLOCKED (score=$score, level=$level) - prompt injection or security threat detected"
+              EXIT_CODE=1
+            elif [ "$score" -gt "50" ]; then
+              echo "::warning file=$file::HIGH RISK (score=$score, level=$level) - review recommended"
+            else
+              echo "  ✓ SAFE (score=$score)"
+            fi
+          done
+
+          exit $EXIT_CODE
+
+      # Optional: scan inline prompts defined in Python source files
+      # This uses stdin to pipe file content through Aigis
+      - name: Scan Python source for hardcoded prompts
+        if: always()  # run even if previous step failed
+        run: |
+          # Find Python files that likely contain LLM prompts
+          # (heuristic: files importing openai, anthropic, langchain, or aigis)
+          grep -rl 'import openai\|import anthropic\|from langchain\|from aigis' \
+            --include="*.py" . 2>/dev/null | head -20 | while read -r file; do
+            echo "Checking Python file: $file"
+            aig scan --file "$file" || true  # non-zero exit is informational here
+          done
+
+      # Optional: post a PR comment with scan summary
+      # Uncomment and add a PAT or use GITHUB_TOKEN for write permissions
+      # - name: Post PR comment
+      #   if: github.event_name == 'pull_request'
+      #   uses: actions/github-script@v7
+      #   with:
+      #     script: |
+      #       const body = `## Aigis Scan Results\n\nScan completed. See workflow logs for details.`
+      #       github.rest.issues.createComment({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         body
+      #       })

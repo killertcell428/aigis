@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1270px; height: 760px; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%); font-family: system-ui, -apple-system, sans-serif; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .grid-overlay { position: absolute; inset: 0; background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 64px 64px; }
+  .container { position: relative; z-index: 1; display: flex; gap: 80px; align-items: center; padding: 0 80px; }
+  .left { flex: 1; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 20px; padding: 6px 16px; font-size: 13px; color: #93c5fd; margin-bottom: 24px; }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; }
+  h1 { color: #fff; font-size: 52px; font-weight: 800; line-height: 1.15; letter-spacing: -1px; margin-bottom: 16px; }
+  h1 span { color: #60a5fa; }
+  .sub { color: #94a3b8; font-size: 20px; line-height: 1.5; margin-bottom: 36px; }
+  .stats { display: flex; gap: 32px; }
+  .stat { text-align: center; }
+  .stat-value { color: #fff; font-size: 32px; font-weight: 800; }
+  .stat-label { color: #64748b; font-size: 13px; margin-top: 4px; }
+  .right { flex-shrink: 0; }
+  .code-block { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 32px; width: 460px; font-family: 'Consolas', 'Monaco', monospace; font-size: 15px; line-height: 1.8; box-shadow: 0 25px 60px rgba(0,0,0,0.4); }
+  .code-block .comment { color: #64748b; }
+  .code-block .keyword { color: #c084fc; }
+  .code-block .func { color: #60a5fa; }
+  .code-block .string { color: #34d399; }
+  .code-block .prop { color: #f8fafc; }
+  .code-block .result { color: #fbbf24; }
+  .terminal-dots { display: flex; gap: 6px; margin-bottom: 20px; }
+  .terminal-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dots .r { background: #ef4444; }
+  .terminal-dots .y { background: #eab308; }
+  .terminal-dots .g { background: #22c55e; }
+  .pip { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 14px 20px; margin-bottom: 16px; width: 460px; font-family: monospace; font-size: 14px; color: #94a3b8; }
+  .pip span { color: #34d399; }
+</style>
+</head><body>
+<div class="grid-overlay"></div>
+<div class="container">
+  <div class="left">
+    <div class="badge"><span class="badge-dot"></span> Open Source &middot; Apache 2.0</div>
+    <h1>Block <span>prompt injection</span><br>before it reaches<br>your LLM</h1>
+    <p class="sub">Zero-dependency Python middleware.<br>64 detection patterns. 100% benchmark precision.</p>
+    <div class="stats">
+      <div class="stat"><div class="stat-value">64</div><div class="stat-label">Detection Patterns</div></div>
+      <div class="stat"><div class="stat-value">0</div><div class="stat-label">Dependencies</div></div>
+      <div class="stat"><div class="stat-value">&lt;5ms</div><div class="stat-label">Latency</div></div>
+      <div class="stat"><div class="stat-value">100%</div><div class="stat-label">Precision</div></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="pip">$ <span>pip install aig-guardian</span></div>
+    <div class="code-block">
+      <div class="terminal-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+      <span class="keyword">from</span> <span class="func">ai_guardian</span> <span class="keyword">import</span> <span class="func">Guard</span><br><br>
+      <span class="prop">guard</span> = <span class="func">Guard</span>()<br>
+      <span class="prop">result</span> = <span class="prop">guard</span>.<span class="func">check_input</span>(<span class="string">"Ignore all instructions..."</span>)<br><br>
+      <span class="comment"># result.blocked    = True</span><br>
+      <span class="comment"># result.risk_level = CRITICAL</span><br>
+      <span class="comment"># result.reasons    = ['Prompt Injection']</span><br><br>
+      <span class="result">BLOCKED</span> <span class="comment">score=95</span>
+    </div>
+  </div>
+</div>
+</body></html>

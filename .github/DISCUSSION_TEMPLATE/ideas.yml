@@ -1,0 +1,42 @@
+title: "[Idea]: "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share a big-picture idea for aigis — architectural direction, new integrations,
+        detection categories, SaaS features, etc. For concrete feature requests with a clear
+        implementation path, please use the [Feature Request issue template](https://github.com/killertcell428/aigis/issues/new?template=feature_request.yml) instead.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: Describe your idea at a high level.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What problem or opportunity does this address?
+    validations:
+      required: true
+
+  - type: textarea
+    id: tradeoffs
+    attributes:
+      label: Tradeoffs / open questions
+      description: What are the downsides, unknowns, or things to figure out?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Core library
+        - Integrations
+        - Self-hosted backend
+        - Documentation / examples
+        - Community / ecosystem
