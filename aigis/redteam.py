@@ -33,7 +33,6 @@ import json
 import random
 from dataclasses import dataclass, field
 
-
 # ---------------------------------------------------------------------------
 # Attack generation templates
 # ---------------------------------------------------------------------------
@@ -245,7 +244,7 @@ class RedTeamSuite:
 
     def __init__(
         self,
-        target_fn: "callable | None" = None,
+        target_fn: callable | None = None,
         categories: list[str] | None = None,
         count_per_category: int = 10,
         seed: int | None = None,
@@ -537,7 +536,7 @@ class RedTeamReportGenerator:
         lines = [
             "# Aigis Red Team Vulnerability Report",
             "",
-            f"*Generated: {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*",
+            f"*Generated: {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d %H:%M UTC')}*",
             "",
             "## Executive Summary",
             "",
@@ -648,7 +647,7 @@ code {{ background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }}
 def make_http_check(
     target_url: str,
     timeout: int = 10,
-) -> "callable":
+) -> callable:
     """Create a check function that tests against an HTTP endpoint.
 
     The endpoint should accept POST with JSON body {"text": "..."} and

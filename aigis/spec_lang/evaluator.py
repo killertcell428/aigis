@@ -31,7 +31,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
 
-from aigis.spec_lang.parser import PolicyDSL, Predicate, Rule
+from aigis.spec_lang.parser import PolicyDSL, Predicate
 from aigis.spec_lang.stdlib import BUILTIN_PREDICATES
 
 

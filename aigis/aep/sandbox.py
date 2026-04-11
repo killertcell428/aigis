@@ -96,10 +96,9 @@ class ProcessSandbox:
             ``SandboxResult`` with captured stdout/stderr, exit code,
             elapsed time, and a list of files created in *work_dir*.
         """
-        created_tmp = False
         if work_dir is None:
             work_dir = Path(tempfile.mkdtemp(prefix="aep_sandbox_"))
-            created_tmp = True
+            pass  # work_dir created
 
         work_dir.mkdir(parents=True, exist_ok=True)
 

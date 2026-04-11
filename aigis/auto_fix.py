@@ -461,7 +461,7 @@ def _log_fix(result: AutoFixResult, storage_dir: Path) -> None:
             log_entries = []
 
     log_entries.append({
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
         "applied_count": len(result.applied),
         "skipped_count": len(result.skipped),
         "regression_passed": result.regression.passed if result.regression else None,

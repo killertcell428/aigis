@@ -613,7 +613,7 @@ def cmd_monitor(args: argparse.Namespace) -> int:
     print(f"  ASR:            {snap.asr:.1%}  (lower = better)")
 
     if snap.risk_distribution:
-        print(f"\n  Risk: ", end="")
+        print("\n  Risk: ", end="")
         for level in ("critical", "high", "medium", "low"):
             count = snap.risk_distribution.get(level, 0)
             if count:
@@ -621,14 +621,14 @@ def cmd_monitor(args: argparse.Namespace) -> int:
         print()
 
     if snap.detection_by_layer:
-        print(f"\n  Detection Layers:")
+        print("\n  Detection Layers:")
         for layer, count in snap.detection_by_layer.items():
             print(f"    {layer:<12} {count:,}")
 
     if snap.learned_patterns_count > 0:
         print(f"\n  Auto-Fix: {snap.learned_patterns_count} learned patterns")
 
-    print(f"\n  Tip: Use 'aig report --format html -o report.html' for a full visual report.")
+    print("\n  Tip: Use 'aig report --format html -o report.html' for a full visual report.")
     return 0
 
 

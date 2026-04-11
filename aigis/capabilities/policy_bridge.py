@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from aigis.capabilities.store import CapabilityStore
 from aigis.capabilities.tokens import Capability
-from aigis.policy import Policy, PolicyRule
+from aigis.policy import Policy
 
 
 def capabilities_from_policy(policy: Policy) -> list[Capability]:

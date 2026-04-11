@@ -19,6 +19,14 @@ Functional API (convenience wrappers around Guard)::
         print(result.reason)
 """
 
+from aigis.cross_session import (
+    CorrelationAlert,
+    CrossSessionCorrelator,
+    SessionRecord,
+    SessionStore,
+    SleeperAlert,
+    SleeperDetector,
+)
 from aigis.guard import Guard
 from aigis.mcp_scanner import MCPServerReport, scan_mcp_server
 from aigis.monitor import SecurityMonitor
@@ -39,14 +47,6 @@ from aigis.scanner import (
     scan_rag_context,
 )
 from aigis.similarity import check_similarity
-from aigis.cross_session import (
-    CorrelationAlert,
-    CrossSessionCorrelator,
-    SessionRecord,
-    SessionStore,
-    SleeperAlert,
-    SleeperDetector,
-)
 from aigis.supply_chain import (
     DependencyAlert,
     DependencyVerifier,

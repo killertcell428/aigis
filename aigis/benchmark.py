@@ -434,7 +434,7 @@ class BenchmarkSuite:
         """Run benchmark and return JSON string."""
         return json.dumps(self.run().to_dict(), ensure_ascii=False, indent=2)
 
-    def run_latency(self, iterations: int = 100) -> "LatencyResult":
+    def run_latency(self, iterations: int = 100) -> LatencyResult:
         """Run latency benchmark — measure scan speed in microseconds.
 
         Args:
@@ -526,7 +526,7 @@ class LatencyResult:
         lines = [
             "# Aigis Latency Benchmark Report",
             "",
-            f"*Generated: {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*",
+            f"*Generated: {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d %H:%M UTC')}*",
             "",
             "## Environment",
             "",

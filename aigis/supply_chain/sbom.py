@@ -21,10 +21,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-
 
 # Default package prefixes to look for when scanning Python packages
 _DEFAULT_PREFIXES: list[str] = [

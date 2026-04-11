@@ -27,7 +27,6 @@ from pathlib import Path
 
 from aigis.scanner import ScanResult, scan_mcp_tool
 
-
 # ---------------------------------------------------------------------------
 # Data types
 # ---------------------------------------------------------------------------
@@ -229,7 +228,7 @@ def snapshot_tool(
     )
     content_hash = hashlib.sha256(hashable.encode("utf-8")).hexdigest()
 
-    ts = timestamp or datetime.datetime.now(datetime.timezone.utc).isoformat()
+    ts = timestamp or datetime.datetime.now(datetime.UTC).isoformat()
 
     return MCPToolSnapshot(
         tool_name=name,

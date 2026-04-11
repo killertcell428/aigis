@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from aigis.capabilities.store import CapabilityStore
-from aigis.capabilities.taint import TaintLabel, TaintedValue
+from aigis.capabilities.taint import TaintedValue, TaintLabel
 from aigis.types import CheckResult
 
 if TYPE_CHECKING:

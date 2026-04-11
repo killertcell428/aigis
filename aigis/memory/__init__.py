@@ -28,7 +28,7 @@ Quick start::
 """
 
 from aigis.memory.integrity import IntegrityRecord, MemoryIntegrity
-from aigis.memory.scanner import MemoryEntry, MemoryScanResult, MemoryScanner
+from aigis.memory.scanner import MemoryEntry, MemoryScanner, MemoryScanResult
 
 __all__ = [
     "MemoryScanner",

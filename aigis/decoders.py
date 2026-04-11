@@ -24,7 +24,6 @@ import codecs
 import re
 import urllib.parse
 
-
 # ---------------------------------------------------------------------------
 # Confusable character mapping (Cyrillic/Greek/Math → Latin ASCII)
 # ---------------------------------------------------------------------------

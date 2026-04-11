@@ -544,6 +544,8 @@ from aigis.monitor.containment import (  # noqa: E402
 from aigis.monitor.drift import DriftAlert, DriftDetector  # noqa: E402
 from aigis.monitor.monitor import (  # noqa: E402
     BehavioralMonitor,
+)
+from aigis.monitor.monitor import (
     MonitoringReport as BehavioralMonitoringReport,
 )
 from aigis.monitor.tracker import ActionTracker, TrackedAction  # noqa: E402

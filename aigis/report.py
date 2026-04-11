@@ -97,99 +97,99 @@ class MonitoringReport:
         lines: list[str] = []
         _a = lines.append
 
-        _a(f"# Aigis Security Report")
-        _a(f"")
+        _a("# Aigis Security Report")
+        _a("")
         _a(f"**Period**: Last {days} days | **Generated**: {meta['generated_at'][:10]} | **Version**: {meta['version']}")
-        _a(f"")
+        _a("")
 
         # --- Summary ---
-        _a(f"## Summary")
-        _a(f"")
-        _a(f"| Metric | Value |")
-        _a(f"|--------|-------|")
+        _a("## Summary")
+        _a("")
+        _a("| Metric | Value |")
+        _a("|--------|-------|")
         _a(f"| Total Scans | {snap['total_scans']:,} |")
         _a(f"| Blocked (Critical) | {snap['total_blocked']:,} |")
         _a(f"| Review Required | {snap['total_review']:,} |")
         _a(f"| Allowed | {snap['total_allowed']:,} |")
         _a(f"| Detection Rate | {snap['detection_rate']:.1%} |")
         _a(f"| Attack Success Rate (ASR) | {snap['asr']:.1%} |")
-        _a(f"")
+        _a("")
 
         # Risk distribution
         risk = snap["risk_distribution"]
         total_risk = sum(risk.values()) or 1
-        _a(f"### Risk Distribution")
-        _a(f"")
-        _a(f"| Level | Count | Share |")
-        _a(f"|-------|-------|-------|")
+        _a("### Risk Distribution")
+        _a("")
+        _a("| Level | Count | Share |")
+        _a("|-------|-------|-------|")
         for level in ("critical", "high", "medium", "low"):
             count = risk.get(level, 0)
             _a(f"| {level.upper()} | {count:,} | {count/total_risk:.1%} |")
-        _a(f"")
+        _a("")
 
         # --- ASR Trend ---
         trend = data["asr_trend"]
         if trend:
-            _a(f"## ASR Trend (Attack Success Rate)")
-            _a(f"")
-            _a(f"> Lower ASR = better defense. Inspired by 0din-ai/ai-scanner's ASR tracking.")
-            _a(f"")
-            _a(f"| Date | Attacks | Blocked | Bypassed | ASR |")
-            _a(f"|------|---------|---------|----------|-----|")
+            _a("## ASR Trend (Attack Success Rate)")
+            _a("")
+            _a("> Lower ASR = better defense. Inspired by 0din-ai/ai-scanner's ASR tracking.")
+            _a("")
+            _a("| Date | Attacks | Blocked | Bypassed | ASR |")
+            _a("|------|---------|---------|----------|-----|")
             for t in trend[-14:]:  # Last 14 days
                 _a(f"| {t['date']} | {t['total_attacks']} | {t['blocked']} | {t['bypassed']} | {t['asr']:.1%} |")
-            _a(f"")
+            _a("")
 
         # --- OWASP LLM Top 10 Scorecard ---
-        _a(f"## OWASP LLM Top 10 Coverage")
-        _a(f"")
+        _a("## OWASP LLM Top 10 Coverage")
+        _a("")
         scorecard = data["owasp_scorecard"]
-        _a(f"| ID | Threat | Protection | Detections | Aigis Unique |")
-        _a(f"|----|--------|------------|------------|-------------------|")
+        _a("| ID | Threat | Protection | Detections | Aigis Unique |")
+        _a("|----|--------|------------|------------|-------------------|")
         for oid in sorted(scorecard.keys()):
             sc = scorecard[oid]
             level = sc.get("protection_level", "not-covered")
             icon = {"active": "ACTIVE", "monitored": "MONITORED", "pattern-ready": "READY", "not-covered": "-"}[level]
             feats = ", ".join(sc.get("unique_features", [])[:2]) or "-"
             _a(f"| {oid} | {sc['name']} | {icon} | {sc.get('detections', 0)} | {feats} |")
-        _a(f"")
+        _a("")
 
         # --- Detection Pipeline (aigis unique) ---
         pipeline = data["detection_pipeline"]
-        _a(f"## Multi-Layer Detection Pipeline")
-        _a(f"")
-        _a(f"> Aigis's 4-layer defense - what makes it different from scan-only tools.")
-        _a(f"")
-        _a(f"| Layer | Detections | Description |")
-        _a(f"|-------|------------|-------------|")
+        _a("## Multi-Layer Detection Pipeline")
+        _a("")
+        _a("> Aigis's 4-layer defense - what makes it different from scan-only tools.")
+        _a("")
+        _a("| Layer | Detections | Description |")
+        _a("|-------|------------|-------------|")
         for layer in ("regex", "similarity", "decoded", "multi_turn"):
             count = pipeline["layers"].get(layer, 0)
             desc = pipeline["description"].get(layer, "")
             _a(f"| {layer} | {count:,} | {desc} |")
-        _a(f"")
+        _a("")
 
         # --- Unique Capabilities ---
         caps = data["unique_capabilities"]
-        _a(f"## Aigis Differentiators")
-        _a(f"")
-        _a(f"| Capability | Status | vs. Scan-Only Tools |")
-        _a(f"|------------|--------|---------------------|")
+        _a("## Aigis Differentiators")
+        _a("")
+        _a("| Capability | Status | vs. Scan-Only Tools |")
+        _a("|------------|--------|---------------------|")
         for cap in caps:
             _a(f"| {cap['name']} | {cap['status']} | {cap['differentiator']} |")
-        _a(f"")
+        _a("")
 
         # --- Direction Breakdown ---
         dirs = data["direction_breakdown"]
         if dirs:
-            _a(f"## Scan Direction Breakdown")
-            _a(f"")
-            _a(f"| Direction | Count |")
-            _a(f"|-----------|-------|")
+            _a("## Scan Direction Breakdown")
+            _a("")
+            _a("| Direction | Count |")
+            _a("|-----------|-------|")
             for d, c in sorted(dirs.items(), key=lambda x: -x[1]):
                 _a(f"| {d} | {c:,} |")
-            _a(f"")
+            _a("")
 
-        _a(f"---")
+        _a("---")
         _a(f"*Generated by Aigis v{meta['version']}*")
         return "\n".join(lines)
 

@@ -22,7 +22,7 @@ from aigis.capabilities.policy_bridge import (
     load_policy_into_store,
 )
 from aigis.capabilities.store import CapabilityStore
-from aigis.capabilities.taint import TaintLabel, TaintedValue
+from aigis.capabilities.taint import TaintedValue, TaintLabel
 from aigis.capabilities.tokens import Capability
 
 __all__ = [

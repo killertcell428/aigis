@@ -34,7 +34,6 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-
 # ---------------------------------------------------------------------------
 # Advanced attack generation — beyond template-based (supplements redteam.py)
 # ---------------------------------------------------------------------------
@@ -447,7 +446,7 @@ class LoopReport:
         lines = [
             "# Adversarial Loop Report",
             "",
-            f"*Generated: {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*",
+            f"*Generated: {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d %H:%M UTC')}*",
             "",
             "## Executive Summary",
             "",

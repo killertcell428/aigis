@@ -15,7 +15,6 @@ Academic basis:
 from __future__ import annotations
 
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 
 from aigis.monitor.baseline import BehaviorProfile

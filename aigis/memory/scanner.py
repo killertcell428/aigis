@@ -21,11 +21,9 @@ plus memory-specific heuristics that target persistence-based attacks.
 from __future__ import annotations
 
 import re
-import time
 from dataclasses import dataclass, field
 
 from aigis.guard import Guard
-
 
 # ---------------------------------------------------------------------------
 # Data classes
