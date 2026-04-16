@@ -68,6 +68,22 @@ class Tenant(Base):
         Boolean, default=False, server_default="false", nullable=False
     )
 
+    # Enterprise Mode (incident workflow, real-time notifications, advanced reports)
+    enterprise_mode: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+
+    # Report delivery settings
+    weekly_report_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true", nullable=False
+    )
+    weekly_report_slack: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+    weekly_report_email: Mapped[Optional[str]] = mapped_column(
+        String(500), nullable=True
+    )  # comma-separated emails
+
     # Relationships
     users: Mapped[list["User"]] = relationship(back_populates="tenant", lazy="selectin")
     policies: Mapped[list["Policy"]] = relationship(back_populates="tenant", lazy="selectin")

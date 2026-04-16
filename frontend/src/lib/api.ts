@@ -348,6 +348,126 @@ export const monitorApi = {
 };
 
 // ---------------------------------------------------------------------------
+// Weekly Report
+// ---------------------------------------------------------------------------
+export interface WeeklyReport {
+  generated_at: string;
+  period_start: string;
+  period_end: string;
+  total_scans: number;
+  total_blocked: number;
+  total_review: number;
+  total_allowed: number;
+  safety_rate: number;
+  risk_distribution: Record<string, number>;
+  category_counts: Record<string, number>;
+  detection_by_layer: Record<string, number>;
+  owasp_coverage: Record<string, {
+    name: string;
+    detections: number;
+    blocked: number;
+    covered: boolean;
+    protection_level: string;
+  }>;
+  prev_total_scans: number;
+  prev_total_blocked: number;
+  prev_safety_rate: number;
+  trend_scans_pct: number;
+  trend_blocked_pct: number;
+  trend_safety_pct: number;
+  category_trends: Record<string, {
+    this_week: number;
+    prev_week: number;
+    change_pct: number;
+    direction: string;
+  }>;
+  recommendations: Array<{ severity: string; message: string }>;
+}
+
+export const reportsApi = {
+  weekly(): Promise<WeeklyReport> {
+    return request("/reports/weekly");
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Incidents
+// ---------------------------------------------------------------------------
+export interface IncidentTimeline {
+  timestamp: string;
+  action: string;
+  actor: string;
+  detail: string;
+}
+
+export interface IncidentItem {
+  id: string;
+  incident_number: string;
+  severity: string;
+  status: string;
+  title: string;
+  request_id: string | null;
+  risk_score: number;
+  matched_rules: Array<{ rule_id: string; rule_name: string; category: string; score_delta: number }>;
+  detection_layers: string[];
+  source_ip: string | null;
+  trigger_category: string | null;
+  assigned_to: string | null;
+  resolution: string | null;
+  resolution_note: string | null;
+  sla_deadline: string | null;
+  sla_met: boolean | null;
+  timeline: IncidentTimeline[];
+  related_event_ids: string[];
+  detected_at: string;
+  responded_at: string | null;
+  resolved_at: string | null;
+  closed_at: string | null;
+}
+
+export interface IncidentStats {
+  total: number;
+  open: number;
+  investigating: number;
+  mitigated: number;
+  closed: number;
+}
+
+export const incidentsApi = {
+  list(params?: { status?: string; severity?: string; limit?: number }): Promise<IncidentItem[]> {
+    const qs = new URLSearchParams();
+    if (params?.status) qs.set("status", params.status);
+    if (params?.severity) qs.set("severity", params.severity);
+    if (params?.limit) qs.set("limit", String(params.limit));
+    return request(`/incidents?${qs.toString()}`);
+  },
+  stats(): Promise<IncidentStats> {
+    return request("/incidents/stats");
+  },
+  get(id: string): Promise<IncidentItem> {
+    return request(`/incidents/${id}`);
+  },
+  updateStatus(id: string, status: string, note?: string): Promise<IncidentItem> {
+    return request(`/incidents/${id}/status`, {
+      method: "POST",
+      body: JSON.stringify({ status, note }),
+    });
+  },
+  resolve(id: string, resolution: string, note?: string): Promise<IncidentItem> {
+    return request(`/incidents/${id}/resolve`, {
+      method: "POST",
+      body: JSON.stringify({ resolution, note }),
+    });
+  },
+  addNote(id: string, note: string): Promise<IncidentItem> {
+    return request(`/incidents/${id}/note`, {
+      method: "POST",
+      body: JSON.stringify({ note }),
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Audit Logs
 // ---------------------------------------------------------------------------
 export const auditApi = {

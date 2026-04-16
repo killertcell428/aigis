@@ -251,6 +251,24 @@ Aigis includes a full web dashboard for monitoring and governance. Optional — 
 - Policy editor with visual risk zone slider
 - Compliance report generation (PDF/Excel/CSV)
 - Audit logs with full request inspection
+- **NEW: Incident Management** — Detection-to-Resolution lifecycle (Open → Investigating → Mitigated → Closed)
+- **NEW: Weekly Security Report** — Auto-generated with trends, OWASP coverage, and recommended actions
+- **NEW: Enterprise Mode** — Real-time notifications, SLA tracking, escalation workflow
+
+### Incident Management
+
+Aigis is the **only open-source LLM security tool** with built-in incident lifecycle management.
+When threats are detected, incidents are automatically created with full timeline tracking.
+
+```bash
+# CLI: Weekly security report
+aigis report weekly
+aigis report weekly --format markdown -o report.md
+
+# Web Dashboard
+# /incidents — Incident list with status filters, SLA countdown, timeline view
+# /reports — Weekly Report tab with trends + Compliance tab
+```
 
 ```bash
 # Start with Docker Compose

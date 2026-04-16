@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getLang, saveLang } from "@/lib/lang";
 import LangToggle from "@/components/LangToggle";
+import { reportsApi, type WeeklyReport } from "@/lib/api";
 
 const BASE = "/api/v1";
 
@@ -44,13 +45,23 @@ interface ReportData {
 }
 
 export default function ReportsPage() {
+  const [tab, setTab] = useState<"weekly" | "compliance">("weekly");
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<ReportData | null>(null);
+  const [weeklyData, setWeeklyData] = useState<WeeklyReport | null>(null);
+  const [weeklyLoading, setWeeklyLoading] = useState(true);
   const [lang, setLang] = useState<"en" | "ja">("ja");
 
   useEffect(() => {
     setLang(getLang());
+  }, []);
+
+  useEffect(() => {
+    reportsApi.weekly()
+      .then(setWeeklyData)
+      .catch(console.error)
+      .finally(() => setWeeklyLoading(false));
   }, []);
 
   function changeLang(l: "en" | "ja") {
@@ -117,14 +128,39 @@ export default function ReportsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl text-gd-text-primary" style={{ fontWeight: 580 }}>{ja ? "コンプライアンスレポート" : "Compliance Reports"}</h1>
+          <h1 className="text-2xl text-gd-text-primary" style={{ fontWeight: 580 }}>{ja ? "レポート" : "Reports"}</h1>
           <p className="text-gd-text-muted text-sm mt-1">
-            {ja ? "SOC2、ISO 27001、OWASP、AI事業者ガイドラインv1.2に対応したレポートを生成" : "Generate audit reports for SOC2, ISO 27001, OWASP, and Japan AI Guidelines v1.2"}
+            {ja ? "週次セキュリティレポートとコンプライアンスレポート" : "Weekly security reports and compliance reports"}
           </p>
         </div>
         <LangToggle lang={lang} onChange={changeLang} />
       </div>
 
+      {/* Tab switcher */}
+      <div className="flex gap-1 bg-gd-elevated rounded-lg p-1 mb-6 w-fit">
+        {(["weekly", "compliance"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 rounded-md text-sm transition-colors ${
+              tab === t
+                ? "bg-gd-accent text-white shadow-gd-inset"
+                : "text-gd-text-muted hover:text-gd-text-primary"
+            }`}
+            style={{ fontWeight: 480 }}
+          >
+            {t === "weekly" ? (ja ? "週次レポート" : "Weekly Report") : (ja ? "コンプライアンス" : "Compliance")}
+          </button>
+        ))}
+      </div>
+
+      {/* Weekly Report Tab */}
+      {tab === "weekly" && (
+        <WeeklyReportSection data={weeklyData} loading={weeklyLoading} ja={ja} />
+      )}
+
+      {/* Compliance Tab */}
+      {tab === "compliance" && <>
       {/* Controls */}
       <div className="bg-gd-surface rounded-xl border border-gd-subtle shadow-gd-card p-6 mb-6">
         <div className="flex flex-wrap items-end gap-4">
@@ -289,6 +325,229 @@ export default function ReportsPage() {
       {!report && !loading && (
         <div className="bg-gd-surface rounded-xl border border-gd-subtle p-12 text-center text-gd-text-muted text-sm">
           {ja ? "「レポート生成」をクリックして、選択した期間のコンプライアンスレポートを作成してください。" : "Click \"Generate Report\" to create a compliance report for the selected period."}
+        </div>
+      )}
+      </>}
+    </div>
+  );
+}
+
+// === Weekly Report i18n Maps ===
+
+const CATEGORY_JA: Record<string, string> = {
+  prompt_injection: "プロンプトインジェクション",
+  jailbreak: "ジェイルブレイク",
+  sql_injection: "SQLインジェクション",
+  command_injection: "コマンドインジェクション",
+  code_injection: "コードインジェクション",
+  xss_injection: "XSSインジェクション",
+  pii_input: "個人情報（入力）",
+  pii_leak: "個人情報漏洩",
+  credential_leak: "認証情報漏洩",
+  data_exfiltration: "データ窃取",
+  confidential_data: "機密データ",
+  system_prompt_leak: "システムプロンプト漏洩",
+  output_manipulation: "出力改ざん",
+  resource_abuse: "リソース悪用",
+  dos_attack: "DoS攻撃",
+  mcp_poisoning: "MCPポイズニング",
+  mcp_tool_shadow: "MCPツールシャドウ",
+  privilege_escalation: "権限昇格",
+  excessive_agency: "過剰な自律性",
+  supply_chain: "サプライチェーン",
+};
+
+const OWASP_JA: Record<string, string> = {
+  "Prompt Injection": "プロンプトインジェクション",
+  "Insecure Output Handling": "安全でない出力処理",
+  "Training Data Poisoning": "学習データ汚染",
+  "Model Denial of Service": "モデルDoS攻撃",
+  "Supply-Chain Vulnerabilities": "サプライチェーン脆弱性",
+  "Sensitive Information Disclosure": "機密情報漏洩",
+  "Insecure Plugin Design": "安全でないプラグイン設計",
+  "Excessive Agency": "過剰な自律性",
+  "Overreliance": "過度な依存",
+  "Model Theft": "モデル窃取",
+};
+
+const STATUS_JA: Record<string, string> = {
+  "ACTIVE": "検出中",
+  "MONITORED": "監視中",
+  "PATTERN-READY": "パターン準備済",
+  "NOT-COVERED": "未対応",
+};
+
+// Recommendation messages: keyword-based translation
+function translateRec(msg: string, ja: boolean): string {
+  if (!ja) return msg;
+  return msg
+    .replace(/increased (\d+)% this week/g, "が今週$1%増加しました")
+    .replace(/\((\d+) -> (\d+)\)/g, "（$1 → $2）")
+    .replace(/Consider reviewing detection rules(?: for this category)?\.?/g, "検出ルールの見直しを検討してください。")
+    .replace(/New threat category: (\w+)/g, (_, c) => `新しい脅威カテゴリを検出: ${CATEGORY_JA[c] || c}`)
+    .replace(/\((\d+) occurrences?\)\.?/g, "（$1件）。")
+    .replace(/Monitor closely\.?/g, "注意して監視してください。")
+    .replace(/Blocked requests doubled/g, "ブロック数が倍増しました")
+    .replace(/Check for targeted attacks or false positives\.?/g, "標的型攻撃または誤検知の可能性を確認してください。")
+    .replace(/Safety rate is ([\d.]+%),? below 90%\.?/g, "安全率が$1で、90%を下回っています。")
+    .replace(/Review blocked requests for false positives\.?/g, "ブロックされたリクエストの誤検知を確認してください。")
+    .replace(/No scans this week\.?/g, "今週のスキャンがありません。")
+    .replace(/Verify Aigis integration is active\.?/g, "Aigisの統合が有効か確認してください。")
+    .replace(/\((\d+)% increase\)/g, "（$1%増加）");
+}
+
+// === Weekly Report Section ===
+
+function TrendBadge({ value, inverted }: { value: number; inverted?: boolean }) {
+  const isGood = inverted ? value < -5 : value > 5;
+  const isBad = inverted ? value > 5 : value < -5;
+  const color = isGood ? "text-gd-safe" : isBad ? "text-gd-danger" : "text-gd-text-muted";
+  const arrow = value > 5 ? "\u2191" : value < -5 ? "\u2193" : "\u2192";
+  return <span className={`text-xs ${color}`} style={{ fontWeight: 500 }}>{arrow} {Math.abs(value).toFixed(0)}%</span>;
+}
+
+function WeeklyReportSection({ data, loading, ja }: { data: WeeklyReport | null; loading: boolean; ja: boolean }) {
+  if (loading) return <p className="text-gd-text-muted text-sm">{ja ? "読み込み中..." : "Loading..."}</p>;
+  if (!data) return <p className="text-gd-text-muted text-sm">{ja ? "データがありません" : "No data available"}</p>;
+
+  const r = data;
+  const sortedCats = Object.entries(r.category_trends).sort((a, b) => b[1].this_week - a[1].this_week);
+  const owaspEntries = Object.entries(r.owasp_coverage).sort();
+
+  return (
+    <div className="space-y-6">
+      {/* Period */}
+      <p className="text-xs text-gd-text-muted">{r.period_start} ~ {r.period_end}</p>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gd-surface rounded-xl border border-gd-subtle p-4">
+          <p className="text-xs text-gd-text-muted">{ja ? "総スキャン数" : "Total Scans"}</p>
+          <p className="text-2xl text-gd-text-primary mt-1" style={{ fontWeight: 600 }}>{r.total_scans.toLocaleString()}</p>
+          <TrendBadge value={r.trend_scans_pct} />
+        </div>
+        <div className="bg-gd-surface rounded-xl border border-gd-subtle p-4">
+          <p className="text-xs text-gd-text-muted">{ja ? "ブロック数" : "Blocked"}</p>
+          <p className="text-2xl text-gd-danger mt-1" style={{ fontWeight: 600 }}>{r.total_blocked}</p>
+          <TrendBadge value={r.trend_blocked_pct} inverted />
+        </div>
+        <div className="bg-gd-surface rounded-xl border border-gd-subtle p-4">
+          <p className="text-xs text-gd-text-muted">{ja ? "安全率" : "Safety Rate"}</p>
+          <p className="text-2xl text-gd-safe mt-1" style={{ fontWeight: 600 }}>{(r.safety_rate * 100).toFixed(1)}%</p>
+          <span className={`text-xs ${r.trend_safety_pct >= 0 ? "text-gd-safe" : "text-gd-danger"}`}>
+            {r.trend_safety_pct >= 0 ? "\u2191" : "\u2193"} {Math.abs(r.trend_safety_pct).toFixed(1)}pp
+          </span>
+        </div>
+        <div className="bg-gd-surface rounded-xl border border-gd-subtle p-4">
+          <p className="text-xs text-gd-text-muted">{ja ? "レビュー待ち" : "Review"}</p>
+          <p className="text-2xl text-gd-warn mt-1" style={{ fontWeight: 600 }}>{r.total_review}</p>
+        </div>
+      </div>
+
+      {/* Risk Distribution */}
+      <div className="bg-gd-surface rounded-xl border border-gd-subtle p-6">
+        <h3 className="text-sm text-gd-text-primary mb-3" style={{ fontWeight: 540 }}>{ja ? "リスク分布" : "Risk Distribution"}</h3>
+        <div className="grid grid-cols-4 gap-3">
+          {(["critical", "high", "medium", "low"] as const).map((level) => {
+            const colors: Record<string, string> = {
+              critical: "bg-red-500/10 text-red-400",
+              high: "bg-orange-500/10 text-orange-400",
+              medium: "bg-yellow-500/10 text-yellow-400",
+              low: "bg-green-500/10 text-green-400",
+            };
+            const labels: Record<string, string> = { critical: ja ? "重大" : "Critical", high: ja ? "高" : "High", medium: ja ? "中" : "Medium", low: ja ? "低" : "Low" };
+            return (
+              <div key={level} className={`rounded-lg p-3 text-center ${colors[level]}`}>
+                <p className="text-xl" style={{ fontWeight: 600 }}>{r.risk_distribution[level] || 0}</p>
+                <p className="text-xs mt-1">{labels[level]}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Category Trends */}
+      {sortedCats.length > 0 && (
+        <div className="bg-gd-surface rounded-xl border border-gd-subtle p-6">
+          <h3 className="text-sm text-gd-text-primary mb-3" style={{ fontWeight: 540 }}>{ja ? "脅威カテゴリ（前週比）" : "Threat Categories (Week-over-Week)"}</h3>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs text-gd-text-muted">
+                <th className="text-left pb-2">{ja ? "カテゴリ" : "Category"}</th>
+                <th className="text-right pb-2">{ja ? "前週" : "Prev"}</th>
+                <th className="text-right pb-2">{ja ? "今週" : "This"}</th>
+                <th className="text-right pb-2">{ja ? "変化" : "Change"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedCats.map(([cat, t]) => (
+                <tr key={cat} className="border-t border-gd-subtle">
+                  <td className="py-2 text-gd-text-secondary">{ja ? (CATEGORY_JA[cat] || cat.replace(/_/g, " ")) : cat.replace(/_/g, " ")}</td>
+                  <td className="py-2 text-right text-gd-text-muted">{t.prev_week}</td>
+                  <td className="py-2 text-right text-gd-text-primary" style={{ fontWeight: 520 }}>{t.this_week}</td>
+                  <td className="py-2 text-right"><TrendBadge value={t.change_pct} inverted /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* OWASP Coverage */}
+      <div className="bg-gd-surface rounded-xl border border-gd-subtle p-6">
+        <h3 className="text-sm text-gd-text-primary mb-3" style={{ fontWeight: 540 }}>OWASP LLM Top 10</h3>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs text-gd-text-muted">
+              <th className="text-left pb-2">ID</th>
+              <th className="text-left pb-2">{ja ? "脅威" : "Threat"}</th>
+              <th className="text-left pb-2">{ja ? "状態" : "Status"}</th>
+              <th className="text-right pb-2">{ja ? "検出" : "Hits"}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {owaspEntries.map(([oid, cov]) => {
+              const statusColors: Record<string, string> = {
+                active: "bg-green-500/10 text-green-400",
+                monitored: "bg-blue-500/10 text-blue-400",
+                "pattern-ready": "bg-gray-500/10 text-gray-400",
+                "not-covered": "bg-gray-500/5 text-gray-500",
+              };
+              return (
+                <tr key={oid} className="border-t border-gd-subtle">
+                  <td className="py-2 text-gd-text-muted text-xs">{oid}</td>
+                  <td className="py-2 text-gd-text-secondary">{ja ? (OWASP_JA[cov.name] || cov.name) : cov.name}</td>
+                  <td className="py-2">
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[cov.protection_level] || ""}`}>
+                      {ja ? (STATUS_JA[cov.protection_level.toUpperCase()] || cov.protection_level.toUpperCase()) : cov.protection_level.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="py-2 text-right text-gd-text-primary">{cov.detections}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Recommendations */}
+      {r.recommendations.length > 0 && (
+        <div className="bg-gd-surface rounded-xl border border-gd-subtle p-6">
+          <h3 className="text-sm text-gd-text-primary mb-3" style={{ fontWeight: 540 }}>{ja ? "推奨アクション" : "Recommended Actions"}</h3>
+          <div className="space-y-2">
+            {r.recommendations.map((rec, i) => {
+              const colors: Record<string, string> = {
+                critical: "border-l-red-500 bg-red-500/5",
+                warning: "border-l-yellow-500 bg-yellow-500/5",
+                info: "border-l-blue-500 bg-blue-500/5",
+              };
+              return (
+                <div key={i} className={`border-l-2 rounded-r-lg px-4 py-3 ${colors[rec.severity] || colors.info}`}>
+                  <p className="text-sm text-gd-text-secondary">{translateRec(rec.message, ja)}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

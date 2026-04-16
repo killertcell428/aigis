@@ -9,8 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.logger import log_event
 from app.config import settings
+from app.notifications.hub import notify_incident_created
 from app.filters.input_filter import filter_input
 from app.filters.output_filter import filter_output
+from app.incidents.service import create_incident
 from app.models.policy import Policy
 from app.models.request import Request
 from app.models.tenant import Tenant
@@ -162,6 +164,26 @@ async def handle_proxy_request(
                 },
             )
         )
+        # Create incident for critical threats
+        primary_cat = req.input_matched_rules[0].get("category", "") if req.input_matched_rules else ""
+        inc_title = f"{input_result.reason or 'Critical threat'} (score={input_result.risk_score})"
+        inc = await create_incident(
+            db=db,
+            tenant_id=tenant.id,
+            request_id=req.id,
+            severity="critical",
+            title=inc_title,
+            risk_score=input_result.risk_score,
+            matched_rules=req.input_matched_rules,
+            source_ip=client_ip,
+            trigger_category=primary_cat,
+            request_snapshot={"model": model, "messages": messages},
+            sla_minutes=policy.review_sla_minutes,
+        )
+        asyncio.create_task(notify_incident_created(
+            tenant=tenant, incident_number=inc.incident_number, severity="critical",
+            title=inc_title, risk_score=input_result.risk_score, matched_rules=req.input_matched_rules,
+        ))
         return blocked_response(
             input_result.reason,
             input_result.risk_score,
@@ -174,6 +196,27 @@ async def handle_proxy_request(
         review_item = await enqueue_for_review(db, req, policy.review_sla_minutes)
         req.latency_ms = (time.monotonic() - start_time) * 1000
         db.add(req)
+        # Create incident for high-risk threats entering review
+        primary_cat = req.input_matched_rules[0].get("category", "") if req.input_matched_rules else ""
+        sev = "high" if input_result.risk_score > 60 else "medium"
+        inc_title = f"{input_result.reason or 'Threat detected'} (score={input_result.risk_score})"
+        inc = await create_incident(
+            db=db,
+            tenant_id=tenant.id,
+            request_id=req.id,
+            severity=sev,
+            title=inc_title,
+            risk_score=input_result.risk_score,
+            matched_rules=req.input_matched_rules,
+            source_ip=client_ip,
+            trigger_category=primary_cat,
+            request_snapshot={"model": model, "messages": messages},
+            sla_minutes=policy.review_sla_minutes,
+        )
+        asyncio.create_task(notify_incident_created(
+            tenant=tenant, incident_number=inc.incident_number, severity=sev,
+            title=inc_title, risk_score=input_result.risk_score, matched_rules=req.input_matched_rules,
+        ))
         return queued_response(str(review_item.id), policy.review_sla_minutes), 202
 
     # --- Auto-allow (Low) ---
@@ -232,6 +275,26 @@ async def handle_proxy_request(
                     },
                 )
             )
+            # Create incident for output filter blocks
+            out_cat = req.output_matched_rules[0].get("category", "") if req.output_matched_rules else ""
+            out_title = f"Output blocked: {output_result.reason or 'Data leak detected'} (score={output_result.risk_score})"
+            inc = await create_incident(
+                db=db,
+                tenant_id=tenant.id,
+                request_id=req.id,
+                severity="critical",
+                title=out_title,
+                risk_score=output_result.risk_score,
+                matched_rules=req.output_matched_rules,
+                source_ip=client_ip,
+                trigger_category=out_cat,
+                request_snapshot={"model": model, "messages": messages},
+                sla_minutes=policy.review_sla_minutes,
+            )
+            asyncio.create_task(notify_incident_created(
+                tenant=tenant, incident_number=inc.incident_number, severity="critical",
+                title=out_title, risk_score=output_result.risk_score, matched_rules=req.output_matched_rules,
+            ))
             return blocked_response(
                 output_result.reason,
                 output_result.risk_score,

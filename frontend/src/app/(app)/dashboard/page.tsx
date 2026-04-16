@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import StatCard from "@/components/StatCard";
 import LangToggle from "@/components/LangToggle";
-import { auditApi, billingApi, type AuditLog, type UsageStats } from "@/lib/api";
+import { auditApi, billingApi, incidentsApi, type AuditLog, type UsageStats, type IncidentStats } from "@/lib/api";
 import { getLang, saveLang } from "@/lib/lang";
 
 interface Stats {
@@ -41,6 +41,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function DashboardPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [usage, setUsage] = useState<UsageStats | null>(null);
+  const [incStats, setIncStats] = useState<IncidentStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState<"en" | "ja">("ja");
 
@@ -58,12 +59,21 @@ export default function DashboardPage() {
     Promise.all([
       auditApi.list({ limit: 200 }),
       billingApi.getUsage().catch(() => null),
+      incidentsApi.stats().catch(() => null),
     ])
-      .then(([l, u]) => {
-        setLogs(l);
+      .then(([l, u, is_]) => {
+        setLogs(l ?? []);
         setUsage(u);
+        setIncStats(is_);
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error("[Aigis Dashboard] fetch error:", err);
+        if (String(err).includes("authenticated") || String(err).includes("401")) {
+          localStorage.removeItem("aigis_token");
+          window.location.href = "/login";
+          return;
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -179,6 +189,38 @@ export default function DashboardPage() {
           value={stats.allowed}
         />
       </div>
+
+      {/* Incident stats */}
+      {incStats && incStats.total > 0 && (
+        <div className="bg-gd-surface border border-gd-subtle rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm text-gd-text-primary" style={{ fontWeight: 540 }}>
+              {ja ? "インシデント状況" : "Incident Status"}
+            </h3>
+            <a href="/incidents" className="text-xs text-gd-accent hover:underline">
+              {ja ? "すべて見る" : "View all"}
+            </a>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            <div className="text-center">
+              <p className="text-lg text-red-400" style={{ fontWeight: 600 }}>{incStats.open}</p>
+              <p className="text-[10px] text-gd-text-muted">{ja ? "未対応" : "Open"}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg text-blue-400" style={{ fontWeight: 600 }}>{incStats.investigating}</p>
+              <p className="text-[10px] text-gd-text-muted">{ja ? "調査中" : "Investigating"}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg text-yellow-400" style={{ fontWeight: 600 }}>{incStats.mitigated}</p>
+              <p className="text-[10px] text-gd-text-muted">{ja ? "対応済" : "Mitigated"}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg text-green-400" style={{ fontWeight: 600 }}>{incStats.closed}</p>
+              <p className="text-[10px] text-gd-text-muted">{ja ? "クローズ" : "Closed"}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Plan usage */}
       {usage && usage.plan !== "free" && (

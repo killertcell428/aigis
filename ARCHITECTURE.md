@@ -554,6 +554,44 @@ Global (CISO/audit, cross-project):
       └── 2026-04-10.jsonl        ← Block/review only (permanent retention)
 ```
 
+## Incident Response Architecture (v0.0.3)
+
+NIST SP 800-61 準拠の4フェーズモデルをLLMセキュリティに翻訳。
+
+```
+Detection              Containment           Eradication/Recovery     Post-Incident
+─────────────────────────────────────────────────────────────────────────────────
+scan() → score         auto-block            review approve           weekly report
+  ↓                      ↓                     ↓                       ↓
+triage (severity)      Incident created      replay to LLM           recommendations
+  ↓                      ↓                   + output filter           ↓
+route (block/review)   timeline started        ↓                    auto-fix suggest
+  ↓                      ↓                  incident mitigated          ↓
+notify (Slack/WH)      SLA clock starts        ↓                    incident closed
+                                            notify resolved
+```
+
+### 2-Layer Design
+
+| Mode | Features | Config |
+|------|----------|--------|
+| **Default** | Weekly report auto-generation, scan logging | Zero config |
+| **Enterprise** | Default + incidents, real-time notifications, SLA, review replay | `enterprise_mode=true` |
+
+### Incident Lifecycle
+
+```
+open → investigating → mitigated → closed
+  ↓         ↓              ↓
+(SLA)    (SLA eval)    (resolution)
+```
+
+### Data Model
+
+- `incidents` table (PostgreSQL) — 25+ fields, JSONB timeline, request snapshot for replay
+- `INC-YYYY-NNNN` numbering (per tenant, per year)
+- 3 indexes: tenant+status, severity, detected_at
+
 ## AGI-Ready Schema
 
 ActivityEvent includes fields designed for future governance extensions.

@@ -1,4 +1,4 @@
-"""Tenant settings API — notification preferences."""
+"""Tenant settings API — notification and enterprise preferences."""
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -35,10 +35,9 @@ async def get_notification_settings(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
-    # Mask the webhook URL for security (show only last 8 chars)
     masked_url = None
     if tenant.slack_webhook_url:
-        masked_url = f"***{tenant.slack_webhook_url[-8:]}"
+        masked_url = "***configured"
 
     return NotificationSettingsResponse(
         slack_webhook_url=masked_url,
@@ -64,13 +63,75 @@ async def update_notification_settings(
     tenant.notify_on_high_risk = body.notify_on_high_risk
 
     db.add(tenant)
+    await db.commit()
 
     masked_url = None
     if tenant.slack_webhook_url:
-        masked_url = f"***{tenant.slack_webhook_url[-8:]}"
+        masked_url = "***configured"
 
     return NotificationSettingsResponse(
         slack_webhook_url=masked_url,
         notify_on_block=tenant.notify_on_block,
         notify_on_high_risk=tenant.notify_on_high_risk,
+    )
+
+
+# --- Enterprise & Report Settings ---
+
+class EnterpriseSettingsRequest(BaseModel):
+    enterprise_mode: bool = False
+    weekly_report_enabled: bool = True
+    weekly_report_slack: bool = False
+    weekly_report_email: Optional[str] = None
+
+
+class EnterpriseSettingsResponse(BaseModel):
+    enterprise_mode: bool
+    weekly_report_enabled: bool
+    weekly_report_slack: bool
+    weekly_report_email: Optional[str] = None
+
+
+@router.get("/enterprise", response_model=EnterpriseSettingsResponse)
+async def get_enterprise_settings(
+    current_user: Annotated[User, Depends(get_admin_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> EnterpriseSettingsResponse:
+    """Get enterprise mode and report delivery settings."""
+    tenant = await db.get(Tenant, current_user.tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    return EnterpriseSettingsResponse(
+        enterprise_mode=tenant.enterprise_mode,
+        weekly_report_enabled=tenant.weekly_report_enabled,
+        weekly_report_slack=tenant.weekly_report_slack,
+        weekly_report_email=tenant.weekly_report_email,
+    )
+
+
+@router.put("/enterprise", response_model=EnterpriseSettingsResponse)
+async def update_enterprise_settings(
+    body: EnterpriseSettingsRequest,
+    current_user: Annotated[User, Depends(get_admin_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> EnterpriseSettingsResponse:
+    """Update enterprise mode and report delivery settings."""
+    tenant = await db.get(Tenant, current_user.tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    tenant.enterprise_mode = body.enterprise_mode
+    tenant.weekly_report_enabled = body.weekly_report_enabled
+    tenant.weekly_report_slack = body.weekly_report_slack
+    tenant.weekly_report_email = body.weekly_report_email or None
+
+    db.add(tenant)
+    await db.commit()
+
+    return EnterpriseSettingsResponse(
+        enterprise_mode=tenant.enterprise_mode,
+        weekly_report_enabled=tenant.weekly_report_enabled,
+        weekly_report_slack=tenant.weekly_report_slack,
+        weekly_report_email=tenant.weekly_report_email,
     )

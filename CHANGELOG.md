@@ -15,6 +15,162 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **README branding update** — Replaced old `shield.svg` with new icon in header/footer, unified branch refs to `master`
 - **HTML sources + `gif_capture.py`** — All assets reproducible from source
 
+## [0.0.3] - 2026-04-17
+
+### Added — Incident Response & Weekly Report (Sprint 1-4)
+
+NIST SP 800-61 準拠のインシデント対応ワークフローを、LLMセキュリティの文脈で実装。
+競合調査（Lakera Guard, CalypsoAI/F5, Datadog, Langfuse, NeMo等）の結果、
+「検出→ブロック→レビュー→対応→クローズ→レポート」を一気通貫で持つOSSは存在しなかったため、
+Aigis独自の「Detection-to-Resolution」パイプラインとして設計・実装。
+
+#### Sprint 1: Weekly Security Report（全ユーザー向けデフォルト機能）
+
+- **`aigis/weekly_report.py`** — `WeeklyReportGenerator`クラス新規作成
+  - 前週比トレンド（スキャン数・ブロック数・安全率の変化率）
+  - カテゴリ別 week-over-week 比較（増加率・新種カテゴリ検出）
+  - OWASP LLM Top 10 カバレッジ集計
+  - 検出レイヤー統計（regex / similarity / decoded）
+  - **推奨アクション自動生成**（カテゴリ増加警告、安全率低下、auto-fix提案等 7種のルール）
+  - 出力形式: text（ターミナル） / markdown / json
+- **CLI: `aigis report weekly`** — `--format text|json|markdown`、`--output` ファイル出力対応
+- **Backend API: `GET /api/v1/reports/weekly`** — PostgreSQLからリクエストデータを2週間分集計
+  - 前週比トレンド、リスク分布、カテゴリ別検出数、OWASP カバレッジ、推奨アクションを返却
+- **Frontend: `/reports` ページに「週次レポート」タブ追加**
+  - サマリーカード（スキャン数/ブロック数/安全率+前週比矢印）
+  - リスク分布（4段階カラーカード）
+  - 脅威カテゴリ前週比テーブル
+  - OWASP LLM Top 10 ステータステーブル
+  - 推奨アクション（severity別カラーバー）
+  - **日本語完全対応**（カテゴリ名20種、OWASP名10種、ステータス4種、推奨アクションの翻訳マッピング）
+
+#### Sprint 2: Incident Management（Enterprise Mode基盤）
+
+- **`backend/app/models/incident.py`** — Incidentモデル新規作成
+  - フィールド: severity, status, title, request_snapshot, matched_rules, detection_layers,
+    related_event_ids, source_ip, trigger_category, assigned_to, resolution, resolution_note,
+    suggested_rule, sla_deadline, sla_met, timeline (JSONB append-only journal)
+  - ライフサイクル: `open` → `investigating` → `mitigated` → `closed`
+  - インシデント番号: `INC-YYYY-NNNN` 形式（テナント×年でユニーク）
+- **`backend/alembic/versions/004_create_incidents_table.py`** — マイグレーション
+  - incidents テーブル作成 + 3インデックス（tenant_status, severity, detected_at）
+- **`backend/app/incidents/service.py`** — インシデントサービス
+  - `create_incident()`: スキャン結果からインシデント自動作成
+  - `add_timeline_entry()`: タイムラインにイベントをappend（JSONB mutation対応）
+  - `_next_incident_number()`: テナント×年でシーケンシャル番号生成
+  - `_find_related_events()`: 同一IP/カテゴリの直近24hイベント自動紐づけ
+- **`backend/app/proxy/handler.py`** — 3箇所にインシデント自動作成をフック
+  - auto-block（CRITICAL）時 → severity=critical のインシデント作成
+  - review queue投入（HIGH/MEDIUM）時 → severity=high/medium のインシデント作成
+  - output filter block時 → severity=critical のインシデント作成
+  - 全箇所でリクエストスナップショット保存（再実行用）
+- **Backend API: `backend/app/routers/incidents.py`** — 7エンドポイント
+  - `GET /api/v1/incidents` — 一覧取得（status/severity/limit/offsetフィルタ）
+  - `GET /api/v1/incidents/stats` — ステータス別件数集計
+  - `GET /api/v1/incidents/{id}` — 詳細取得（タイムライン含む）
+  - `POST /api/v1/incidents/{id}/status` — ステータス遷移（valid_transitionsで制御）
+  - `POST /api/v1/incidents/{id}/assign` — 担当者アサイン（テナント間チェック付き）
+  - `POST /api/v1/incidents/{id}/resolve` — 解決（resolution + note記録）
+  - `POST /api/v1/incidents/{id}/note` — タイムラインにメモ追加
+- **Frontend: `/incidents` ページ新規作成**
+  - 2ペインレイアウト（左: 一覧、右: 詳細+タイムライン）
+  - ステータス別フィルタボタン（Open/Investigating/Mitigated/Closed + 件数表示）
+  - SLAカウントダウン / 超過表示
+  - アクションボタン（調査開始 / 誤検知 / 脅威確認 / ブロックリスト追加 / クローズ）
+  - タイムライン表示（ドット+ライン形式、時系列降順）
+  - メモ入力+送信
+  - **日本語完全対応**（ステータス、重大度、カテゴリ名の翻訳マッピング）
+- **サイドバーに「インシデント」リンク追加**
+
+#### Sprint 3: Notification Hub & Review Replay
+
+- **`backend/app/notifications/hub.py`** — 統合通知ハブ新規作成
+  - `notify()`: Slack + 汎用Webhook の統合ディスパッチ
+  - `notify_incident_created()`: インシデント作成時の通知テンプレート
+  - `notify_sla_warning()`: SLA期限接近時の警告通知
+  - `notify_incident_resolved()`: インシデント解決時の通知
+  - `_send_slack()`: Block Kit形式のリッチ通知（severity別カラー+emoji、マッチルール表示）
+  - `_send_webhook()`: 汎用JSON形式のHTTP POST通知
+- **proxy/handler.py の3箇所にインシデント通知をフック**
+  - `asyncio.create_task(notify_incident_created(...))` で非同期送信
+- **レビュー承認→リクエスト再実行**（`backend/app/review/service.py`）
+  - `_replay_approved_request()`: 承認時にrequest_snapshotからLLMにリクエスト再送
+  - **出力フィルタを再実行に適用**（セキュリティ修正 #4）
+  - レビュー判断と同時にリンクされたIncidentのステータスも自動更新
+    （resolution記録、タイムラインにreview判断を追記、SLA判定）
+
+#### Sprint 4: Dashboard Integration & Enterprise Settings
+
+- **Dashboard に「インシデント状況」セクション追加**
+  - Open/Investigating/Mitigated/Closed の件数をリアルタイム表示
+  - 「すべて見る」リンクで `/incidents` に遷移
+- **`backend/app/routers/settings.py`** — Enterprise設定エンドポイント追加
+  - `GET/PUT /api/v1/settings/enterprise`
+  - enterprise_mode: インシデントワークフローのON/OFF
+  - weekly_report_enabled: 週次レポート生成のON/OFF
+  - weekly_report_slack: Slackへの自動配信ON/OFF
+  - weekly_report_email: メール配信先（カンマ区切り）
+- **`backend/app/models/tenant.py`** — 4フィールド追加
+  - enterprise_mode, weekly_report_enabled, weekly_report_slack, weekly_report_email
+- **`backend/alembic/versions/005_add_enterprise_report_fields.py`** — マイグレーション
+
+#### Claude Code Hook連携
+
+- **`.claude/hooks/aig-guard.py`** — hookスクリプトをv2に更新
+  - `ai_guardian` → `aigis` のimport修正
+  - **バックエンドAPI送信追加**: スキャン結果を `POST /api/v1/proxy/test` 経由でDBに記録
+  - JWTトークンキャッシュ（ディスクキャッシュ、1時間TTL）
+  - バックエンド停止時もClaude Codeをブロックしない（fail-open）
+- **`examples/live_demo.py`** — 包括デモスクリプト新規作成
+  - scan / log / monitor / dashboard / audit / watch の6モード
+  - SecurityMonitorへのデータ記録（`aigis monitor` にデータ連携）
+
+#### 設計ドキュメント
+
+- **`docs/design/INCIDENT_RESPONSE_STRATEGY.md`** — インシデントレスポンス戦略設計書
+  - 競合6社（Lakera, CalypsoAI/F5, Datadog, Langfuse, NeMo, WhyLabs）の調査結果
+  - 業界の5つのギャップ分析
+  - Aigisの差別化ポジション「Detection-to-Resolution」
+  - 3フェーズモデル（Immediate / Daily Ops / Reporting）
+  - 通知チャネル設計マトリクス
+  - インシデントカード設計
+- **`docs/design/INCIDENT_RESPONSE_IMPLEMENTATION.md`** — 実装設計書
+  - NIST SP 800-61 / IPA手引き / CSIRTフレームワークの翻訳表
+  - 各フェーズの「人間のタスク→Aigisでの機械的再現」対応表
+  - 2層構造（Default Mode / Enterprise Mode）の設計
+  - 重大度判定基準（LLMセキュリティ版）
+  - 週次レポートのテンプレート仕様
+  - Incident テーブル DDL
+  - 4スプリントのロードマップ
+
+### Fixed — Security Audit (12 vulnerabilities)
+
+深層セキュリティ監査を実施し、21件の脆弱性を発見。うち12件を修正。
+
+- **[Critical] #1 SSRF防止** — `notifications/hub.py` の `_send_webhook()` に
+  `_is_safe_url()` バリデーション追加。HTTPS必須、プライベートIP/ループバック/リンクローカル拒否。
+  DNS解決後にIPアドレスを検証。
+- **[High] #3 レビュー決定のレース条件** — `review/service.py` の `process_review_decision()` で
+  `SELECT ... FOR UPDATE` による排他ロックを追加。二重承認/二重リプレイを防止。
+- **[High] #4 リプレイが出力フィルタをバイパス** — `_replay_approved_request()` に
+  `filter_output()` を追加。承認後のLLM応答もデータ漏洩チェックを実施。
+  risk_score >= 80 の応答はブロック。
+- **[Medium] #5 StatusUpdate入力バリデーション** — `str` → `Literal["investigating", "mitigated", "closed"]`
+- **[Medium] #6 ResolveRequest入力バリデーション** — `str` → `Literal[6種の有効値]`
+- **[Medium] #7 AssignRequest UUID検証** — `str` → `uuid.UUID` + テナント間ユーザーチェック
+- **[Medium] #10 情報漏洩防止** — `_serialize()` で `matched_text` をレスポンスから除外
+- **[Medium] #12 SLAバイパス修正** — `closed` への直接遷移時にも `resolved_at` 設定 + SLA評価
+- **[Medium] #13 Webhook URLマスキング** — 末尾8文字表示 → `***configured` に変更
+- **[Medium] #14 レビュー権限チェック** — `decide_review_item` に `admin/reviewer` ロールチェック追加
+- **[Low] #19 incident_id型修正** — パスパラメータを `str` → `uuid.UUID` に変更
+- **[Low] #20 settings commit漏れ** — `update_notification_settings` / `update_enterprise_settings` に `await db.commit()` 追加
+- **[Low] NoteRequest長さ制限** — `max_length=5000` を設定
+
+### Tests
+
+- **901 既存テスト全パス**（コアライブラリに影響なし）
+- E2E フロー確認済み: 攻撃→ブロック→インシデント自動作成→レビュー→承認→リプレイ→クローズ→週次レポート
+
 ## [1.5.0] - 2026-04-11
 
 ### Added — Policy DSL, Cryptographic Audit, Supply Chain, Cross-Session

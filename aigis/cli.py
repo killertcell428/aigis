@@ -70,6 +70,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # aig report
     report_p = sub.add_parser("report", help="Generate compliance report")
+    report_p.add_argument("report_type", nargs="?", default=None, choices=["weekly"], help="Report type (e.g. 'weekly')")
     report_p.add_argument("--days", type=int, default=30, help="Report period in days")
     report_p.add_argument("--format", choices=["text", "json", "html", "markdown"], default="text")
     report_p.add_argument(
@@ -489,6 +490,10 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 def cmd_report(args: argparse.Namespace) -> int:
     """Generate compliance report."""
+    # Weekly report subcommand
+    if getattr(args, "report_type", None) == "weekly":
+        return _cmd_report_weekly(args)
+
     fmt = args.format
 
     # Auto-detect format from output file extension
@@ -547,6 +552,43 @@ def cmd_report(args: argparse.Namespace) -> int:
         print(f"  Regulations covered: {compliance['covered']}/{compliance['total_requirements']}")
         print()
         print("  Tip: Use --format html or --format markdown for rich security reports.")
+
+    return 0
+
+
+def _cmd_report_weekly(args: argparse.Namespace) -> int:
+    """Generate weekly security report."""
+    from aigis.weekly_report import WeeklyReportGenerator
+
+    gen = WeeklyReportGenerator()
+    report = gen.generate()
+
+    fmt = args.format
+
+    # Auto-detect from output extension
+    if args.output:
+        ext = Path(args.output).suffix.lower()
+        if ext == ".md" and fmt == "text":
+            fmt = "markdown"
+        elif ext == ".json" and fmt == "text":
+            fmt = "json"
+        elif ext == ".html" and fmt == "text":
+            fmt = "html"
+
+    if fmt == "json":
+        output = gen.to_json(report)
+    elif fmt == "markdown":
+        output = gen.to_markdown(report)
+    elif fmt == "html":
+        output = gen.to_markdown(report)  # HTML generation can be added later
+    else:
+        output = gen.to_text(report)
+
+    if args.output:
+        Path(args.output).write_text(output, encoding="utf-8")
+        print(f"Weekly report saved to {args.output}")
+    else:
+        print(output)
 
     return 0
 

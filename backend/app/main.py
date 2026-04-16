@@ -12,6 +12,7 @@ from app.config import settings
 from app.billing.webhooks import router as webhook_router
 from app.routers.admin import router as admin_router
 from app.routers.audit import router as audit_router
+from app.routers.incidents import router as incidents_router
 from app.routers.monitor import router as monitor_router
 from app.routers.billing import router as billing_router
 from app.routers.gandalf import router as gandalf_router
@@ -155,6 +156,7 @@ app.include_router(monitor_router)
 app.include_router(billing_router)
 app.include_router(webhook_router)
 app.include_router(settings_router)
+app.include_router(incidents_router)
 
 
 @app.get("/health", tags=["health"])

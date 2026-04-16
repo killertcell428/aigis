@@ -4,9 +4,14 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Look for .env in backend/ first, then project root
-_backend_env = Path(__file__).resolve().parents[2] / ".env"
-_root_env = Path(__file__).resolve().parents[3] / ".env"
-_env_file = str(_backend_env) if _backend_env.exists() else str(_root_env) if _root_env.exists() else ".env"
+_config_path = Path(__file__).resolve()
+_backend_env = _config_path.parents[2] / ".env" if len(_config_path.parents) > 2 else None
+_root_env = _config_path.parents[3] / ".env" if len(_config_path.parents) > 3 else None
+_env_file = (
+    str(_backend_env) if _backend_env and _backend_env.exists()
+    else str(_root_env) if _root_env and _root_env.exists()
+    else ".env"
+)
 
 
 class Settings(BaseSettings):

@@ -135,6 +135,13 @@ async def decide_review_item(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ReviewItem:
     """Submit a review decision (approve / reject / escalate)."""
+    # Role check: only admin or reviewer can make decisions
+    if current_user.role not in ("admin", "reviewer"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Reviewer or admin role required to make review decisions",
+        )
+
     if body.decision not in ("approve", "reject", "escalate"):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
