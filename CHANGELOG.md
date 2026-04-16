@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — Marketing Assets & Branding
+
+- **New Aigis icon** (`images/aigis_icon_v01.jpg`) — Shield + AM monogram lockup, adopted as official brand mark
+- **PH Gallery images x10** (EN/JA, 1270x760) — Hero, 4-Layer Architecture, Dashboard, Integrations, Compliance
+- **CLI demo GIFs x2** (EN/JA, 820x520, 14s) — `pip install` → scan attacks → block/pass animation
+- **README branding update** — Replaced old `shield.svg` with new icon in header/footer, unified branch refs to `master`
+- **HTML sources + `gif_capture.py`** — All assets reproducible from source
+
 ## [1.5.0] - 2026-04-11
 
 ### Added — Policy DSL, Cryptographic Audit, Supply Chain, Cross-Session

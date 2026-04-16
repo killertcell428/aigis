@@ -69,7 +69,8 @@ OSS Core (free, forever)
   - Note: Coming Soon pages were discontinued (August 2025). Using Maker trust building + external channels instead
   - [x] Phase A: Create PH account & Product Draft, daily commenting activity (through 4/20) <- Account & Draft done (4/7), commenting ongoing
   - [ ] Phase B: External channel seeding & acquire 50-100 supporters (4/14-4/28)
-  - [ ] Gallery images x5 + OG image PNG + demo video (by 4/21)
+  - [x] Gallery images x5 EN/JA (10 PNGs) + CLI demo GIFs EN/JA + new icon (4/16 done)
+  - [ ] OG image PNG (derive from gallery_1_hero)
   - [ ] Final launch copy review & supporter pre-notification (by 4/28)
   - [ ] LP improvements & upload all assets to PH (by 5/5)
   - [ ] Go/NoGo decision (5/5) -> if criteria not met, postpone to 5/20 or 5/27
