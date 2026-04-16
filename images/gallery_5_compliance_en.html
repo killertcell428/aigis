@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1270px; height: 760px; background: linear-gradient(160deg, #0f172a 0%, #1a2742 50%, #0f172a 100%); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; }
+  .grid { position: absolute; inset: 0; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0); background-size: 40px 40px; }
+  .content { position: relative; z-index: 1; padding: 50px 70px; height: 100%; display: flex; flex-direction: column; }
+  .header { text-align: center; margin-bottom: 40px; }
+  .label { color: #60a5fa; font-size: 13px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { color: #f1f5f9; font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  h1 .accent { background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { color: #64748b; font-size: 16px; margin-top: 8px; }
+  /* Country grid */
+  .countries { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; flex: 1; }
+  .country-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 24px; position: relative; overflow: hidden; }
+  .country-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .country-card.jp::before { background: linear-gradient(90deg, #ef4444, #fff, #ef4444); }
+  .country-card.us::before { background: linear-gradient(90deg, #3b82f6, #ef4444, #fff); }
+  .country-card.cn::before { background: linear-gradient(90deg, #ef4444, #fbbf24); }
+  .country-card.eu::before { background: linear-gradient(90deg, #3b82f6, #fbbf24); }
+  .country-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .country-name { display: flex; align-items: center; gap: 10px; }
+  .country-flag { font-size: 28px; }
+  .country-title { color: #f1f5f9; font-size: 18px; font-weight: 700; }
+  .country-count { background: rgba(99,102,241,0.12); color: #818cf8; font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 8px; }
+  .frameworks { display: flex; flex-direction: column; gap: 6px; }
+  .fw-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .fw-check { color: #34d399; font-size: 14px; width: 20px; text-align: center; }
+  .fw-name { color: #cbd5e1; font-size: 13px; flex: 1; }
+  .fw-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .fw-badge.security { background: rgba(239,68,68,0.12); color: #f87171; }
+  .fw-badge.privacy { background: rgba(59,130,246,0.12); color: #60a5fa; }
+  .fw-badge.governance { background: rgba(168,85,247,0.12); color: #c084fc; }
+  .fw-badge.industry { background: rgba(234,179,8,0.12); color: #fbbf24; }
+  /* Bottom banner */
+  .bottom { display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 24px; padding: 18px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.12); border-radius: 12px; }
+  .bottom-stat { text-align: center; }
+  .bottom-val { color: #f1f5f9; font-size: 28px; font-weight: 800; }
+  .bottom-label { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px; }
+  .bottom-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.08); }
+</style>
+</head><body>
+<div class="grid"></div>
+<div class="content">
+  <div class="header">
+    <div class="label">Compliance</div>
+    <h1><span class="accent">44 Templates</span> Across 4 Countries</h1>
+    <div class="subtitle">Every template is an inspectable, testable regex rule. No black boxes.</div>
+  </div>
+
+  <div class="countries">
+    <div class="country-card us">
+      <div class="country-header">
+        <div class="country-name"><span class="country-flag">&#127482;&#127480;</span><span class="country-title">United States</span></div>
+        <div class="country-count">21 templates</div>
+      </div>
+      <div class="frameworks">
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">OWASP LLM Top 10</span><span class="fw-badge security">Security</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">OWASP Agentic Top 10</span><span class="fw-badge security">Security</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">NIST AI RMF &middot; MITRE ATLAS</span><span class="fw-badge governance">Governance</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">SOC2 &middot; HIPAA &middot; PCI-DSS</span><span class="fw-badge industry">Industry</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">Colorado AI Act</span><span class="fw-badge governance">Governance</span></div>
+      </div>
+    </div>
+
+    <div class="country-card jp">
+      <div class="country-header">
+        <div class="country-name"><span class="country-flag">&#127471;&#127477;</span><span class="country-title">Japan</span></div>
+        <div class="country-count">10 templates</div>
+      </div>
+      <div class="frameworks">
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">AI Business Operator Guidelines v1.2</span><span class="fw-badge governance">Governance</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">MIC Security Guidelines</span><span class="fw-badge security">Security</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">APPI (Personal Information Protection)</span><span class="fw-badge privacy">Privacy</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">My Number Act</span><span class="fw-badge privacy">Privacy</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">37/37 requirements — full compliance</span><span class="fw-badge governance">Governance</span></div>
+      </div>
+    </div>
+
+    <div class="country-card cn">
+      <div class="country-header">
+        <div class="country-name"><span class="country-flag">&#127464;&#127475;</span><span class="country-title">China</span></div>
+        <div class="country-count">8 templates</div>
+      </div>
+      <div class="frameworks">
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">GenAI Interim Measures</span><span class="fw-badge governance">Governance</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">PIPL (Personal Information Protection Law)</span><span class="fw-badge privacy">Privacy</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">AI Safety Framework v2.0</span><span class="fw-badge security">Security</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">Algorithm Recommendation Rules</span><span class="fw-badge governance">Governance</span></div>
+      </div>
+    </div>
+
+    <div class="country-card eu">
+      <div class="country-header">
+        <div class="country-name"><span class="country-flag">&#127466;&#127482;</span><span class="country-title">European Union</span></div>
+        <div class="country-count">3 + Corporate</div>
+      </div>
+      <div class="frameworks">
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">GDPR (General Data Protection Regulation)</span><span class="fw-badge privacy">Privacy</span></div>
+        <div class="fw-row"><span class="fw-check">&#10003;</span><span class="fw-name">EU AI Act (planned)</span><span class="fw-badge governance">Governance</span></div>
+        <div class="fw-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);"><span class="fw-check">&#10003;</span><span class="fw-name">Corporate: NDA, project codes, salary, IPs</span><span class="fw-badge industry">Custom</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="bottom-stat"><div class="bottom-val">44</div><div class="bottom-label">Total Templates</div></div>
+    <div class="bottom-divider"></div>
+    <div class="bottom-stat"><div class="bottom-val">4</div><div class="bottom-label">Countries</div></div>
+    <div class="bottom-divider"></div>
+    <div class="bottom-stat"><div class="bottom-val">165+</div><div class="bottom-label">Detection Rules</div></div>
+    <div class="bottom-divider"></div>
+    <div class="bottom-stat"><div class="bottom-val">100%</div><div class="bottom-label">Inspectable</div></div>
+  </div>
+</div>
+</body></html>

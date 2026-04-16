@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/killertcell428/aigis/main/.github/shield.svg" alt="Aigis" width="100" />
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/aigis_icon_v01.jpg" alt="Aigis" width="320" />
 </p>
-
-<h1 align="center">Aigis</h1>
 
 <p align="center">
   <strong>The open-source firewall for AI agents.</strong><br />
@@ -32,7 +30,7 @@
   <a href="#how-it-works">How It Works</a> &middot;
   <a href="#compliance">Compliance</a> &middot;
   <a href="#agent-security">Agent Security</a> &middot;
-  <a href="https://github.com/killertcell428/aigis/tree/main/docs">Docs</a>
+  <a href="https://github.com/killertcell428/aigis/tree/master/docs">Docs</a>
 </p>
 
 <p align="center">
@@ -346,6 +344,7 @@ Apache 2.0 — free for personal and commercial use. See [LICENSE](LICENSE).
 ---
 
 <p align="center">
-  <strong>Aigis</strong> — The open-source firewall for AI agents.<br />
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/aigis_icon_v01.jpg" alt="Aigis" width="160" /><br />
+  <strong>The open-source firewall for AI agents.</strong><br />
   <sub>Named after the Aegis, the shield of Zeus. AI + Aegis = Aigis.</sub>
 </p>

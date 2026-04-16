@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1270px; height: 760px; background: linear-gradient(160deg, #0f172a 0%, #1a2742 50%, #0f172a 100%); font-family: 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif; overflow: hidden; }
+  .grid { position: absolute; inset: 0; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0); background-size: 40px 40px; }
+  .content { position: relative; z-index: 1; padding: 50px 70px; }
+  .header { text-align: center; margin-bottom: 40px; }
+  .label { color: #60a5fa; font-size: 13px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { color: #f1f5f9; font-size: 38px; font-weight: 800; letter-spacing: -0.5px; }
+  h1 .accent { background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { color: #64748b; font-size: 15px; margin-top: 8px; }
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 0 auto; max-width: 1130px; }
+  .input-box, .output-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 120px; }
+  .io-label { color: #94a3b8; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .io-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .io-icon.input { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); }
+  .io-icon.output { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.25); }
+  .arrow { display: flex; align-items: center; padding: 0 8px; color: #475569; font-size: 24px; }
+  .walls { display: flex; gap: 12px; flex: 1; }
+  .wall { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px 16px; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .wall::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
+  .wall:nth-child(1)::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+  .wall:nth-child(2)::before { background: linear-gradient(90deg, #f97316, #eab308); }
+  .wall:nth-child(3)::before { background: linear-gradient(90deg, #eab308, #22c55e); }
+  .wall:nth-child(4)::before { background: linear-gradient(90deg, #22c55e, #3b82f6); }
+  .wall-num { color: #475569; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .wall-title { color: #f1f5f9; font-size: 14px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+  .wall-desc { color: #64748b; font-size: 12px; line-height: 1.5; flex: 1; }
+  .wall-catches { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .wall-catches span { display: inline-block; background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px 7px; font-size: 10px; color: #94a3b8; margin: 2px; }
+  .deep-layers { display: flex; gap: 16px; margin-top: 32px; max-width: 1130px; margin-left: auto; margin-right: auto; }
+  .deep { flex: 1; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); border-radius: 12px; padding: 16px 18px; }
+  .deep-label { color: #818cf8; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .deep-title { color: #e2e8f0; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .deep-desc { color: #64748b; font-size: 11px; line-height: 1.5; }
+</style>
+</head><body>
+<div class="grid"></div>
+<div class="content">
+  <div class="header">
+    <div class="label">How It Works</div>
+    <h1><span class="accent">4層</span>ディープディフェンス</h1>
+    <div class="subtitle">1つの壁を突破しても、次の壁で検知。独立した層構造で単一障害点なし。</div>
+  </div>
+
+  <div class="flow">
+    <div class="input-box">
+      <div class="io-label">ユーザー入力</div>
+      <div class="io-icon input">&#9888;</div>
+    </div>
+    <div class="arrow">&#10132;</div>
+    <div class="walls">
+      <div class="wall">
+        <div class="wall-num">Wall 1</div>
+        <div class="wall-title">パターンマッチング</div>
+        <div class="wall-desc">25カテゴリ165+のルールで既知の攻撃パターンを検知</div>
+        <div class="wall-catches">
+          <span>SQLi</span><span>XSS</span><span>PII</span><span>脱獄</span>
+        </div>
+      </div>
+      <div class="wall">
+        <div class="wall-num">Wall 2</div>
+        <div class="wall-title">意味的類似度</div>
+        <div class="wall-desc">既知の攻撃フレーズとの類似度を比較</div>
+        <div class="wall-catches">
+          <span>言い換え</span><span>新規表現</span>
+        </div>
+      </div>
+      <div class="wall">
+        <div class="wall-num">Wall 3</div>
+        <div class="wall-title">エンコード検出</div>
+        <div class="wall-desc">Base64/hex/URL/ROT13をデコードして再スキャン</div>
+        <div class="wall-catches">
+          <span>難読化</span><span>エンコード</span><span>Unicode</span>
+        </div>
+      </div>
+      <div class="wall">
+        <div class="wall-num">Wall 4</div>
+        <div class="wall-title">マルチターン分析</div>
+        <div class="wall-desc">会話の複数ターンにわたるエスカレーションを追跡</div>
+        <div class="wall-catches">
+          <span>段階的攻撃</span><span>権限昇格</span>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">&#10132;</div>
+    <div class="output-box">
+      <div class="io-label">安全な出力</div>
+      <div class="io-icon output">&#10003;</div>
+    </div>
+  </div>
+
+  <div class="deep-layers">
+    <div class="deep">
+      <div class="deep-label">L4</div>
+      <div class="deep-title">ケイパビリティ制御</div>
+      <div class="deep-desc">CaMeL方式のテイント追跡。信頼できないデータから特権ツールを実行不可。</div>
+    </div>
+    <div class="deep">
+      <div class="deep-label">L5</div>
+      <div class="deep-title">原子的実行パイプライン</div>
+      <div class="deep-desc">サンドボックスで実行し、完了後に全痕跡を消去。</div>
+    </div>
+    <div class="deep">
+      <div class="deep-label">L6</div>
+      <div class="deep-title">安全性仕様検証器</div>
+      <div class="deep-desc">形式的安全性仕様と証明書による検証。</div>
+    </div>
+  </div>
+</div>
+</body></html>

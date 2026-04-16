@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1270px; height: 760px; background: linear-gradient(160deg, #0f172a 0%, #1a2742 50%, #0f172a 100%); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; }
+  .grid { position: absolute; inset: 0; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0); background-size: 40px 40px; }
+  .content { position: relative; z-index: 1; padding: 50px 70px; }
+  .header { text-align: center; margin-bottom: 40px; }
+  .label { color: #60a5fa; font-size: 13px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { color: #f1f5f9; font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  h1 .accent { background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { color: #64748b; font-size: 16px; margin-top: 8px; }
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 0 auto; max-width: 1130px; }
+  .input-box, .output-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 120px; }
+  .io-label { color: #94a3b8; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .io-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .io-icon.input { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); }
+  .io-icon.output { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.25); }
+  .arrow { display: flex; align-items: center; padding: 0 8px; color: #475569; font-size: 24px; }
+  .walls { display: flex; gap: 12px; flex: 1; }
+  .wall { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px 16px; position: relative; overflow: hidden; transition: all 0.3s; display: flex; flex-direction: column; }
+  .wall::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
+  .wall:nth-child(1)::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+  .wall:nth-child(2)::before { background: linear-gradient(90deg, #f97316, #eab308); }
+  .wall:nth-child(3)::before { background: linear-gradient(90deg, #eab308, #22c55e); }
+  .wall:nth-child(4)::before { background: linear-gradient(90deg, #22c55e, #3b82f6); }
+  .wall-num { color: #475569; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .wall-title { color: #f1f5f9; font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+  .wall-desc { color: #64748b; font-size: 12px; line-height: 1.5; flex: 1; }
+  .wall-catches { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .wall-catches span { display: inline-block; background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px 7px; font-size: 10px; color: #94a3b8; margin: 2px; }
+  .deep-layers { display: flex; gap: 16px; margin-top: 32px; max-width: 1130px; margin-left: auto; margin-right: auto; }
+  .deep { flex: 1; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); border-radius: 12px; padding: 16px 18px; }
+  .deep-label { color: #818cf8; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .deep-title { color: #e2e8f0; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .deep-desc { color: #64748b; font-size: 11px; line-height: 1.4; }
+</style>
+</head><body>
+<div class="grid"></div>
+<div class="content">
+  <div class="header">
+    <div class="label">How It Works</div>
+    <h1><span class="accent">4-Layer</span> Deep Defense</h1>
+    <div class="subtitle">What gets past one wall gets caught by the next. Independent layers — no single point of failure.</div>
+  </div>
+
+  <div class="flow">
+    <div class="input-box">
+      <div class="io-label">User Input</div>
+      <div class="io-icon input">&#9888;</div>
+    </div>
+    <div class="arrow">&#10132;</div>
+    <div class="walls">
+      <div class="wall">
+        <div class="wall-num">Wall 1</div>
+        <div class="wall-title">Pattern Matching</div>
+        <div class="wall-desc">165+ regex rules across 25 threat categories</div>
+        <div class="wall-catches">
+          <span>SQLi</span><span>XSS</span><span>PII</span><span>Jailbreak</span>
+        </div>
+      </div>
+      <div class="wall">
+        <div class="wall-num">Wall 2</div>
+        <div class="wall-title">Semantic Similarity</div>
+        <div class="wall-desc">Compares against corpus of known attack phrases</div>
+        <div class="wall-catches">
+          <span>Paraphrased</span><span>Novel phrasing</span>
+        </div>
+      </div>
+      <div class="wall">
+        <div class="wall-num">Wall 3</div>
+        <div class="wall-title">Encoded Payload</div>
+        <div class="wall-desc">Decodes Base64, hex, URL, ROT13, then re-scans</div>
+        <div class="wall-catches">
+          <span>Obfuscated</span><span>Encoded</span><span>Unicode</span>
+        </div>
+      </div>
+      <div class="wall">
+        <div class="wall-num">Wall 4</div>
+        <div class="wall-title">Multi-Turn Analysis</div>
+        <div class="wall-desc">Tracks escalation across conversation turns</div>
+        <div class="wall-catches">
+          <span>Slow-burn</span><span>Escalation</span>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">&#10132;</div>
+    <div class="output-box">
+      <div class="io-label">Safe Output</div>
+      <div class="io-icon output">&#10003;</div>
+    </div>
+  </div>
+
+  <div class="deep-layers">
+    <div class="deep">
+      <div class="deep-label">L4</div>
+      <div class="deep-title">Capability Access Control</div>
+      <div class="deep-desc">CaMeL-inspired taint tracking. Untrusted data can't trigger privileged tools.</div>
+    </div>
+    <div class="deep">
+      <div class="deep-label">L5</div>
+      <div class="deep-title">Atomic Execution Pipeline</div>
+      <div class="deep-desc">Run agent actions in a sealed sandbox, destroy all traces after.</div>
+    </div>
+    <div class="deep">
+      <div class="deep-label">L6</div>
+      <div class="deep-title">Safety Specification Verifier</div>
+      <div class="deep-desc">Formal safety specs with proof-certificate verification.</div>
+    </div>
+  </div>
+</div>
+</body></html>

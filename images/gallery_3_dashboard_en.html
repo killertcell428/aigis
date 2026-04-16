@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1270px; height: 760px; background: #0f172a; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; }
+  .content { padding: 40px 50px; display: flex; flex-direction: column; height: 100%; }
+  .header { text-align: center; margin-bottom: 28px; }
+  .label { color: #60a5fa; font-size: 13px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+  h1 { color: #f1f5f9; font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+  h1 .accent { background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { color: #64748b; font-size: 14px; margin-top: 6px; }
+  .dashboard { flex: 1; display: grid; grid-template-columns: 240px 1fr; gap: 16px; }
+  /* Sidebar */
+  .sidebar { background: #1e293b; border-radius: 14px; padding: 20px 16px; border: 1px solid rgba(255,255,255,0.05); }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .sidebar-logo img { height: 28px; border-radius: 4px; background: white; padding: 2px 6px; }
+  .sidebar-logo span { color: #f1f5f9; font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 4px; color: #64748b; font-size: 13px; cursor: pointer; }
+  .nav-item.active { background: rgba(59,130,246,0.12); color: #60a5fa; }
+  .nav-icon { width: 18px; text-align: center; font-size: 14px; }
+  /* Main area */
+  .main { display: flex; flex-direction: column; gap: 14px; }
+  /* Top stats */
+  .top-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; }
+  .stat-title { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .stat-row { display: flex; align-items: baseline; gap: 8px; }
+  .stat-val { color: #f1f5f9; font-size: 26px; font-weight: 800; }
+  .stat-change { font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+  .stat-change.up { background: rgba(239,68,68,0.12); color: #f87171; }
+  .stat-change.down { background: rgba(52,211,153,0.12); color: #34d399; }
+  .stat-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); margin-top: 10px; }
+  .stat-bar-fill { height: 100%; border-radius: 2px; }
+  .fill-blue { background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 72%; }
+  .fill-green { background: linear-gradient(90deg, #22c55e, #34d399); width: 98%; }
+  .fill-yellow { background: linear-gradient(90deg, #eab308, #fbbf24); width: 45%; }
+  .fill-red { background: linear-gradient(90deg, #ef4444, #f87171); width: 15%; }
+  /* Middle row */
+  .mid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; }
+  .panel { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; overflow: hidden; }
+  .panel-title { color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  /* OWASP Scorecard */
+  .owasp-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .owasp-id { color: #64748b; font-size: 11px; font-weight: 600; width: 50px; }
+  .owasp-name { color: #e2e8f0; font-size: 12px; flex: 1; }
+  .owasp-status { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; }
+  .owasp-status.active { background: rgba(52,211,153,0.12); color: #34d399; }
+  .owasp-count { color: #94a3b8; font-size: 11px; width: 30px; text-align: right; }
+  /* Activity log */
+  .log-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .log-time { color: #475569; font-size: 10px; font-family: monospace; width: 54px; }
+  .log-level { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.5px; width: 60px; text-align: center; }
+  .log-level.critical { background: rgba(239,68,68,0.15); color: #f87171; }
+  .log-level.high { background: rgba(249,115,22,0.15); color: #fb923c; }
+  .log-level.medium { background: rgba(234,179,8,0.15); color: #fbbf24; }
+  .log-level.low { background: rgba(52,211,153,0.15); color: #34d399; }
+  .log-msg { color: #cbd5e1; font-size: 11px; flex: 1; }
+  .log-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+  .log-badge.blocked { background: rgba(239,68,68,0.12); color: #f87171; }
+  .log-badge.passed { background: rgba(52,211,153,0.12); color: #34d399; }
+</style>
+</head><body>
+<div class="content">
+  <div class="header">
+    <div class="label">Dashboard</div>
+    <h1>Real-Time <span class="accent">Security Monitoring</span></h1>
+    <div class="subtitle">Monitor threats, track compliance, and manage policies — all from one dashboard.</div>
+  </div>
+
+  <div class="dashboard">
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <img src="aigis_icon_v01.jpg" alt="Aigis" />
+      </div>
+      <div class="nav-item active"><span class="nav-icon">&#9632;</span> Dashboard</div>
+      <div class="nav-item"><span class="nav-icon">&#9670;</span> Security Logs</div>
+      <div class="nav-item"><span class="nav-icon">&#9733;</span> OWASP Scorecard</div>
+      <div class="nav-item"><span class="nav-icon">&#9881;</span> Policies</div>
+      <div class="nav-item"><span class="nav-icon">&#9745;</span> Review Queue</div>
+      <div class="nav-item"><span class="nav-icon">&#9874;</span> Red Team</div>
+      <div class="nav-item"><span class="nav-icon">&#9783;</span> Reports</div>
+      <div class="nav-item"><span class="nav-icon">&#9998;</span> Settings</div>
+    </div>
+
+    <div class="main">
+      <div class="top-stats">
+        <div class="stat-card">
+          <div class="stat-title">Scans Today</div>
+          <div class="stat-row"><div class="stat-val">12,847</div><div class="stat-change up">+18%</div></div>
+          <div class="stat-bar"><div class="stat-bar-fill fill-blue"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Detection Rate</div>
+          <div class="stat-row"><div class="stat-val">98.9%</div></div>
+          <div class="stat-bar"><div class="stat-bar-fill fill-green"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Blocked Threats</div>
+          <div class="stat-row"><div class="stat-val">342</div><div class="stat-change down">-12%</div></div>
+          <div class="stat-bar"><div class="stat-bar-fill fill-yellow"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">False Positives</div>
+          <div class="stat-row"><div class="stat-val">0.3%</div></div>
+          <div class="stat-bar"><div class="stat-bar-fill fill-red"></div></div>
+        </div>
+      </div>
+
+      <div class="mid-row">
+        <div class="panel">
+          <div class="panel-title">OWASP LLM Top 10 Scorecard</div>
+          <div class="owasp-row"><div class="owasp-id">LLM01</div><div class="owasp-name">Prompt Injection</div><div class="owasp-status active">ACTIVE</div><div class="owasp-count">118</div></div>
+          <div class="owasp-row"><div class="owasp-id">LLM02</div><div class="owasp-name">Insecure Output Handling</div><div class="owasp-status active">ACTIVE</div><div class="owasp-count">36</div></div>
+          <div class="owasp-row"><div class="owasp-id">LLM05</div><div class="owasp-name">Supply-Chain Vulnerabilities</div><div class="owasp-status active">ACTIVE</div><div class="owasp-count">17</div></div>
+          <div class="owasp-row"><div class="owasp-id">LLM06</div><div class="owasp-name">Sensitive Info Disclosure</div><div class="owasp-status active">ACTIVE</div><div class="owasp-count">45</div></div>
+          <div class="owasp-row"><div class="owasp-id">LLM07</div><div class="owasp-name">System Prompt Leakage</div><div class="owasp-status active">ACTIVE</div><div class="owasp-count">89</div></div>
+          <div class="owasp-row"><div class="owasp-id">LLM10</div><div class="owasp-name">Unbounded Consumption</div><div class="owasp-status active">ACTIVE</div><div class="owasp-count">22</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Live Security Feed</div>
+          <div class="log-row"><div class="log-time">16:04:32</div><div class="log-level critical">CRITICAL</div><div class="log-msg">Prompt injection: "Ignore all previous..."</div><div class="log-badge blocked">BLOCKED</div></div>
+          <div class="log-row"><div class="log-time">16:04:28</div><div class="log-level low">LOW</div><div class="log-msg">Normal query: "Summarize the report"</div><div class="log-badge passed">PASSED</div></div>
+          <div class="log-row"><div class="log-time">16:04:15</div><div class="log-level high">HIGH</div><div class="log-msg">PII detected: credit card pattern</div><div class="log-badge blocked">BLOCKED</div></div>
+          <div class="log-row"><div class="log-time">16:03:58</div><div class="log-level medium">MEDIUM</div><div class="log-msg">Encoded payload: Base64 injection attempt</div><div class="log-badge blocked">BLOCKED</div></div>
+          <div class="log-row"><div class="log-time">16:03:42</div><div class="log-level low">LOW</div><div class="log-msg">Normal query: "What's the weather?"</div><div class="log-badge passed">PASSED</div></div>
+          <div class="log-row"><div class="log-time">16:03:30</div><div class="log-level critical">CRITICAL</div><div class="log-msg">SQL injection: "DROP TABLE users"</div><div class="log-badge blocked">BLOCKED</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -3,7 +3,7 @@ title: "How I Built an Open-Source LLM Security Library in Python (and What I Le
 published: false
 description: "A walkthrough of building aigis, an open-source Python library that scans LLM prompts for prompt injection, PII leaks, and jailbreaks — with remediation hints mapped to OWASP LLM Top 10."
 tags: [python, security, ai, llm]
-cover_image: https://raw.githubusercontent.com/killertcell428/aigis/main/.github/shield.svg
+cover_image: https://raw.githubusercontent.com/killertcell428/aigis/master/images/aigis_icon_v01.jpg
 canonical_url: https://dev.to/killertcell428/how-i-built-an-open-source-llm-security-library
 series: LLM Security in Practice
 ---

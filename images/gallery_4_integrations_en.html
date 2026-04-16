@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1270px; height: 760px; background: linear-gradient(160deg, #0f172a 0%, #1a2742 50%, #0f172a 100%); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; }
+  .grid { position: absolute; inset: 0; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0); background-size: 40px 40px; }
+  .content { position: relative; z-index: 1; padding: 50px 70px; height: 100%; display: flex; flex-direction: column; }
+  .header { text-align: center; margin-bottom: 40px; }
+  .label { color: #60a5fa; font-size: 13px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { color: #f1f5f9; font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  h1 .accent { background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { color: #64748b; font-size: 16px; margin-top: 8px; }
+  /* Flow diagram */
+  .flow-section { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 44px; }
+  .flow-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 20px 28px; text-align: center; min-width: 180px; }
+  .flow-box.aigis { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15)); border: 1px solid rgba(99,102,241,0.3); min-width: 220px; box-shadow: 0 0 40px rgba(99,102,241,0.1); }
+  .flow-box-icon { font-size: 28px; margin-bottom: 8px; }
+  .flow-box-icon img { height: 36px; border-radius: 6px; background: white; padding: 3px 8px; }
+  .flow-box-title { color: #f1f5f9; font-size: 17px; font-weight: 700; }
+  .flow-box-sub { color: #64748b; font-size: 12px; margin-top: 3px; }
+  .flow-arrow { color: #475569; font-size: 28px; }
+  /* Integration grid */
+  .integrations { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 1000px; margin: 0 auto; flex: 1; }
+  .int-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 16px; display: flex; align-items: center; gap: 14px; transition: all 0.3s; }
+  .int-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: white; flex-shrink: 0; }
+  .int-icon.fastapi { background: #009688; }
+  .int-icon.langchain { background: #1C3C3C; }
+  .int-icon.langgraph { background: #2D5016; }
+  .int-icon.openai { background: #0D0D0D; }
+  .int-icon.anthropic { background: #D4A574; color: #1a1a1a; }
+  .int-icon.github { background: #24292e; }
+  .int-icon.vscode { background: #007ACC; }
+  .int-icon.precommit { background: #FAB040; color: #1a1a1a; }
+  .int-name { color: #e2e8f0; font-size: 15px; font-weight: 600; }
+  .int-type { color: #64748b; font-size: 11px; margin-top: 2px; }
+  /* Footer */
+  .footer { text-align: center; margin-top: 24px; }
+  .footer-text { color: #34d399; font-family: monospace; font-size: 15px; }
+</style>
+</head><body>
+<div class="grid"></div>
+<div class="content">
+  <div class="header">
+    <div class="label">Drop-In Integration</div>
+    <h1>Works With Your <span class="accent">Existing Stack</span></h1>
+    <div class="subtitle">No code rewrites needed. Add middleware or change base_url.</div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-box">
+      <div class="flow-box-icon">&#128187;</div>
+      <div class="flow-box-title">Your App</div>
+      <div class="flow-box-sub">Python / Any SDK</div>
+    </div>
+    <div class="flow-arrow">&#10132;</div>
+    <div class="flow-box aigis">
+      <div class="flow-box-icon"><img src="aigis_icon_v01.jpg" alt="Aigis" /></div>
+      <div class="flow-box-title">Aigis</div>
+      <div class="flow-box-sub">Scan &middot; Block &middot; Log</div>
+    </div>
+    <div class="flow-arrow">&#10132;</div>
+    <div class="flow-box">
+      <div class="flow-box-icon">&#129302;</div>
+      <div class="flow-box-title">LLM</div>
+      <div class="flow-box-sub">OpenAI / Anthropic / Any</div>
+    </div>
+  </div>
+
+  <div class="integrations">
+    <div class="int-card">
+      <div class="int-icon fastapi">FA</div>
+      <div><div class="int-name">FastAPI</div><div class="int-type">Middleware</div></div>
+    </div>
+    <div class="int-card">
+      <div class="int-icon langchain">LC</div>
+      <div><div class="int-name">LangChain</div><div class="int-type">Callback</div></div>
+    </div>
+    <div class="int-card">
+      <div class="int-icon langgraph">LG</div>
+      <div><div class="int-name">LangGraph</div><div class="int-type">GuardNode</div></div>
+    </div>
+    <div class="int-card">
+      <div class="int-icon openai">OA</div>
+      <div><div class="int-name">OpenAI</div><div class="int-type">SecureOpenAI proxy</div></div>
+    </div>
+    <div class="int-card">
+      <div class="int-icon anthropic">AN</div>
+      <div><div class="int-name">Anthropic</div><div class="int-type">SecureAnthropic proxy</div></div>
+    </div>
+    <div class="int-card">
+      <div class="int-icon github">GH</div>
+      <div><div class="int-name">GitHub Actions</div><div class="int-type">CI Workflow</div></div>
+    </div>
+    <div class="int-card">
+      <div class="int-icon vscode">VS</div>
+      <div><div class="int-name">VS Code</div><div class="int-type">Extension</div></div>
+    </div>
+    <div class="int-card">
+      <div class="int-icon precommit">PC</div>
+      <div><div class="int-name">pre-commit</div><div class="int-type">Hook</div></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-text">pip install pyaigis — zero dependencies required</div>
+  </div>
+</div>
+</body></html>
