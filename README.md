@@ -34,7 +34,7 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/.github/demo.svg" alt="Aigis Demo" width="700" />
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/demo_cli_en.gif" alt="Aigis CLI Demo" width="700" />
 </p>
 
 ---
@@ -86,31 +86,9 @@ Your AI agents are one prompt injection away from leaking secrets, executing mal
 
 Most tools scan with a single layer. Aigis runs your input through four independent walls — what gets past one gets caught by the next.
 
-```
-User Input
-    │
-    ▼
-┌──────────────────────────────────────────────────────────────┐
-│  WALL 1: Pattern Matching                                    │
-│  165+ regex rules across 25 threat categories                │
-│  → Catches: known injections, SQLi, XSS, PII, jailbreaks    │
-├──────────────────────────────────────────────────────────────┤
-│  WALL 2: Semantic Similarity                                 │
-│  Compares against corpus of known attack phrases             │
-│  → Catches: paraphrased attacks, novel phrasings             │
-├──────────────────────────────────────────────────────────────┤
-│  WALL 3: Encoded Payload Detection                           │
-│  Decodes Base64, hex, URL encoding, ROT13, then re-scans     │
-│  → Catches: obfuscated attacks hidden in encoded strings     │
-├──────────────────────────────────────────────────────────────┤
-│  WALL 4: Multi-Turn Analysis                                 │
-│  Tracks escalation across conversation turns                 │
-│  → Catches: slow-burn attacks that build across messages     │
-└──────────────────────────────────────────────────────────────┘
-    │
-    ▼
-  Safe input reaches your LLM — or gets blocked before it ever does.
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_2_architecture_en.png" alt="Aigis 4-Layer Deep Defense" width="800" />
+</p>
 
 Beyond the 4 walls, Aigis has three deeper defense layers for advanced use cases:
 
@@ -121,6 +99,10 @@ Beyond the 4 walls, Aigis has three deeper defense layers for advanced use cases
 ---
 
 ## Compliance
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_5_compliance_en.png" alt="Aigis Compliance — 44 Templates Across 4 Countries" width="800" />
+</p>
 
 Aigis ships with **44 compliance rule templates** covering regulations across four countries. Click to add, click to remove. Your policy, your rules.
 
@@ -187,6 +169,10 @@ Aigis attacks itself, finds gaps, and writes new detection rules automatically.
 
 ## Integrations
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_4_integrations_en.png" alt="Aigis Integrations" width="800" />
+</p>
+
 Drop Aigis into your existing stack. No rewrites.
 
 <details>
@@ -252,6 +238,10 @@ aigis init --agent claude-code
 ---
 
 ## Dashboard
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_3_dashboard_en.png" alt="Aigis Dashboard" width="800" />
+</p>
 
 Aigis includes a full web dashboard for monitoring and governance. Optional — the CLI and SDK work without it.
 
