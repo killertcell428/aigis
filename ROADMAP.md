@@ -302,32 +302,38 @@ aigis/
 
 ## Immediate Action Items (Prioritized)
 
-### Now (This Week)
+> Last updated: 2026-04-16
+
+### Completed (Phase 0)
 1. ~~HN reply post~~ Done (switched Show HN -> replies)
 2. ~~Zenn article published~~ Done (replaced with alternative article)
 3. ~~Reddit 3 posts~~ Posted
 4. ~~DEV.to English article published~~ Posted
 5. ~~Gandalf Challenge verification~~ Fixed
 6. ~~v0.7.0 release~~ 2026-03-31
+7. ~~**PH account creation & Product Draft registration** (by 4/8)~~ Done (4/7)
+8. ~~**Gallery images x10 (EN/JA) + CLI demo GIFs x2 (EN/JA) + new icon**~~ Done (4/16)
+9. ~~**README branding overhaul** — icon, GIF, architecture/compliance/integrations/dashboard images embedded~~ Done (4/16)
 
-### This Month (Phase 0 completion through Phase 1 transition)
-7. Awesome list PR submissions (3 lists)
-8. AI meetup LT talk application
+### Now (This Week 4/16 onwards)
+10. **OG image PNG** — derive from gallery_1_hero_en for PH & SNS sharing
+11. **Daily 2-3 PH comments** (ongoing, target: 20+ by 4/20)
+12. **Awesome list PR submissions** (3 lists) — drafts in `content/awesome_list_pr_drafts.md`
 
-### Now (This Week 4/6 onwards)
-9. ~~**PH account creation & Product Draft registration** (by 4/8)~~ Done (4/7)
-10. **Start daily 2-3 PH comments** (4/6 onwards, ongoing)
-
-### This Month to Next Month (Phase 1: PH Launch focus)
-11. **Maker trust building: PH community participation** (through 4/20, target: 20+ comments)
-12. **Gallery images x5 + OG image + demo video** (by 4/21)
+### This Month (4/16 - 4/30)
 13. **External channel seeding & acquire 50-100 supporters** (4/14-4/28)
 14. **Final launch copy review & supporter pre-notification** (by 4/28)
-15. **LP improvements & upload all assets to PH** (by 5/5)
-16. **Go/NoGo decision** (5/5)
-17. **Product Hunt Launch 12:01 AM PT** (5/13 Wed)
-18. Qiita/Zenn weekly article pace (aim for 3 articles before PH launch)
-19. Email list -> beta invitation flow setup
+15. Qiita/Zenn weekly article pace (aim for 3 articles before PH launch) — 4 drafts ready in `content/articles/`
+
+### Next Month (5/1 - 5/13 Launch)
+16. **LP improvements & upload all assets to PH** (by 5/5)
+17. **Go/NoGo decision** (5/5) -> if criteria not met, postpone to 5/20 or 5/27
+18. **Product Hunt Launch 12:01 AM PT** (5/13 Wed)
+
+### Backlog
+19. AI meetup LT talk application
+20. Share in LangChain/LlamaIndex Discord
+21. Email list -> beta invitation flow setup
 
 ---
 
