@@ -220,7 +220,7 @@ class SignedAuditLog:
             }
             sig = self._compute_signature(entry_data)
             entry_data["signature"] = sig
-            entry = SignedLogEntry(**entry_data)
+            entry = SignedLogEntry(**entry_data)  # type: ignore[arg-type]
             self._entries.append(entry)
             self._sequence += 1
             return entry

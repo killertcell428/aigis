@@ -31,7 +31,9 @@ from __future__ import annotations
 
 import json
 import random
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Attack generation templates
@@ -244,7 +246,7 @@ class RedTeamSuite:
 
     def __init__(
         self,
-        target_fn: callable | None = None,
+        target_fn: Callable[..., Any] | None = None,
         categories: list[str] | None = None,
         count_per_category: int = 10,
         seed: int | None = None,
@@ -646,7 +648,7 @@ code {{ background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }}
 def make_http_check(
     target_url: str,
     timeout: int = 10,
-) -> callable:
+) -> Callable[..., Any]:
     """Create a check function that tests against an HTTP endpoint.
 
     The endpoint should accept POST with JSON body {"text": "..."} and

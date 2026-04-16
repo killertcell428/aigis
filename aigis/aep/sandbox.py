@@ -121,7 +121,7 @@ class ProcessSandbox:
         if not is_win:
             popen_kwargs["start_new_session"] = True
         else:
-            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
 
         t0 = time.perf_counter()
         proc_obj = subprocess.Popen(shell_cmd, **popen_kwargs)

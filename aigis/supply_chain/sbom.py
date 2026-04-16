@@ -108,15 +108,15 @@ class SBOMGenerator:
 
         added: list[SBOMEntry] = []
         for dist in md.distributions():
-            raw_name = dist.metadata.get("Name", "")
+            raw_name = dist.metadata.get("Name", "")  # type: ignore[attr-defined]
             if not raw_name:
                 continue
             norm_name = raw_name.lower().replace("-", "_")
             if not any(norm_name.startswith(p) for p in norm_prefixes):
                 continue
 
-            version = dist.metadata.get("Version", "") or ""
-            license_str = dist.metadata.get("License") or ""
+            version = dist.metadata.get("Version", "") or ""  # type: ignore[attr-defined]
+            license_str = dist.metadata.get("License") or ""  # type: ignore[attr-defined]
             # Try to get a classifier-based license if metadata field is empty
             if not license_str:
                 classifiers = dist.metadata.get_all("Classifier") or []

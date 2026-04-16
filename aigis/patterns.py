@@ -19,6 +19,8 @@ import re
 # Use the single canonical DetectionPattern definition from filters.patterns
 from aigis.filters.patterns import DetectionPattern  # noqa: F401
 
+__all__ = ["DetectionPattern", "ALL_INPUT_PATTERNS", "OUTPUT_PATTERNS"]
+
 
 def _p(pattern: str, flags: int = re.IGNORECASE | re.DOTALL) -> re.Pattern:
     return re.compile(pattern, flags)

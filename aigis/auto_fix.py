@@ -25,6 +25,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 # Default storage paths for learned defenses
 _DEFAULT_DIR = Path(".aigis")
@@ -165,12 +166,13 @@ def _ensure_dir(storage_dir: Path) -> None:
     storage_dir.mkdir(parents=True, exist_ok=True)
 
 
-def load_learned_patterns(storage_dir: Path | None = None) -> list[dict]:
+def load_learned_patterns(storage_dir: Path | None = None) -> list[dict[str, Any]]:
     """Load learned patterns from JSON file."""
     path = (storage_dir or _DEFAULT_DIR) / _LEARNED_PATTERNS_FILE
     if not path.exists():
         return []
-    return json.loads(path.read_text(encoding="utf-8"))
+    result: list[dict[str, Any]] = json.loads(path.read_text(encoding="utf-8"))
+    return result
 
 
 def save_learned_patterns(patterns: list[dict], storage_dir: Path | None = None) -> Path:
@@ -182,12 +184,13 @@ def save_learned_patterns(patterns: list[dict], storage_dir: Path | None = None)
     return path
 
 
-def load_learned_similarity(storage_dir: Path | None = None) -> list[dict]:
+def load_learned_similarity(storage_dir: Path | None = None) -> list[dict[str, Any]]:
     """Load learned similarity phrases from JSON file."""
     path = (storage_dir or _DEFAULT_DIR) / _LEARNED_SIMILARITY_FILE
     if not path.exists():
         return []
-    return json.loads(path.read_text(encoding="utf-8"))
+    result: list[dict[str, Any]] = json.loads(path.read_text(encoding="utf-8"))
+    return result
 
 
 def save_learned_similarity(phrases: list[dict], storage_dir: Path | None = None) -> Path:

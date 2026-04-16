@@ -306,7 +306,7 @@ def _parse_policy_yaml(text: str) -> dict:
     try the full ``yaml`` library first, then fall back to a stdlib-only parser.
     """
     try:
-        import yaml
+        import yaml  # type: ignore[import-untyped]
 
         data = yaml.safe_load(text)
         if not isinstance(data, dict):

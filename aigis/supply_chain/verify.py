@@ -268,11 +268,11 @@ class DependencyVerifier:
 
         result: dict[str, str] = {}
         for dist in md.distributions():
-            raw_name = dist.metadata.get("Name", "")
+            raw_name = dist.metadata.get("Name", "")  # type: ignore[attr-defined]
             if not raw_name:
                 continue
             norm = raw_name.lower().replace("-", "_")
-            version = dist.metadata.get("Version", "") or ""
+            version = dist.metadata.get("Version", "") or ""  # type: ignore[attr-defined]
             result[norm] = version
         return result
 

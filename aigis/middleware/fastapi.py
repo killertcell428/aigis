@@ -74,7 +74,7 @@ class AIGuardianMiddleware(BaseHTTPMiddleware):
             # cached value. However, some ASGI servers or test clients
             # rely on the receive channel. We set the internal cache
             # explicitly to guarantee availability.
-            request._body = body_bytes  # type: ignore[attr-defined]
+            request._body = body_bytes
 
             try:
                 body = json.loads(body_bytes)
@@ -106,7 +106,7 @@ class AIGuardianMiddleware(BaseHTTPMiddleware):
         if self.check_output and request.method == "POST" and self._should_scan(request.url.path):
             if hasattr(response, "body"):
                 try:
-                    resp_body = json.loads(response.body)
+                    resp_body = json.loads(bytes(response.body))
                     out_result = self.guard.check_response(resp_body)
                     if out_result.blocked:
                         return JSONResponse(
