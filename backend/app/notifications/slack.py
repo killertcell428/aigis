@@ -8,6 +8,7 @@ from typing import Any
 import httpx
 
 from app.models.tenant import Tenant
+from app.notifications.url_guard import is_safe_slack_webhook
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,13 @@ async def send_slack_notification(
     Returns True if sent successfully, False otherwise.
     """
     if not tenant.slack_webhook_url:
+        return False
+
+    # SSRF guard — only allow hooks.slack.com over HTTPS with a public-IP resolution.
+    if not is_safe_slack_webhook(tenant.slack_webhook_url):
+        logger.warning(
+            "Slack webhook URL rejected (SSRF guard) for tenant %s", tenant.slug
+        )
         return False
 
     # Decide whether to notify based on tenant preferences

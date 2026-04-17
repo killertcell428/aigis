@@ -16,39 +16,15 @@ Usage:
     )
 """
 
-import ipaddress
 import logging
-import socket
-import urllib.parse
 from typing import Any
 
 import httpx
 
 from app.models.tenant import Tenant
+from app.notifications.url_guard import is_safe_url as _is_safe_url  # re-export
 
 logger = logging.getLogger(__name__)
-
-
-def _is_safe_url(url: str) -> bool:
-    """Validate webhook URL to prevent SSRF.
-
-    Rejects non-HTTPS, private/internal IPs, and link-local addresses.
-    """
-    try:
-        parsed = urllib.parse.urlparse(url)
-        if parsed.scheme != "https":
-            return False
-        if not parsed.hostname:
-            return False
-        # Resolve hostname and check IP
-        results = socket.getaddrinfo(parsed.hostname, None, socket.AF_UNSPEC)
-        for _, _, _, _, sockaddr in results:
-            ip = ipaddress.ip_address(sockaddr[0])
-            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
-                return False
-        return True
-    except Exception:
-        return False
 
 
 async def notify(
