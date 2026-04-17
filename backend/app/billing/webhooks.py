@@ -1,11 +1,13 @@
 """Stripe Webhook handler for Aigis SaaS billing events."""
 import logging
+import uuid
 from datetime import datetime, timezone
 from typing import Annotated
 
 import stripe
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.billing.plans import PLAN_LIMITS, get_plan_limits
@@ -13,6 +15,7 @@ from app.billing.stripe_client import PRICE_IDS
 from app.config import settings
 from app.db.session import get_db
 from app.models.tenant import Tenant
+from app.models.webhook_event import WebhookEvent
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +96,27 @@ async def stripe_webhook(
 
     event_type = event["type"]
     data = event["data"]["object"]
+    event_id = event["id"]
 
-    logger.info("Received Stripe webhook event: %s (id=%s)", event_type, event["id"])
+    logger.info("Received Stripe webhook event: %s (id=%s)", event_type, event_id)
+
+    # Idempotency gate — reject duplicate Stripe event IDs.
+    # Stripe retries failed deliveries, so the same event may arrive multiple
+    # times. A unique-insert acts as the gate; IntegrityError => already processed.
+    db.add(
+        WebhookEvent(
+            id=uuid.uuid4(),
+            source="stripe",
+            event_id=event_id,
+            event_type=event_type,
+        )
+    )
+    try:
+        await db.flush()
+    except IntegrityError:
+        await db.rollback()
+        logger.info("Stripe webhook duplicate ignored: %s (id=%s)", event_type, event_id)
+        return {"status": "ok", "duplicate": True}
 
     # ------------------------------------------------------------------
     # checkout.session.completed
