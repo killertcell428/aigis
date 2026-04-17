@@ -34,7 +34,15 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
-          git diff --quiet public/ && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+          # `git diff --quiet` ignores untracked files, so newly-created
+          # public/*.md did not count as "changes" and the commit step was
+          # skipped. `git status --porcelain public/` catches both tracked
+          # modifications and new untracked files.
+          if [ -n "$(git status --porcelain public/)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit synced articles
         if: steps.changes.outputs.changed == 'true'
