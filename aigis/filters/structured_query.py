@@ -114,9 +114,9 @@ class StructuredMessage:
             for m in p.finditer(self.data):
                 out.append(BoundaryFinding("data", "role_token", m.group(0)[:120]))
         for p in _OVERRIDE_PATTERNS:
-            m = p.search(self.data)
-            if m:
-                out.append(BoundaryFinding("data", "override_phrase", m.group(0)[:120]))
+            match = p.search(self.data)
+            if match is not None:
+                out.append(BoundaryFinding("data", "override_phrase", match.group(0)[:120]))
         if strict:
             for p in _ROLE_TOKEN_PATTERNS:
                 for m in p.finditer(self.instruction):
