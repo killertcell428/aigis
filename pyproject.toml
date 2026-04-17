@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyaigis"
-version = "0.0.3"
+version = "0.0.4"
 description = "The open-source firewall for AI agents. Block prompt injections, jailbreaks, and data leaks before they reach your LLM. Multi-layer defense, agent-era security (MCP/Capability), US/CN/JP/EU compliance. Zero-dependency core."
 readme = "README.md"
 license = { file = "LICENSE" }

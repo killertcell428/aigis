@@ -7,13 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added — Marketing Assets & Branding
+## [0.0.4] - 2026-04-17
 
-- **New Aigis icon** (`images/aigis_icon_v01.jpg`) — Shield + AM monogram lockup, adopted as official brand mark
-- **PH Gallery images x10** (EN/JA, 1270x760) — Hero, 4-Layer Architecture, Dashboard, Integrations, Compliance
-- **CLI demo GIFs x2** (EN/JA, 820x520, 14s) — `pip install` → scan attacks → block/pass animation
-- **README branding update** — Replaced old `shield.svg` with new icon in header/footer, unified branch refs to `master`
-- **HTML sources + `gif_capture.py`** — All assets reproducible from source
+Two parallel tracks landed in this release: (1) a full internal security audit of backend and
+scanner core, and (2) seven zero-dep detectors translated directly from 2025–2026 LLM-security
+literature. 940/940 aigis core + 61/61 backend tests pass.
+
+### Security — internal audit + CodeQL
+
+Resolved 13 issues flagged during an internal security audit (4 Critical, 5 High, 4 Medium),
+plus 7 CodeQL alerts that were open on `master`.
+
+- **auth/api_keys**: switched from raw `SHA-256` + `==` to **HMAC-SHA256 (keyed by app secret) + `hmac.compare_digest`**. Closes DB-leak rainbow-table and timing-attack paths. (C2)
+- **main / config**: CORS no longer uses `"*"` with credentials — origins now driven by `cors_allowed_origins`; methods/headers restricted to needed set. (C1)
+- **billing/webhooks**: new **`WebhookEvent` idempotency ledger** (UNIQUE event_id). Stripe retries no longer double-apply plan state. (C3)
+- **routers/admin**: `POST /admin/tenants` now requires an authenticated **superadmin**; was previously an unauthenticated MVP bootstrap endpoint. (C4)
+- **notifications/slack**: new **`url_guard` module** with allowlist to `hooks.slack.com` over HTTPS + private/loopback/link-local IP rejection. Closes SSRF via tenant-controlled webhook URLs. (H1)
+- **auth/jwt**: algorithms pinned to `["HS256"]`, `require` enforces `exp` / `sub` / `tenant_id`; **bcrypt rounds raised to 14**. (H3, M3)
+- **config**: field validators **reject placeholder `SECRET_KEY`** and `postgres:postgres` defaults when `environment=production`. (M1, M2)
+- **main**: `/docs` & `/redoc` exposed only when `debug=True` AND `environment!=production`. (M4)
+- **scanner / filters.scorer**: new `aigis/_regex_guard.py` — **`safe_compile_user_regex`** rejects patterns longer than 2 KB, nested quantifiers (`(a+)+`), and quantified alternation groups (`(a|a)+`). Invalid rules now surface as an `invalid_rule` match instead of being silently skipped — an attacker can no longer disable scanning by uploading a broken pattern. (H5, H6)
+- **decoders**: confusables expanded to **Armenian / Hebrew / Arabic-Indic digits / Fullwidth Latin / zero-width & bidi control codepoints**. (H4)
+- **decoders**: emoji regex rewritten as a codepoint-range function — closes CodeQL `py/overly-permissive-regex-range` (6 alerts).
+- **scripts/seed_demo**: no longer logs any part of the raw API key — closes CodeQL `py/clear-text-logging-sensitive-data`.
+
+### Added — Research-driven detectors (2025-2026 literature)
+
+Seven zero-dep modules, one per paper. Each module's docstring cites the paper and explains the
+attack class it covers.
+
+- **`aigis/filters/fast_screen.py`** — character-trigram log-likelihood first-line screen. Cheap pre-filter before full regex scan. Inspired by the **Mirror Design Pattern** ([arxiv:2603.11875](https://arxiv.org/abs/2603.11875), Mar 2026).
+- **`aigis/spec_lang/fsm.py`** — goal-conditioned FSM (`AgentStateMachine`, `FSMMonitor`, `FSMViolation`). Complements `monitor/drift.py`: statistical drift vs. declarative conformance. Inspired by **MI9** ([arxiv:2508.03858](https://arxiv.org/abs/2508.03858), Aug 2025).
+- **`aigis/filters/structured_query.py`** — `StructuredMessage` with three role-tagged slots; raises `BoundaryViolation` when the untrusted `data` slot contains role tokens or override phrases. **StruQ** ([arxiv:2402.06363](https://arxiv.org/abs/2402.06363)) + **LLMail-Inject** ([arxiv:2506.09956](https://arxiv.org/abs/2506.09956)).
+- **`aigis/memory/imitation_detector.py`** — character-4-gram Jaccard similarity against operator-registered agent-voice references. Catches planted experiences that *imitate* the system voice rather than containing overt jailbreak phrases. **MemoryGraft** ([arxiv:2512.16962](https://arxiv.org/abs/2512.16962), Dec 2025).
+- **`aigis/filters/patterns.py`** — new `judge_manipulation` category, **15 patterns** (13 EN + 2 JA): forced verdicts, rubric override, reward hacking, role swap, meta-instructions to the judge. Targets **AdvJudge-Zero** bypasses (Palo Alto Unit 42, 2026) of auxiliary LLM judges used in enterprise review pipelines.
+- **`aigis/mcp_scanner.py`** — new `scan_invocation()` / `scan_response()` helpers. Extends MCP coverage from definition-only to the full **MSB 3-stage surface** ([arxiv:2510.15994](https://arxiv.org/abs/2510.15994)): puppet / rug-pull attacks that only fire at runtime are now detected.
+- **`aigis/filters/rag_context_filter.py`** — per-chunk `strip` / `block` policies for retrieved documents. **DataFilter** ([arxiv:2510.19207](https://arxiv.org/abs/2510.19207)) + **RAGDefender** ([arxiv:2511.01268](https://arxiv.org/abs/2511.01268)).
+
+### Tests
+
+- **+39** pytest cases across the seven new modules.
+- **940 / 940** aigis core + **61 / 61** backend = **1,001** tests pass.
+
+### Chores
+
+- `ruff check aigis/ tests/` and `ruff format --check` pass; E501 ignores unified for `aigis/filters/*.py`, `aigis/mcp_scanner.py`, `aigis/memory/*.py`, `aigis/weekly_report.py`.
+- `mypy aigis/` passes on CI (Ubuntu); narrowed `Match | None` in `structured_query.findings()`.
+
+[0.0.4]: https://github.com/killertcell428/aigis/compare/v0.0.3...v0.0.4
 
 ## [0.0.3] - 2026-04-17
 

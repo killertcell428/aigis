@@ -10,7 +10,7 @@
 <table align="center">
   <tr>
     <td align="center"><strong>98.9%</strong><br /><sub>Detection Rate</sub></td>
-    <td align="center"><strong>901</strong><br /><sub>Tests Passing</sub></td>
+    <td align="center"><strong>940</strong><br /><sub>Tests Passing</sub></td>
     <td align="center"><strong>44</strong><br /><sub>Compliance Templates<br />(US/CN/JP/EU)</sub></td>
     <td align="center"><strong>$0</strong><br /><sub>Forever</sub></td>
   </tr>
@@ -164,6 +164,22 @@ aigis adversarial-loop --rounds 5 --auto-fix
 ```
 
 Aigis attacks itself, finds gaps, and writes new detection rules automatically.
+
+### Recent Research → Production (2025-2026)
+
+Aigis tracks the live LLM-security literature and turns each paper into a zero-dep Python module. Seven additions landed in **v0.0.4**:
+
+| Module | Paper | What it does |
+|---|---|---|
+| `filters.fast_screen` | [Mirror Design Pattern](https://arxiv.org/abs/2603.11875) (Mar 2026) | Character-trigram log-likelihood screen; cheap first-line triage before the full regex scan. |
+| `filters.structured_query` | [StruQ](https://arxiv.org/abs/2402.06363) + [LLMail-Inject](https://arxiv.org/abs/2506.09956) | Splits a prompt into `system` / `instruction` / `data` slots; raises `BoundaryViolation` if the data slot smuggles role tokens or override phrases. |
+| `filters.rag_context_filter` | [DataFilter](https://arxiv.org/abs/2510.19207) + [RAGDefender](https://arxiv.org/abs/2511.01268) | Strips or blocks poisoned sentences in retrieved RAG chunks before the LLM sees them. |
+| `spec_lang.fsm` | [MI9](https://arxiv.org/abs/2508.03858) (Aug 2025) | Goal-conditioned FSM — declare the intended control flow and get a hard `FSMViolation` on any out-of-spec transition or tool call. Complements statistical drift. |
+| `memory.imitation_detector` | [MemoryGraft](https://arxiv.org/abs/2512.16962) (Dec 2025) | Catches planted memory entries that *imitate* the system voice instead of containing overt jailbreak phrases. |
+| `mcp_scanner.scan_invocation` / `scan_response` | [MSB](https://arxiv.org/abs/2510.15994) (Oct 2025) | Extends MCP coverage to the invocation + response stages — puppet / rug-pull attacks that don't show up in tool metadata. |
+| `filters.patterns` — `judge_manipulation` category | AdvJudge-Zero (Palo Alto Unit 42) | 15 patterns for forced verdicts, rubric override, and reward-hack phrasing targeting LLM-as-Judge evaluators. |
+
+All seven ship in the core package — zero extra dependencies. Full citations live in each module's docstring.
 
 ---
 
