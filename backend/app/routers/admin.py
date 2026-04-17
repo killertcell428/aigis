@@ -107,9 +107,16 @@ async def get_me(current_user: Annotated[User, Depends(get_current_user)]) -> Us
 @router.post("/tenants", response_model=TenantResponse, status_code=201)
 async def create_tenant(
     body: TenantCreateRequest,
+    current_user: Annotated[User, Depends(get_admin_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> Tenant:
-    """Create a new tenant (bootstrap endpoint — no auth required for MVP)."""
+    """Create a new tenant. Restricted to super-admin users.
+
+    Only users with role=="superadmin" may create additional tenants.
+    """
+    if current_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Super-admin role required")
+
     result = await db.execute(select(Tenant).where(Tenant.slug == body.slug))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Tenant slug already exists")

@@ -131,17 +131,22 @@ app = FastAPI(
         "rule-based filtering, risk scoring, and Human-in-the-Loop review."
     ),
     lifespan=lifespan,
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
+    # Hide API docs whenever debug is off OR environment is production —
+    # both must be safe for docs to be exposed.
+    docs_url="/docs" if (settings.debug and not settings.is_production()) else None,
+    redoc_url="/redoc" if (settings.debug and not settings.is_production()) else None,
 )
 
-# CORS
+# CORS — origins configured via settings; never "*" with credentials.
+_cors_origins = settings.cors_origins_list()
+if settings.debug and not _cors_origins:
+    _cors_origins = ["http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
+    allow_origins=_cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "stripe-signature"],
 )
 
 # Routers

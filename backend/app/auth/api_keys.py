@@ -1,7 +1,15 @@
 """API key generation and validation for proxy authentication."""
 import hashlib
+import hmac
 import secrets
-import uuid
+
+from app.config import settings
+
+
+def _hmac_key() -> bytes:
+    # Derive the HMAC secret from the app secret_key. Using a fixed label
+    # keeps the API-key hash distinct from any other HMAC domain.
+    return hashlib.sha256(b"aigis.api_key.v1|" + settings.secret_key.encode()).digest()
 
 
 def generate_api_key() -> tuple[str, str]:
@@ -17,10 +25,10 @@ def generate_api_key() -> tuple[str, str]:
 
 
 def hash_api_key(raw_key: str) -> str:
-    """Hash an API key for secure storage (SHA-256)."""
-    return hashlib.sha256(raw_key.encode()).hexdigest()
+    """Hash an API key with HMAC-SHA256 keyed by the app secret."""
+    return hmac.new(_hmac_key(), raw_key.encode(), hashlib.sha256).hexdigest()
 
 
 def verify_api_key(raw_key: str, stored_hash: str) -> bool:
-    """Verify a raw API key against its stored hash."""
-    return hash_api_key(raw_key) == stored_hash
+    """Constant-time verify a raw API key against its stored hash."""
+    return hmac.compare_digest(hash_api_key(raw_key), stored_hash)

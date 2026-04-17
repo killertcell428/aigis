@@ -1,6 +1,7 @@
 """Application configuration using pydantic-settings."""
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Look for .env in backend/ first, then project root
@@ -71,6 +72,43 @@ class Settings(BaseSettings):
 
     # Billing enforcement mode: "strict" blocks, "warn" logs only
     billing_enforcement_mode: str = "warn"
+
+    # CORS — comma-separated origins. Use "*" only for local dev (debug=True).
+    cors_allowed_origins: str = "http://localhost:3000"
+
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
+
+    def is_production(self) -> bool:
+        return self.environment.lower() == "production"
+
+    @field_validator("secret_key")
+    @classmethod
+    def _validate_secret_key(cls, v: str, info) -> str:
+        # Allow weak defaults only outside production. In production, reject
+        # the placeholder and any short/obviously-demo value.
+        env = (info.data.get("environment") or "production").lower()
+        if env != "production":
+            return v
+        if not v or len(v) < 32:
+            raise ValueError("SECRET_KEY must be at least 32 chars in production")
+        bad_prefixes = ("CHANGE_ME", "demo_secret", "changeme", "your-secret")
+        if any(v.startswith(p) for p in bad_prefixes):
+            raise ValueError("SECRET_KEY must not use a placeholder value in production")
+        return v
+
+    @field_validator("database_url")
+    @classmethod
+    def _validate_database_url(cls, v: str, info) -> str:
+        env = (info.data.get("environment") or "production").lower()
+        if env != "production":
+            return v
+        # Reject default ":postgres@" credential in prod.
+        if ":postgres@" in v or "user=postgres password=postgres" in v:
+            raise ValueError(
+                "DATABASE_URL uses default 'postgres:postgres' credentials in production"
+            )
+        return v
 
 
 settings = Settings()

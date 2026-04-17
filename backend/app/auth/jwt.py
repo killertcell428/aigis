@@ -7,7 +7,12 @@ from passlib.context import CryptContext
 
 from app.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# bcrypt__rounds=14 — 2026 baseline; raise periodically as hardware improves.
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=14)
+
+# Restrict accepted algorithms to HS256 only to defeat "alg: none" and
+# algorithm-confusion attacks regardless of settings.algorithm typos.
+_ALLOWED_ALGORITHMS = ["HS256"]
 
 
 def create_access_token(
@@ -47,9 +52,18 @@ def decode_token(token: str) -> dict[str, Any]:
         Decoded payload dict.
 
     Raises:
-        JWTError: If token is invalid or expired.
+        JWTError: If token is invalid, expired, or missing required claims.
     """
-    return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    return jwt.decode(
+        token,
+        settings.secret_key,
+        algorithms=_ALLOWED_ALGORITHMS,
+        options={
+            "require": ["exp", "sub", "tenant_id"],
+            "verify_exp": True,
+            "verify_signature": True,
+        },
+    )
 
 
 def hash_password(password: str) -> str:
