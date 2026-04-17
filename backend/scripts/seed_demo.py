@@ -110,9 +110,8 @@ async def seed() -> None:
 
         await db.commit()
 
-        # Print credentials — mask sensitive values in logs.
-        # The API key is shown once at initial seed only.
-        masked_key = raw_key[:8] + "..." + raw_key[-4:]
+        # Print credentials — never log the API key (even partially).
+        # The full key is written to a 0600 file below; show the path only.
         print("\n" + "=" * 60)
         print("  Aigis Demo — Ready!")
         print("=" * 60)
@@ -120,8 +119,7 @@ async def seed() -> None:
         print(f"    Admin:    {DEMO_ADMIN_EMAIL} / ********")
         print(f"    Reviewer: {DEMO_REVIEWER_EMAIL} / ********")
         print(f"\n  API Key (for proxy requests):")
-        print(f"    {masked_key}")
-        print(f"\n  Full API key written to: .aigis/demo_api_key")
+        print(f"    written to .aigis/demo_api_key (chmod 600)")
         print(f"\n  Use in code:")
         print(f'    client = OpenAI(api_key="<your-api-key>",')
         print(f'                    base_url="http://localhost:8000/api/v1/proxy")')
