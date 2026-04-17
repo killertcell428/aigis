@@ -3,7 +3,7 @@ name: Sync Zenn to Qiita
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
     paths:
       - 'articles/**'
   schedule:
