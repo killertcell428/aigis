@@ -41,6 +41,7 @@ Outcome
   retrieved chunks, the structured-query wrapper makes any surviving
   boundary token a fatal error rather than a silent vulnerability.
 """
+
 from __future__ import annotations
 
 import re
@@ -62,7 +63,10 @@ _ROLE_TOKEN_PATTERNS: tuple[re.Pattern[str], ...] = (
 # purpose so callers can use structured_query standalone without spinning
 # up the full scanner.
 _OVERRIDE_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\b(ignore|disregard|forget|override|bypass)\s+(the\s+)?(previous|prior|above|all|your|any)\s+(instructions?|rules?|guidelines?|prompts?)", re.IGNORECASE),
+    re.compile(
+        r"\b(ignore|disregard|forget|override|bypass)\s+(the\s+)?(previous|prior|above|all|your|any)\s+(instructions?|rules?|guidelines?|prompts?)",
+        re.IGNORECASE,
+    ),
     re.compile(r"\b(new|updated)\s+instructions?\s*[:\-]", re.IGNORECASE),
     re.compile(r"\byou\s+are\s+now\b", re.IGNORECASE),
     re.compile(r"\b(これまで|今まで|以前)の(指示|ルール)を(無視|破棄|忘れ)", re.IGNORECASE),

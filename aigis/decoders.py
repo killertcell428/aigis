@@ -94,24 +94,24 @@ _CONFUSABLES: dict[str, str] = {
     # Extended Arabic-Indic digits
     **{chr(0x06F0 + i): str(i) for i in range(10)},  # ۰-۹
     # Hebrew confusables (conservative — only visually-identical letters)
-    "\u05D0": "N",  # א (alef, loose lookalike for "N" in adversarial fonts)
+    "\u05d0": "N",  # א (alef, loose lookalike for "N" in adversarial fonts)
     # Zero-width & bidi controls → dropped (empty string)
-    "\u200B": "",   # Zero-width space
-    "\u200C": "",   # Zero-width non-joiner
-    "\u200E": "",   # LRM
-    "\u200F": "",   # RLM
-    "\u2028": "",   # Line separator
-    "\u2029": "",   # Paragraph separator
-    "\u202A": "",   # LRE
-    "\u202B": "",   # RLE
-    "\u202C": "",   # PDF
-    "\u202D": "",   # LRO
-    "\u202E": "",   # RLO
-    "\u2066": "",   # LRI
-    "\u2067": "",   # RLI
-    "\u2068": "",   # FSI
-    "\u2069": "",   # PDI
-    "\uFEFF": "",   # BOM / ZWNBSP
+    "\u200b": "",  # Zero-width space
+    "\u200c": "",  # Zero-width non-joiner
+    "\u200e": "",  # LRM
+    "\u200f": "",  # RLM
+    "\u2028": "",  # Line separator
+    "\u2029": "",  # Paragraph separator
+    "\u202a": "",  # LRE
+    "\u202b": "",  # RLE
+    "\u202c": "",  # PDF
+    "\u202d": "",  # LRO
+    "\u202e": "",  # RLO
+    "\u2066": "",  # LRI
+    "\u2067": "",  # RLI
+    "\u2068": "",  # FSI
+    "\u2069": "",  # PDI
+    "\ufeff": "",  # BOM / ZWNBSP
 }
 
 _CONFUSABLE_TABLE = str.maketrans(_CONFUSABLES)
@@ -126,14 +126,16 @@ _EMOJI_RANGES: tuple[tuple[int, int], ...] = (
     (0x1F900, 0x1F9FF),  # Supplemental Symbols
     (0x1FA00, 0x1FA6F),  # Chess Symbols
     (0x1FA70, 0x1FAFF),  # Symbols and Pictographs Extended-A
-    (0x2600, 0x26FF),    # Misc symbols
-    (0x2700, 0x27BF),    # Dingbats
+    (0x2600, 0x26FF),  # Misc symbols
+    (0x2700, 0x27BF),  # Dingbats
     (0x1F1E0, 0x1F1FF),  # Flags
 )
-_EMOJI_SINGLES: frozenset[int] = frozenset({
-    0x200D,   # Zero Width Joiner
-    0xFE0F,   # Variation Selector-16
-})
+_EMOJI_SINGLES: frozenset[int] = frozenset(
+    {
+        0x200D,  # Zero Width Joiner
+        0xFE0F,  # Variation Selector-16
+    }
+)
 
 
 def _is_emoji_codepoint(cp: int) -> bool:
@@ -143,6 +145,7 @@ def _is_emoji_codepoint(cp: int) -> bool:
         if start <= cp <= end:
             return True
     return False
+
 
 # Patterns for detecting encoded content
 _BASE64_RE = re.compile(r"[A-Za-z0-9+/]{20,}={0,2}")

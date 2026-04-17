@@ -1,4 +1,5 @@
 """Tests for the RAG context filter."""
+
 from aigis.filters.rag_context_filter import (
     RetrievedChunk,
     filter_chunks,

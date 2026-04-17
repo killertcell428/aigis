@@ -36,6 +36,7 @@ Outcome
   response (``warn → throttle → restrict → isolate → stop``).
 - Zero dependency; pure stdlib, fits inside the ``spec_lang`` DSL family.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

@@ -21,11 +21,11 @@ Usage::
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from aigis.monitor import OWASP_LLM_TOP10, SecurityMonitor
+from aigis.monitor import SecurityMonitor
 
 
 @dataclass
@@ -108,7 +108,8 @@ class WeeklyReportGenerator:
         prev_total = len(prev_records)
         prev_blocked = sum(1 for r in prev_records if r.get("is_blocked"))
         prev_review = sum(
-            1 for r in prev_records
+            1
+            for r in prev_records
             if r.get("risk_level") in ("medium", "high") and not r.get("is_blocked")
         )
         prev_allowed = prev_total - prev_blocked - prev_review
@@ -146,7 +147,10 @@ class WeeklyReportGenerator:
 
         # Generate recommendations
         recommendations = self._generate_recommendations(
-            this_snap, category_trends, trend_blocked, this_safety,
+            this_snap,
+            category_trends,
+            trend_blocked,
+            this_safety,
         )
 
         # OWASP coverage
@@ -156,6 +160,7 @@ class WeeklyReportGenerator:
         learned_count = 0
         try:
             from aigis.auto_fix import load_learned_patterns
+
             learned_count = len(load_learned_patterns())
         except Exception:
             pass
@@ -205,10 +210,14 @@ class WeeklyReportGenerator:
         a("  SUMMARY")
         a("  " + "-" * 40)
         a(f"  Total Scans:     {r.total_scans:>8,}")
-        a(f"  Blocked:         {r.total_blocked:>8,}  ({_arrow(r.trend_blocked_pct)} {abs(r.trend_blocked_pct):.0f}% vs prev week)")
+        a(
+            f"  Blocked:         {r.total_blocked:>8,}  ({_arrow(r.trend_blocked_pct)} {abs(r.trend_blocked_pct):.0f}% vs prev week)"
+        )
         a(f"  Review:          {r.total_review:>8,}")
         a(f"  Allowed:         {r.total_allowed:>8,}")
-        a(f"  Safety Rate:     {r.safety_rate:>7.1%}  ({_arrow(r.trend_safety_pct)} {abs(r.trend_safety_pct):.1f}pp)")
+        a(
+            f"  Safety Rate:     {r.safety_rate:>7.1%}  ({_arrow(r.trend_safety_pct)} {abs(r.trend_safety_pct):.1f}pp)"
+        )
         a(f"  Detection Rate:  {r.detection_rate:>7.1%}")
         a(f"  ASR:             {r.asr:>7.1%}  (lower = better)")
         a("")
@@ -233,7 +242,9 @@ class WeeklyReportGenerator:
             )
             for cat, trend in sorted_cats:
                 arrow = _arrow(trend["change_pct"])
-                a(f"  {cat:>22s}  {trend['prev_week']:>3} -> {trend['this_week']:>3}  {arrow} {abs(trend['change_pct']):.0f}%")
+                a(
+                    f"  {cat:>22s}  {trend['prev_week']:>3} -> {trend['this_week']:>3}  {arrow} {abs(trend['change_pct']):.0f}%"
+                )
             a("")
 
         # Detection layers
@@ -279,69 +290,79 @@ class WeeklyReportGenerator:
         lines: list[str] = []
         a = lines.append
 
-        a(f"# Aigis Weekly Security Report")
-        a(f"")
+        a("# Aigis Weekly Security Report")
+        a("")
         a(f"**Period**: {r.period_start} ~ {r.period_end} | **Generated**: {r.generated_at[:10]}")
-        a(f"")
+        a("")
 
         # Summary table
-        a(f"## Summary")
-        a(f"")
-        a(f"| Metric | This Week | Prev Week | Trend |")
-        a(f"|--------|-----------|-----------|-------|")
-        a(f"| Total Scans | {r.total_scans:,} | {r.prev_total_scans:,} | {_trend_badge(r.trend_scans_pct)} |")
-        a(f"| Blocked | {r.total_blocked:,} | {r.prev_total_blocked:,} | {_trend_badge(r.trend_blocked_pct)} |")
-        a(f"| Safety Rate | {r.safety_rate:.1%} | {r.prev_safety_rate:.1%} | {_trend_badge_safety(r.trend_safety_pct)} |")
+        a("## Summary")
+        a("")
+        a("| Metric | This Week | Prev Week | Trend |")
+        a("|--------|-----------|-----------|-------|")
+        a(
+            f"| Total Scans | {r.total_scans:,} | {r.prev_total_scans:,} | {_trend_badge(r.trend_scans_pct)} |"
+        )
+        a(
+            f"| Blocked | {r.total_blocked:,} | {r.prev_total_blocked:,} | {_trend_badge(r.trend_blocked_pct)} |"
+        )
+        a(
+            f"| Safety Rate | {r.safety_rate:.1%} | {r.prev_safety_rate:.1%} | {_trend_badge_safety(r.trend_safety_pct)} |"
+        )
         a(f"| Detection Rate | {r.detection_rate:.1%} | - | - |")
         a(f"| ASR | {r.asr:.1%} | - | - |")
-        a(f"")
+        a("")
 
         # Risk distribution
-        a(f"## Risk Distribution")
-        a(f"")
-        a(f"| Level | Count |")
-        a(f"|-------|-------|")
+        a("## Risk Distribution")
+        a("")
+        a("| Level | Count |")
+        a("|-------|-------|")
         for level in ("critical", "high", "medium", "low"):
             count = r.risk_distribution.get(level, 0)
             a(f"| {level.upper()} | {count:,} |")
-        a(f"")
+        a("")
 
         # Category trends
         if r.category_trends:
-            a(f"## Threat Categories (Week-over-Week)")
-            a(f"")
-            a(f"| Category | Prev | This | Change |")
-            a(f"|----------|------|------|--------|")
+            a("## Threat Categories (Week-over-Week)")
+            a("")
+            a("| Category | Prev | This | Change |")
+            a("|----------|------|------|--------|")
             sorted_cats = sorted(
                 r.category_trends.items(),
                 key=lambda x: x[1]["this_week"],
                 reverse=True,
             )
             for cat, t in sorted_cats:
-                a(f"| {cat} | {t['prev_week']} | {t['this_week']} | {_trend_badge(t['change_pct'])} |")
-            a(f"")
+                a(
+                    f"| {cat} | {t['prev_week']} | {t['this_week']} | {_trend_badge(t['change_pct'])} |"
+                )
+            a("")
 
         # OWASP
-        a(f"## OWASP LLM Top 10 Coverage")
-        a(f"")
-        a(f"| ID | Threat | Status | Detections |")
-        a(f"|----|--------|--------|------------|")
+        a("## OWASP LLM Top 10 Coverage")
+        a("")
+        a("| ID | Threat | Status | Detections |")
+        a("|----|--------|--------|------------|")
         for oid in sorted(r.owasp_coverage.keys()):
             cov = r.owasp_coverage[oid]
             status = cov.get("protection_level", "not-covered").upper()
             a(f"| {oid} | {cov['name']} | {status} | {cov.get('detections', 0)} |")
-        a(f"")
+        a("")
 
         # Recommendations
         if r.recommendations:
-            a(f"## Recommended Actions")
-            a(f"")
+            a("## Recommended Actions")
+            a("")
             for rec in r.recommendations:
-                icon = {"critical": "**[CRITICAL]**", "warning": "**[WARNING]**", "info": "[INFO]"}[rec["severity"]]
+                icon = {"critical": "**[CRITICAL]**", "warning": "**[WARNING]**", "info": "[INFO]"}[
+                    rec["severity"]
+                ]
                 a(f"- {icon} {rec['message']}")
-            a(f"")
+            a("")
 
-        a(f"---")
+        a("---")
         a(f"*Generated by Aigis v{r.version}*")
         return "\n".join(lines)
 
@@ -379,49 +400,60 @@ class WeeklyReportGenerator:
         # 1. Categories with significant increase
         for cat, trend in category_trends.items():
             if trend["change_pct"] > 50 and trend["this_week"] >= 3:
-                recs.append({
-                    "severity": "warning",
-                    "message": f"{cat} increased {trend['change_pct']:.0f}% this week "
-                               f"({trend['prev_week']} -> {trend['this_week']}). "
-                               f"Consider reviewing detection rules for this category.",
-                })
+                recs.append(
+                    {
+                        "severity": "warning",
+                        "message": f"{cat} increased {trend['change_pct']:.0f}% this week "
+                        f"({trend['prev_week']} -> {trend['this_week']}). "
+                        f"Consider reviewing detection rules for this category.",
+                    }
+                )
 
         # 2. New categories appearing
         for cat, trend in category_trends.items():
             if trend["prev_week"] == 0 and trend["this_week"] > 0:
-                recs.append({
-                    "severity": "info",
-                    "message": f"New threat category detected: {cat} "
-                               f"({trend['this_week']} occurrences). Monitor closely.",
-                })
+                recs.append(
+                    {
+                        "severity": "info",
+                        "message": f"New threat category detected: {cat} "
+                        f"({trend['this_week']} occurrences). Monitor closely.",
+                    }
+                )
 
         # 3. High blocked rate increase
         if trend_blocked_pct > 100:
-            recs.append({
-                "severity": "warning",
-                "message": f"Blocked requests doubled ({trend_blocked_pct:.0f}% increase). "
-                           f"Investigate whether this is a targeted attack or false positives.",
-            })
+            recs.append(
+                {
+                    "severity": "warning",
+                    "message": f"Blocked requests doubled ({trend_blocked_pct:.0f}% increase). "
+                    f"Investigate whether this is a targeted attack or false positives.",
+                }
+            )
 
         # 4. Low safety rate
         if safety_rate < 0.9:
-            recs.append({
-                "severity": "critical",
-                "message": f"Safety rate is {safety_rate:.1%}, below 90% threshold. "
-                           f"Review blocked and review-queued requests for false positives.",
-            })
+            recs.append(
+                {
+                    "severity": "critical",
+                    "message": f"Safety rate is {safety_rate:.1%}, below 90% threshold. "
+                    f"Review blocked and review-queued requests for false positives.",
+                }
+            )
 
         # 5. Auto-fix suggestions available
         try:
             from aigis.auto_fix import load_learned_patterns
+
             learned = load_learned_patterns()
             unapplied = [p for p in learned if not p.get("auto_applied")]
             if unapplied:
-                recs.append({
-                    "severity": "info",
-                    "message": f"{len(unapplied)} auto-fix rules are pending review. "
-                               f"Run `aigis adversarial-loop --auto-fix` to apply.",
-                })
+                recs.append(
+                    {
+                        "severity": "info",
+                        "message": f"{len(unapplied)} auto-fix rules are pending review. "
+                        f"Run `aigis adversarial-loop --auto-fix` to apply.",
+                    }
+                )
         except Exception:
             pass
 
@@ -430,28 +462,34 @@ class WeeklyReportGenerator:
         all_layers = {"regex", "similarity", "decoded", "multi_turn"}
         unused = all_layers - active_layers
         if unused and snap.total_scans > 10:
-            recs.append({
-                "severity": "info",
-                "message": f"Detection layers with no hits this week: {', '.join(sorted(unused))}. "
-                           f"This is normal if no obfuscated attacks were attempted.",
-            })
+            recs.append(
+                {
+                    "severity": "info",
+                    "message": f"Detection layers with no hits this week: {', '.join(sorted(unused))}. "
+                    f"This is normal if no obfuscated attacks were attempted.",
+                }
+            )
 
         # 7. Zero scans warning
         if snap.total_scans == 0:
-            recs.append({
-                "severity": "warning",
-                "message": "No scans recorded this week. Verify that Aigis is properly "
-                           "integrated into your LLM pipeline.",
-            })
+            recs.append(
+                {
+                    "severity": "warning",
+                    "message": "No scans recorded this week. Verify that Aigis is properly "
+                    "integrated into your LLM pipeline.",
+                }
+            )
 
         return recs
 
 
 # === Helpers ===
 
+
 def _get_version() -> str:
     try:
         from aigis import __version__
+
         return __version__
     except ImportError:
         return "unknown"

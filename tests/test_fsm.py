@@ -1,4 +1,5 @@
 """Tests for the goal-conditioned FSM monitor."""
+
 import pytest
 
 from aigis.spec_lang.fsm import (

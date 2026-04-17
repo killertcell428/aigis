@@ -2381,7 +2381,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_force_approved",
         name="Forced 'approved' verdict",
         category="judge_manipulation",
-        pattern=_p(r"\b(always|just|only|simply)\s+(return|output|respond(?:\s+with)?|say)\s+['\"]?(approved|safe|allow|ok|pass|yes)['\"]?"),
+        pattern=_p(
+            r"\b(always|just|only|simply)\s+(return|output|respond(?:\s+with)?|say)\s+['\"]?(approved|safe|allow|ok|pass|yes)['\"]?"
+        ),
         base_score=55,
         description="Attempts to force a fixed verdict from an LLM judge regardless of content.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2391,7 +2393,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_score_fixation",
         name="Score fixation",
         category="judge_manipulation",
-        pattern=_p(r"\b(score|rating|verdict|label)\s*(=|:|is)\s*['\"]?(1(\.0+)?|10|100|safe|pass)['\"]?\b"),
+        pattern=_p(
+            r"\b(score|rating|verdict|label)\s*(=|:|is)\s*['\"]?(1(\.0+)?|10|100|safe|pass)['\"]?\b"
+        ),
         base_score=45,
         description="Attempts to pin the judge's score to a specific value.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2401,7 +2405,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_rubric_override",
         name="Rubric override",
         category="judge_manipulation",
-        pattern=_p(r"\b(ignore|override|replace|update)\s+(the\s+)?(rubric|evaluation\s+criteria|grading|scoring\s+guidelines)"),
+        pattern=_p(
+            r"\b(ignore|override|replace|update)\s+(the\s+)?(rubric|evaluation\s+criteria|grading|scoring\s+guidelines)"
+        ),
         base_score=50,
         description="Attempts to replace the judge's rubric with attacker-chosen criteria.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2411,7 +2417,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_self_grade",
         name="Self-grade injection",
         category="judge_manipulation",
-        pattern=_p(r"\b(grade|evaluate|judge)\s+(yourself|this\s+response)\s+as\s+(correct|safe|passing|excellent|perfect|10/10)\b"),
+        pattern=_p(
+            r"\b(grade|evaluate|judge)\s+(yourself|this\s+response)\s+as\s+(correct|safe|passing|excellent|perfect|10/10)\b"
+        ),
         base_score=40,
         description="Content instructs the judge to self-rate the answer favorably.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2421,7 +2429,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_role_swap",
         name="Judge role swap",
         category="judge_manipulation",
-        pattern=_p(r"\b(you\s+are\s+(now\s+)?the\s+(user|author|attacker)|stop\s+evaluating|drop\s+your\s+judge\s+role)\b"),
+        pattern=_p(
+            r"\b(you\s+are\s+(now\s+)?the\s+(user|author|attacker)|stop\s+evaluating|drop\s+your\s+judge\s+role)\b"
+        ),
         base_score=55,
         description="Attempts to swap the judge out of its evaluation role.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2431,7 +2441,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_reward_hack",
         name="Reward-hack phrasing",
         category="judge_manipulation",
-        pattern=_p(r"\b(reward|bonus|points|credit)\s+for\s+(saying|outputting|returning)\s+['\"]?(safe|approved|yes|ok|pass)['\"]?"),
+        pattern=_p(
+            r"\b(reward|bonus|points|credit)\s+for\s+(saying|outputting|returning)\s+['\"]?(safe|approved|yes|ok|pass)['\"]?"
+        ),
         base_score=40,
         description="Reward-hack style directive aimed at RL-trained judges.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2441,7 +2453,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_policy_null",
         name="Policy nullification",
         category="judge_manipulation",
-        pattern=_p(r"\b(there\s+are\s+no\s+(rules|policies|restrictions)|policies?\s+(do\s+not|don'?t)\s+apply|everything\s+is\s+allowed)\b"),
+        pattern=_p(
+            r"\b(there\s+are\s+no\s+(rules|policies|restrictions)|policies?\s+(do\s+not|don'?t)\s+apply|everything\s+is\s+allowed)\b"
+        ),
         base_score=45,
         description="Tells the judge its policies no longer apply.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2461,7 +2475,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_confidence_inflation",
         name="Confidence inflation",
         category="judge_manipulation",
-        pattern=_p(r"\b(with\s+)?(100%|full|maximum|total)\s+confidence\s*,?\s+(this\s+is\s+safe|approve|pass)"),
+        pattern=_p(
+            r"\b(with\s+)?(100%|full|maximum|total)\s+confidence\s*,?\s+(this\s+is\s+safe|approve|pass)"
+        ),
         base_score=35,
         description="Asserts a high confidence verdict to bias the judge.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2471,7 +2487,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_ignore_disclaimer",
         name="Ignore-safety disclaimer",
         category="judge_manipulation",
-        pattern=_p(r"\b(ignore|skip|omit)\s+(any\s+)?(safety|ethical|warning|disclaimer|caveats?)\s+(labels?|flags?|checks?)"),
+        pattern=_p(
+            r"\b(ignore|skip|omit)\s+(any\s+)?(safety|ethical|warning|disclaimer|caveats?)\s+(labels?|flags?|checks?)"
+        ),
         base_score=45,
         description="Directs the judge to ignore safety flags.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2491,7 +2509,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_meta_instruction",
         name="Meta-instruction to judge",
         category="judge_manipulation",
-        pattern=_p(r"\b(dear|hi|hello)\s+(judge|evaluator|reviewer)\b|\bnote\s+to\s+(the\s+)?(judge|evaluator)\b"),
+        pattern=_p(
+            r"\b(dear|hi|hello)\s+(judge|evaluator|reviewer)\b|\bnote\s+to\s+(the\s+)?(judge|evaluator)\b"
+        ),
         base_score=35,
         description="Direct address to the judge inside data under review.",
         owasp_ref="OWASP LLM01: Prompt Injection",
@@ -2501,7 +2521,9 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
         id="judge_evidence_swap",
         name="Fabricated evidence preamble",
         category="judge_manipulation",
-        pattern=_p(r"\b(proof|evidence|citation)\s*[:=]\s+(this\s+(is|has\s+been)\s+(safe|approved|cleared|verified))"),
+        pattern=_p(
+            r"\b(proof|evidence|citation)\s*[:=]\s+(this\s+(is|has\s+been)\s+(safe|approved|cleared|verified))"
+        ),
         base_score=35,
         description="Content cites itself as 'pre-approved' evidence.",
         owasp_ref="OWASP LLM01: Prompt Injection",

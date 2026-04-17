@@ -50,18 +50,22 @@ Outcome
   DataFilter/RAGDefender evaluations.
 - Zero-dep implementation — callers keep aigis's install story.
 """
+
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
 
-from aigis.filters.fast_screen import THRESHOLD_BLOCK, THRESHOLD_WARN, screen
+from aigis.filters.fast_screen import THRESHOLD_BLOCK, screen
 from aigis.filters.structured_query import _ROLE_TOKEN_PATTERNS
 
 # Directive phrases that legitimate reference content should never contain.
 # Conservative — these are hard signals, not statistical ones.
 _DIRECTIVE_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\b(ignore|disregard|forget|override|bypass)\s+(the\s+)?(above|previous|prior|instructions?|rules?)", re.IGNORECASE),
+    re.compile(
+        r"\b(ignore|disregard|forget|override|bypass)\s+(the\s+)?(above|previous|prior|instructions?|rules?)",
+        re.IGNORECASE,
+    ),
     re.compile(r"\bnew\s+instructions?\s*[:\-]", re.IGNORECASE),
     re.compile(r"\byou\s+are\s+now\b", re.IGNORECASE),
     re.compile(r"\bsystem\s*:\s", re.IGNORECASE),

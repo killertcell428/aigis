@@ -11,6 +11,7 @@ instead of returning them. Callers should treat a ``None`` return as a hard
 failure and surface it (log + matched-rule marker) rather than continuing
 silently — so that an operator can see which rule is broken.
 """
+
 from __future__ import annotations
 
 import logging
@@ -25,9 +26,7 @@ _MAX_PATTERN_LEN = 2048
 # Nested-quantifier detector: a parenthesized group whose *contents* include
 # a quantifier (* + ? or {n,m}), followed by another quantifier outside the
 # group. This is the classic ReDoS shape: (a+)+, (a*)+, (a+)*, (.+)+, etc.
-_NESTED_QUANT_RE = re.compile(
-    r"\([^()]*[\*\+\?\{][^()]*\)[\*\+\?\{]"
-)
+_NESTED_QUANT_RE = re.compile(r"\([^()]*[\*\+\?\{][^()]*\)[\*\+\?\{]")
 
 # Unbounded alternation inside a group with a trailing quantifier:
 # "(a|ab)+", "(x|x|x)*", a common ReDoS source. Conservative — flags groups

@@ -29,6 +29,7 @@ for obviously-benign traffic.
 The caller is expected to treat this as a hint, not a verdict. It sits
 alongside, not in place of, the existing scanner.
 """
+
 from __future__ import annotations
 
 import math
@@ -113,8 +114,14 @@ def _build_log_probs(corpus: tuple[str, ...]) -> dict[str, float]:
 _ATTACK_LOGP = _build_log_probs(_ATTACK_CORPUS)
 _BENIGN_LOGP = _build_log_probs(_BENIGN_CORPUS)
 # Background floor for ngrams unseen in a given corpus.
-_ATTACK_FLOOR = math.log(_SMOOTHING / (sum(Counter(ng for s in _ATTACK_CORPUS for ng in _ngrams(s)).values()) + _SMOOTHING))
-_BENIGN_FLOOR = math.log(_SMOOTHING / (sum(Counter(ng for s in _BENIGN_CORPUS for ng in _ngrams(s)).values()) + _SMOOTHING))
+_ATTACK_FLOOR = math.log(
+    _SMOOTHING
+    / (sum(Counter(ng for s in _ATTACK_CORPUS for ng in _ngrams(s)).values()) + _SMOOTHING)
+)
+_BENIGN_FLOOR = math.log(
+    _SMOOTHING
+    / (sum(Counter(ng for s in _BENIGN_CORPUS for ng in _ngrams(s)).values()) + _SMOOTHING)
+)
 
 THRESHOLD_WARN = 0.55
 THRESHOLD_BLOCK = 0.80

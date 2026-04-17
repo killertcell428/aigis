@@ -5,8 +5,6 @@ Aggregates matched pattern scores into a single risk score and level.
 
 from __future__ import annotations
 
-import re
-
 from aigis.filters.patterns import DetectionPattern
 from aigis.types import MatchedRule, RiskLevel
 

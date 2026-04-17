@@ -592,7 +592,9 @@ def _flatten_json_strings(obj: object, prefix: str = "") -> list[tuple[str, str]
     return out
 
 
-def _scan_text_field(tool_name: str, stage: str, field_path: str, text: str) -> MCPStageFinding | None:
+def _scan_text_field(
+    tool_name: str, stage: str, field_path: str, text: str
+) -> MCPStageFinding | None:
     """Run the shared scanner over one textual field."""
     if not text:
         return None

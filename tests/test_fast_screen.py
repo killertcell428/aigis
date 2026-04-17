@@ -1,4 +1,5 @@
 """Tests for the character-ngram fast screen."""
+
 from aigis.filters.fast_screen import (
     THRESHOLD_WARN,
     screen,

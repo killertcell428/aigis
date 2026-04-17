@@ -70,7 +70,13 @@ def main(argv: list[str] | None = None) -> int:
 
     # aig report
     report_p = sub.add_parser("report", help="Generate compliance report")
-    report_p.add_argument("report_type", nargs="?", default=None, choices=["weekly"], help="Report type (e.g. 'weekly')")
+    report_p.add_argument(
+        "report_type",
+        nargs="?",
+        default=None,
+        choices=["weekly"],
+        help="Report type (e.g. 'weekly')",
+    )
     report_p.add_argument("--days", type=int, default=30, help="Report period in days")
     report_p.add_argument("--format", choices=["text", "json", "html", "markdown"], default="text")
     report_p.add_argument(

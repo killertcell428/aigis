@@ -1,4 +1,5 @@
 """Tests for the judge_manipulation detection category."""
+
 from aigis.filters.patterns import ALL_INPUT_PATTERNS
 
 

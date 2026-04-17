@@ -14,7 +14,6 @@ Usage:
     # cleaned == "Call me at [PHONE_REDACTED]"
 """
 
-import re
 from dataclasses import dataclass, field
 
 from aigis.patterns import (

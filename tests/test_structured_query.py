@@ -1,4 +1,5 @@
 """Tests for structured-query boundary enforcement."""
+
 import pytest
 
 from aigis.filters.structured_query import (
