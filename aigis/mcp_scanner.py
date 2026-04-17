@@ -544,3 +544,102 @@ def scan_mcp_server(
         permission_summaries=permission_summaries,
         rug_pull_alerts=rug_pull_alerts,
     )
+
+
+# ---------------------------------------------------------------------------
+# Stage-2 / Stage-3 scanners — MSB (arxiv:2510.15994, Oct 2025) classifies
+# MCP attacks across three stages: tool *discovery* (already handled by
+# scan_mcp_server above), tool *invocation* (runtime args), and tool
+# *response* (returned payload). The invocation/response surfaces are
+# where indirect-injection and puppet attacks actually fire — definitions
+# alone cannot catch them.
+#
+# Mechanism: both scanners defer to the same pattern engine used for
+# user input, treating tool arguments and tool responses as untrusted
+# textual surfaces. Any hit is reported as an MCPStageFinding that a
+# caller can gate on before forwarding to the LLM.
+#
+# Outcome: `aig mcp` now covers the full MSB 3-stage surface; puppet
+# attacks that plant instructions in arg strings or rigged tool responses
+# are detected instead of silently flowing back to the agent.
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class MCPStageFinding:
+    """A single invocation/response-stage finding."""
+
+    stage: str  # "invocation" | "response"
+    tool_name: str
+    source_field: str  # which arg/field carried the payload
+    risk_score: int
+    is_blocked: bool
+    matched_rule_ids: list[str]
+    evidence: str  # short excerpt of the offending text
+
+
+def _flatten_json_strings(obj: object, prefix: str = "") -> list[tuple[str, str]]:
+    """Yield (path, string_value) pairs from an arbitrary JSON-like value."""
+    out: list[tuple[str, str]] = []
+    if isinstance(obj, str):
+        out.append((prefix or "$", obj))
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            out.extend(_flatten_json_strings(v, f"{prefix}.{k}" if prefix else k))
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            out.extend(_flatten_json_strings(v, f"{prefix}[{i}]"))
+    return out
+
+
+def _scan_text_field(tool_name: str, stage: str, field_path: str, text: str) -> MCPStageFinding | None:
+    """Run the shared scanner over one textual field."""
+    if not text:
+        return None
+    from aigis.scanner import scan as _scan_input
+
+    result = _scan_input(text)
+    if result.is_safe:
+        return None
+    return MCPStageFinding(
+        stage=stage,
+        tool_name=tool_name,
+        source_field=field_path,
+        risk_score=result.risk_score,
+        is_blocked=result.is_blocked,
+        matched_rule_ids=[r.rule_id for r in result.matched_rules],
+        evidence=text[:200],
+    )
+
+
+def scan_invocation(tool_name: str, arguments: dict | list | str | None) -> list[MCPStageFinding]:
+    """Scan the *arguments* supplied to an MCP tool call.
+
+    Catches prompt-injection / jailbreak / PII payloads smuggled through
+    tool args — the MSB "tool invocation" attack surface.
+    """
+    findings: list[MCPStageFinding] = []
+    if arguments is None:
+        return findings
+    for path, text in _flatten_json_strings(arguments):
+        f = _scan_text_field(tool_name, "invocation", path, text)
+        if f is not None:
+            findings.append(f)
+    return findings
+
+
+def scan_response(tool_name: str, response: dict | list | str | None) -> list[MCPStageFinding]:
+    """Scan the payload *returned* by an MCP tool call.
+
+    Defends against puppet / rug-pull attacks that embed instructions in a
+    tool's response so the calling agent re-executes them — the MSB
+    "response handling" attack surface.
+    """
+    findings: list[MCPStageFinding] = []
+    if response is None:
+        return findings
+    for path, text in _flatten_json_strings(response):
+        f = _scan_text_field(tool_name, "response", path, text)
+        if f is not None:
+            findings.append(f)
+    return findings
