@@ -90,11 +90,37 @@ Most tools scan with a single layer. Aigis runs your input through four independ
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_2_architecture_en.png" alt="Aigis 4-Layer Deep Defense" width="800" />
 </p>
 
-Beyond the 4 walls, Aigis has three deeper defense layers for advanced use cases:
+Beyond the 4 walls, Aigis has deeper defense layers for advanced use cases:
 
 - **L4: Capability-Based Access Control** — CaMeL-inspired taint tracking. Even if an attack is undetectable, untrusted data can't trigger privileged tools.
 - **L5: Atomic Execution Pipeline** — Run agent actions in a sealed sandbox, destroy all traces after.
 - **L6: Safety Specification Verifier** — Formal safety specs with proof-certificate verification.
+- **L7: Goal-Conditioned FSM** *(v0.0.4)* — Operator-declared agent state machines; any transition or tool call outside the spec is a hard `FSMViolation`, not a soft anomaly. Complements the statistical drift detector in `monitor/drift.py`. Inspired by [MI9](https://arxiv.org/abs/2508.03858) (Aug 2025).
+
+### v0.0.4 — what each layer gained
+
+Aigis tracks the live LLM-security literature and maps each paper into an existing layer rather than adding a parallel framework. Seven additions in v0.0.4:
+
+**Wall 1 (Pattern Matching)**
+
+- New `judge_manipulation` category — 15 patterns (EN + JA) targeting forced verdicts, rubric override, reward-hacking, and role-swap against LLM-as-Judge evaluators. Closes the attack class demonstrated by **AdvJudge-Zero** (Palo Alto Unit 42, 2026).
+- MCP coverage extended from definitions to the full 3-stage attack surface via `mcp_scanner.scan_invocation()` + `scan_response()` — puppet / rug-pull attacks that only fire at runtime. [**MSB**](https://arxiv.org/abs/2510.15994) (Oct 2025).
+
+**Wall 2 (Semantic Similarity)**
+
+- `filters.fast_screen` — character-trigram log-likelihood screen; runs in sub-millisecond time as a first-line triage before the full corpus similarity pass. [**Mirror Design Pattern**](https://arxiv.org/abs/2603.11875) (Mar 2026).
+- `memory.imitation_detector` — applies the same Jaccard-style similarity signal to *memory writes*, catching planted experiences that imitate the system voice without containing overt jailbreak phrases. [**MemoryGraft**](https://arxiv.org/abs/2512.16962) (Dec 2025).
+
+**Wall 3 (Encoded Payload)**
+
+- Confusables table expanded to Armenian, Hebrew, Arabic-Indic digits, Fullwidth Latin, and zero-width / bidi control codepoints. Emoji stripping reimplemented as a codepoint-range function.
+
+**New tier — Input Shaping (runs before Wall 1)**
+
+- `filters.structured_query` — `StructuredMessage` splits a prompt into `system` / `instruction` / `data` slots and raises `BoundaryViolation` when the untrusted `data` slot contains role tokens or override phrases. [**StruQ**](https://arxiv.org/abs/2402.06363) + [**LLMail-Inject**](https://arxiv.org/abs/2506.09956).
+- `filters.rag_context_filter` — applies Wall 1 + Wall 2 signals to retrieved RAG chunks and either strips the offending sentences or drops the whole chunk before the LLM ever sees it. [**DataFilter**](https://arxiv.org/abs/2510.19207) + [**RAGDefender**](https://arxiv.org/abs/2511.01268).
+
+All seven additions ship in the core package with zero extra dependencies. Full citations live in each module's docstring.
 
 ---
 
@@ -164,22 +190,6 @@ aigis adversarial-loop --rounds 5 --auto-fix
 ```
 
 Aigis attacks itself, finds gaps, and writes new detection rules automatically.
-
-### Recent Research → Production (2025-2026)
-
-Aigis tracks the live LLM-security literature and turns each paper into a zero-dep Python module. Seven additions landed in **v0.0.4**:
-
-| Module | Paper | What it does |
-|---|---|---|
-| `filters.fast_screen` | [Mirror Design Pattern](https://arxiv.org/abs/2603.11875) (Mar 2026) | Character-trigram log-likelihood screen; cheap first-line triage before the full regex scan. |
-| `filters.structured_query` | [StruQ](https://arxiv.org/abs/2402.06363) + [LLMail-Inject](https://arxiv.org/abs/2506.09956) | Splits a prompt into `system` / `instruction` / `data` slots; raises `BoundaryViolation` if the data slot smuggles role tokens or override phrases. |
-| `filters.rag_context_filter` | [DataFilter](https://arxiv.org/abs/2510.19207) + [RAGDefender](https://arxiv.org/abs/2511.01268) | Strips or blocks poisoned sentences in retrieved RAG chunks before the LLM sees them. |
-| `spec_lang.fsm` | [MI9](https://arxiv.org/abs/2508.03858) (Aug 2025) | Goal-conditioned FSM — declare the intended control flow and get a hard `FSMViolation` on any out-of-spec transition or tool call. Complements statistical drift. |
-| `memory.imitation_detector` | [MemoryGraft](https://arxiv.org/abs/2512.16962) (Dec 2025) | Catches planted memory entries that *imitate* the system voice instead of containing overt jailbreak phrases. |
-| `mcp_scanner.scan_invocation` / `scan_response` | [MSB](https://arxiv.org/abs/2510.15994) (Oct 2025) | Extends MCP coverage to the invocation + response stages — puppet / rug-pull attacks that don't show up in tool metadata. |
-| `filters.patterns` — `judge_manipulation` category | AdvJudge-Zero (Palo Alto Unit 42) | 15 patterns for forced verdicts, rubric override, and reward-hack phrasing targeting LLM-as-Judge evaluators. |
-
-All seven ship in the core package — zero extra dependencies. Full citations live in each module's docstring.
 
 ---
 
