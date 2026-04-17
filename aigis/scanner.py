@@ -227,29 +227,42 @@ def _run_patterns(
     )
 
     if custom_rules:
+        from aigis._regex_guard import safe_compile_user_regex
+
         for rule in custom_rules:
             if not rule.get("enabled", True):
                 continue
-            try:
-                pat = re.compile(rule["pattern"], re.IGNORECASE | re.DOTALL)
-                m = pat.search(safe_normalized)
-                if m:
-                    delta = int(rule.get("score_delta", 20))
-                    matched.append(
-                        MatchedRule(
-                            rule_id=rule["id"],
-                            rule_name=rule["name"],
-                            category="custom",
-                            score_delta=delta,
-                            matched_text=m.group(0)[:200],
-                            owasp_ref=rule.get("owasp_ref", ""),
-                            remediation_hint=rule.get("remediation_hint", ""),
-                        )
+            pat = safe_compile_user_regex(rule["pattern"])
+            if pat is None:
+                # Surface the broken/unsafe rule so it cannot silently disable scanning.
+                matched.append(
+                    MatchedRule(
+                        rule_id=rule.get("id", "invalid"),
+                        rule_name=f"INVALID RULE: {rule.get('name', 'custom')}",
+                        category="invalid_rule",
+                        score_delta=0,
+                        matched_text="",
+                        owasp_ref="",
+                        remediation_hint="Rule regex rejected (invalid syntax or ReDoS risk). Fix the pattern.",
                     )
-                    prev = category_scores.get("custom", 0)
-                    category_scores["custom"] = min(prev + delta, delta * 2)
-            except re.error:
+                )
                 continue
+            m = pat.search(safe_normalized)
+            if m:
+                delta = int(rule.get("score_delta", 20))
+                matched.append(
+                    MatchedRule(
+                        rule_id=rule["id"],
+                        rule_name=rule["name"],
+                        category="custom",
+                        score_delta=delta,
+                        matched_text=m.group(0)[:200],
+                        owasp_ref=rule.get("owasp_ref", ""),
+                        remediation_hint=rule.get("remediation_hint", ""),
+                    )
+                )
+                prev = category_scores.get("custom", 0)
+                category_scores["custom"] = min(prev + delta, delta * 2)
 
     # Layer 2: Similarity check (only for input patterns, not output)
     if patterns is ALL_INPUT_PATTERNS:

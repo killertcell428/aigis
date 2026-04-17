@@ -127,29 +127,41 @@ def run_patterns(
     safe_text = text[:_MAX_CUSTOM_REGEX_INPUT] if len(text) > _MAX_CUSTOM_REGEX_INPUT else text
 
     if custom_rules:
+        from aigis._regex_guard import safe_compile_user_regex
+
         for rule in custom_rules:
             if not rule.get("enabled", True):
                 continue
-            try:
-                compiled = re.compile(rule["pattern"], re.IGNORECASE | re.DOTALL)
-                m = compiled.search(safe_text)
-                if m:
-                    score_delta = int(rule.get("score_delta", 20))
-                    matched.append(
-                        MatchedRule(
-                            rule_id=rule["id"],
-                            rule_name=rule["name"],
-                            category="custom",
-                            score_delta=score_delta,
-                            matched_text=m.group(0)[:200],
-                            owasp_ref=rule.get("owasp_ref", ""),
-                            remediation_hint=rule.get("remediation_hint", ""),
-                        )
+            compiled = safe_compile_user_regex(rule["pattern"])
+            if compiled is None:
+                matched.append(
+                    MatchedRule(
+                        rule_id=rule.get("id", "invalid"),
+                        rule_name=f"INVALID RULE: {rule.get('name', 'custom')}",
+                        category="invalid_rule",
+                        score_delta=0,
+                        matched_text="",
+                        owasp_ref="",
+                        remediation_hint="Rule regex rejected (invalid syntax or ReDoS risk). Fix the pattern.",
                     )
-                    prev = category_scores.get("custom", 0)
-                    category_scores["custom"] = min(prev + score_delta, score_delta * 2)
-            except re.error:
+                )
                 continue
+            m = compiled.search(safe_text)
+            if m:
+                score_delta = int(rule.get("score_delta", 20))
+                matched.append(
+                    MatchedRule(
+                        rule_id=rule["id"],
+                        rule_name=rule["name"],
+                        category="custom",
+                        score_delta=score_delta,
+                        matched_text=m.group(0)[:200],
+                        owasp_ref=rule.get("owasp_ref", ""),
+                        remediation_hint=rule.get("remediation_hint", ""),
+                    )
+                )
+                prev = category_scores.get("custom", 0)
+                category_scores["custom"] = min(prev + score_delta, score_delta * 2)
 
     # Apply length-based token exhaustion heuristic
     heuristic_score = _check_token_exhaustion_heuristic(text)

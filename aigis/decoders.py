@@ -81,6 +81,37 @@ _CONFUSABLES: dict[str, str] = {
     "\u2012": "-",  # Figure dash
     "\u2013": "-",  # En dash
     "\u2014": "-",  # Em dash
+    # Armenian (selected Latin-confusables)
+    "\u0585": "o",  # օ
+    "\u0578": "n",  # ո (lowercase-ish)
+    "\u0555": "O",  # Օ
+    # Fullwidth Latin A-Z / a-z / 0-9 → ASCII
+    **{chr(cp): chr(cp - 0xFEE0) for cp in range(0xFF21, 0xFF3B)},  # Ａ-Ｚ
+    **{chr(cp): chr(cp - 0xFEE0) for cp in range(0xFF41, 0xFF5B)},  # ａ-ｚ
+    **{chr(cp): chr(cp - 0xFEE0) for cp in range(0xFF10, 0xFF1A)},  # ０-９
+    # Arabic-Indic digits → ASCII digits
+    **{chr(0x0660 + i): str(i) for i in range(10)},  # ٠-٩
+    # Extended Arabic-Indic digits
+    **{chr(0x06F0 + i): str(i) for i in range(10)},  # ۰-۹
+    # Hebrew confusables (conservative — only visually-identical letters)
+    "\u05D0": "N",  # א (alef, loose lookalike for "N" in adversarial fonts)
+    # Zero-width & bidi controls → dropped (empty string)
+    "\u200B": "",   # Zero-width space
+    "\u200C": "",   # Zero-width non-joiner
+    "\u200E": "",   # LRM
+    "\u200F": "",   # RLM
+    "\u2028": "",   # Line separator
+    "\u2029": "",   # Paragraph separator
+    "\u202A": "",   # LRE
+    "\u202B": "",   # RLE
+    "\u202C": "",   # PDF
+    "\u202D": "",   # LRO
+    "\u202E": "",   # RLO
+    "\u2066": "",   # LRI
+    "\u2067": "",   # RLI
+    "\u2068": "",   # FSI
+    "\u2069": "",   # PDI
+    "\uFEFF": "",   # BOM / ZWNBSP
 }
 
 _CONFUSABLE_TABLE = str.maketrans(_CONFUSABLES)
