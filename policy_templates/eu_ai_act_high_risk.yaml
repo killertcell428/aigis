@@ -1,0 +1,78 @@
+# Aigis Policy — EU AI Act, High-Risk Systems
+#
+# Use this for:
+#   - AI systems in Annex III categories: biometrics, critical
+#     infrastructure, education, employment, essential services, law
+#     enforcement, migration, justice, democratic processes.
+#   - Any deployment that will be placed on the EU market or whose
+#     output reaches persons in the EU on or after 2026-08-02.
+#
+# Regulatory context:
+#   - EU AI Act (Regulation (EU) 2024/1689). Obligations for high-risk
+#     systems (Chapter III) become applicable on **2026-08-02** — the
+#     next major compliance milestone after the GPAI / prohibited-AI
+#     provisions that already took effect in 2025.
+#   - Member-state competent authorities are expected to start active
+#     enforcement from that date (fines up to the greater of EUR 35M or
+#     7% of worldwide turnover for the most serious violations).
+#
+# Threat model:
+#   - Article 10 (data governance): prompt-injection or retrieval
+#     poisoning causing the system to reach a decision from untrusted
+#     data without traceability.
+#   - Article 14 (human oversight): attempts to coerce the system into
+#     bypassing a human-in-the-loop gate.
+#   - Article 15 (accuracy, robustness, cybersecurity): adversarial
+#     jailbreaks; secret exfiltration via side-channels.
+#   - Article 26 (deployer logging): any request to disable logging or
+#     tamper with the audit trail.
+#   - Transparency (Article 50) for interacting with natural persons:
+#     prompts designed to suppress the "you are talking to AI"
+#     disclosure.
+#
+name: eu_ai_act_high_risk
+auto_block_threshold: 55   # strict — high-risk systems require traceability
+auto_allow_threshold: 20
+
+custom_rules:
+  # Article 14 — human oversight bypass
+  - id: eu_ai_oversight_bypass
+    name: Human Oversight Bypass (Art. 14)
+    pattern: "(skip\\s+(the\\s+)?(human|reviewer|oversight)\\s+(review|approval|check)|auto-?approve\\s+without\\s+review|人\\s*による\\s*(確認|承認)\\s*(をスキップ|を飛ばして|は不要))"
+    score_delta: 60
+    enabled: true
+
+  # Article 26 — audit log tampering
+  - id: eu_ai_audit_tamper
+    name: Audit Log Tampering (Art. 26)
+    pattern: "(disable\\s+(logging|audit|monitoring)|do\\s+not\\s+(log|record)\\s+this|delete\\s+(the\\s+)?(audit|log)|ログ\\s*(を|の)\\s*(消して|削除|残さない|オフ))"
+    score_delta: 55
+    enabled: true
+
+  # Article 50 — AI interaction transparency bypass
+  - id: eu_ai_transparency_bypass
+    name: AI Transparency Bypass (Art. 50)
+    pattern: "(pretend\\s+to\\s+be\\s+(a\\s+)?human|deny\\s+being\\s+(an?\\s+)?AI|do\\s+not\\s+disclose\\s+you\\s+are|人間の\\s*(ふりをして|ように振る舞って)|AI\\s*(であることを隠して|だと言わないで))"
+    score_delta: 50
+    enabled: true
+
+  # Article 10 — data governance: retrieval provenance bypass
+  - id: eu_ai_provenance_bypass
+    name: Retrieval Provenance Bypass (Art. 10)
+    pattern: "(skip\\s+source\\s+verification|accept\\s+unverified\\s+data|disable\\s+provenance|出典\\s*(の|を)\\s*(確認|検証)\\s*(スキップ|しない))"
+    score_delta: 45
+    enabled: true
+
+  # Article 15 — adversarial robustness: biometric identification misuse
+  - id: eu_ai_biometric_misuse
+    name: Prohibited Biometric Use (Art. 5 / Art. 15)
+    pattern: "(real[- ]?time\\s+remote\\s+biometric|social\\s+score|predict\\s+criminality|emotion\\s+(detection|recognition)\\s+in\\s+(workplace|school)|感情\\s*認識\\s*(職場|学校)|社会\\s*信用)"
+    score_delta: 70
+    enabled: true
+
+  # FRIA — fundamental-rights impact assessment avoidance
+  - id: eu_ai_fria_skip
+    name: FRIA Skip (Art. 27)
+    pattern: "(skip\\s+(the\\s+)?(FRIA|fundamental\\s+rights\\s+impact)|bypass\\s+impact\\s+assessment|影響\\s*評価\\s*(を)?\\s*(スキップ|省略))"
+    score_delta: 40
+    enabled: true

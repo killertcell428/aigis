@@ -30,6 +30,7 @@ guard = Guard(policy_file="my_policy.yaml")
 | [`education.yaml`](education.yaml) | EdTech, student-facing AI | 71 (moderate) |
 | [`customer_support.yaml`](customer_support.yaml) | Support bots, helpdesks | 76 (moderate-strict) |
 | [`developer_tools.yaml`](developer_tools.yaml) | Code assistants, CI helpers | 86 (permissive) |
+| [`eu_ai_act_high_risk.yaml`](eu_ai_act_high_risk.yaml) | EU AI Act Annex III systems (effective 2026-08-02) | 55 (strict) |
 
 ## Customization
 
