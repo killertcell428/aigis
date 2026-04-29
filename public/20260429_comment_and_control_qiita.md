@@ -1,20 +1,20 @@
 ---
-title: 「PR コメントを読ませただけで Claude Code がクレデンシャル吐くって本当？」と聞かれたときに見せる Comment and Control 解剖
+title: "PR コメント 1 つで Claude Code がクレデンシャル吐くらしい、なんで？仕組みを解説"
 tags:
-  - Security
   - Python
-  - ClaudeCode
-  - AIエージェント
   - GitHub
+  - Security
+  - AIエージェント
+  - ClaudeCode
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-04-29T12:24:30+09:00'
+id: e7aeab92fa6abb07ed3d
 organization_url_name: null
 slide: false
 ignorePublish: false
 ---
 
-# 「PR コメントを読ませただけで Claude Code がクレデンシャル吐くって本当？」と聞かれたときに見せる Comment and Control 解剖
+# PR コメント 1 つで Claude Code がクレデンシャル吐くらしい、なんで？仕組みを解説
 
 先週、社内 Slack の `#ai-tools` チャンネルでこう聞かれた。
 

@@ -1,12 +1,12 @@
 ---
-title: "「Claude Code・Gemini・Copilot が PR コメント経由で全部抜かれたらしいけど、何が共通の壊れ方なの？」と聞かれたときの設計レベルの答え方"
+title: "Claude Code・Gemini・Copilot が PR コメントで同時に抜かれたらしい、なんで？仕組みを解説"
 emoji: "🪝"
 type: "tech"
 topics: ["security", "Python", "LLM", "AIエージェント", "GitHub"]
 published: true
 ---
 
-# 「Claude Code・Gemini・Copilot が PR コメント経由で全部抜かれたらしいけど、何が共通の壊れ方なの？」と聞かれたときの設計レベルの答え方
+# Claude Code・Gemini・Copilot が PR コメントで同時に抜かれたらしい、なんで？仕組みを解説
 
 先週、CTO 室の同僚から立ち話でこう聞かれた。
 

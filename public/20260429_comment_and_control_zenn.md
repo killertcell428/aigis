@@ -1,20 +1,20 @@
 ---
-title: 「Claude Code・Gemini・Copilot が PR コメント経由で全部抜かれたらしいけど、何が共通の壊れ方なの？」と聞かれたときの設計レベルの答え方
+title: "Claude Code・Gemini・Copilot が PR コメントで同時に抜かれたらしい、なんで？仕組みを解説"
 tags:
-  - security
   - Python
+  - GitHub
+  - Security
   - LLM
   - AIエージェント
-  - GitHub
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-04-29T12:24:32+09:00'
+id: dd5d524e35160dbe36fa
 organization_url_name: null
 slide: false
 ignorePublish: false
 ---
 
-# 「Claude Code・Gemini・Copilot が PR コメント経由で全部抜かれたらしいけど、何が共通の壊れ方なの？」と聞かれたときの設計レベルの答え方
+# Claude Code・Gemini・Copilot が PR コメントで同時に抜かれたらしい、なんで？仕組みを解説
 
 先週、CTO 室の同僚から立ち話でこう聞かれた。
 

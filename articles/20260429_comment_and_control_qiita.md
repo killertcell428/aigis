@@ -1,12 +1,12 @@
 ---
-title: "「PR コメントを読ませただけで Claude Code がクレデンシャル吐くって本当？」と聞かれたときに見せる Comment and Control 解剖"
+title: "PR コメント 1 つで Claude Code がクレデンシャル吐くらしい、なんで？仕組みを解説"
 emoji: "🪝"
 type: "tech"
 topics: ["Security", "Python", "ClaudeCode", "AIエージェント", "GitHub"]
 published: true
 ---
 
-# 「PR コメントを読ませただけで Claude Code がクレデンシャル吐くって本当？」と聞かれたときに見せる Comment and Control 解剖
+# PR コメント 1 つで Claude Code がクレデンシャル吐くらしい、なんで？仕組みを解説
 
 先週、社内 Slack の `#ai-tools` チャンネルでこう聞かれた。
 
