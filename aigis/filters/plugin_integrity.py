@@ -66,7 +66,6 @@ import hmac
 import re
 from dataclasses import dataclass, field
 from hashlib import sha256
-from typing import Optional
 
 from aigis.filters.rag_context_filter import _DIRECTIVE_PATTERNS, _SENTENCE_SPLIT_RE
 from aigis.filters.structured_query import _OVERRIDE_PATTERNS, _ROLE_TOKEN_PATTERNS
@@ -77,7 +76,10 @@ _VALID_ROLES = {"system", "user", "assistant", "tool", "external"}
 # a ``tool`` turn. Tools return data; they don't issue orders.
 _TOOL_DIRECTIVE_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b(you\s+must|you\s+should|you\s+are\s+required\s+to)\b", re.IGNORECASE),
-    re.compile(r"\b(assistant|claude|gpt|model)\s*,?\s*(please|kindly)?\s*(do|run|execute|send|email|transfer)", re.IGNORECASE),
+    re.compile(
+        r"\b(assistant|claude|gpt|model)\s*,?\s*(please|kindly)?\s*(do|run|execute|send|email|transfer)",
+        re.IGNORECASE,
+    ),
     re.compile(r"(アシスタント|モデル)は\s*.{0,20}\s*(してください|しなさい|すること)"),
 )
 
@@ -91,7 +93,7 @@ class HistoryTurn:
     # Optional HMAC-SHA256 hex digest over ``role|content`` produced by the
     # trusted emitter (our own backend) at write time. If provided, we can
     # reject turns that were inserted by a compromised client or plugin.
-    tag: Optional[str] = None
+    tag: str | None = None
     # Where the content originated. ``"trusted"`` = our own backend or a
     # vetted tool; ``"external"`` = scraped page, email, untrusted plugin.
     origin: str = "trusted"
@@ -114,7 +116,7 @@ class IntegrityResult:
 
 
 def _expected_tag(secret: bytes, role: str, content: str) -> str:
-    return hmac.new(secret, f"{role}|{content}".encode("utf-8"), sha256).hexdigest()
+    return hmac.new(secret, f"{role}|{content}".encode(), sha256).hexdigest()
 
 
 def _strip_hostile_sentences(text: str) -> tuple[str, list[str]]:
@@ -167,7 +169,7 @@ def _tool_turn_is_forged(content: str) -> tuple[bool, str]:
 def verify_history(
     turns: list[HistoryTurn],
     *,
-    secret: Optional[bytes] = None,
+    secret: bytes | None = None,
     strict: bool = False,
 ) -> IntegrityResult:
     """Run integrity checks on a conversation history.

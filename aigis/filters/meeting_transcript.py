@@ -134,9 +134,16 @@ _INTERNAL_CUES: tuple[re.Pattern[str], ...] = (
 
 # Consent withdrawal — both soft and hard.
 _CONSENT_CUES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\b(i\s+do\s+not\s+consent|stop\s+recording|turn\s+off\s+the\s+(bot|recorder|transcription))\b", re.IGNORECASE),
-    re.compile(r"\b(remove\s+me\s+from\s+(this|the)\s+recording|don'?t\s+record\s+me)\b", re.IGNORECASE),
-    re.compile(r"(録音(しないで|をやめて|を停止して)|議事録に残さないで|文字起こしを止めて|同意していません)"),
+    re.compile(
+        r"\b(i\s+do\s+not\s+consent|stop\s+recording|turn\s+off\s+the\s+(bot|recorder|transcription))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(remove\s+me\s+from\s+(this|the)\s+recording|don'?t\s+record\s+me)\b", re.IGNORECASE
+    ),
+    re.compile(
+        r"(録音(しないで|をやめて|を停止して)|議事録に残さないで|文字起こしを止めて|同意していません)"
+    ),
 )
 
 
@@ -192,6 +199,7 @@ def _classify_one(text: str) -> tuple[Sensitivity, list[str], list[str], bool]:
 def _redact(text: str, redaction_map: dict[str, str]) -> str:
     out = text
     for kind, pat in _PII_PATTERNS:
+
         def _sub(m: re.Match[str]) -> str:
             raw = m.group(0)
             token = f"[REDACTED_{kind.upper()}_{len(redaction_map) + 1}]"
@@ -256,9 +264,7 @@ def classify_transcript(
     # Optional redaction.
     if redact:
         for seg in segments:
-            redacted.append(
-                Segment(speaker=seg.speaker, ts=seg.ts, text=_redact(seg.text, rmap))
-            )
+            redacted.append(Segment(speaker=seg.speaker, ts=seg.ts, text=_redact(seg.text, rmap)))
 
     return TranscriptReport(
         classifications=classifications,
