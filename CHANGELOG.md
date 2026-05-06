@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Three research-driven detectors (2026-Q2 papers / disclosures)
+
+Three independently usable additions, each motivated by a 2026 paper or
+disclosure that the existing aigis detectors did not cover. All three are
+zero-dep (Python stdlib only). 988/988 tests pass (940 prior + 48 new).
+
+- **`aigis/decoders.py` — Unicode Tag-block & Variation Selector smuggling.**
+  New `detect_invisible_tags()`, `strip_invisible_tags()`,
+  `decode_invisible_tags()`. The Tag block (U+E0000–U+E007F) and
+  Variation Selectors Supplement (U+E0100–U+E01EF) render as zero-width
+  glyphs but tokenise normally, so an attacker can hide an entire
+  instruction inside what looks like an empty string. Recent measurements
+  ([arxiv:2504.11168](https://arxiv.org/abs/2504.11168), Apr 2026,
+  *"Bypassing Prompt Injection and Jailbreak Detection in LLM Guardrails"*)
+  put the attack success rate at **90.15% / 81.79%** against deployed
+  guardrails — the highest of any obfuscation class measured. The Tag
+  block is structured (U+E0000+0xNN ↔ ASCII 0xNN), so we now BOTH strip
+  the chars from the visible text AND emit the recovered ASCII payload
+  through `decode_all()` so every downstream detector re-runs against
+  the smuggled instruction. New `te_unicode_tag_smuggling` pattern (base
+  score 70) flags any single Tag/VS-Sup codepoint as suspicious — these
+  never appear in legitimately human-typed text.
+
+- **`aigis/mcp_scanner.py` — Tool-selection bias detection (ToolHijacker /
+  ToolTweak).** New `detect_selection_bias()` and `scan_selection_bias()`.
+  An attacker who can publish a tool description (or rename a tool) can
+  hijack agent tool-selection without any prompt injection in the user's
+  message — *"Prompt Injection Attack to Tool Selection in LLM Agents"*
+  ([arxiv:2504.19793](https://arxiv.org/abs/2504.19793), NDSS 2026)
+  reaches **96.7% ASR on MetaTool**, and *"ToolTweak"*
+  ([arxiv:2510.02554](https://arxiv.org/abs/2510.02554)) lifts selection
+  rates from a ~20% baseline to as high as **81%**. Five zero-dep
+  heuristics (H1 forcing imperatives / H2 superlatives / H3 comparative
+  dismissal / H4 hidden role-token injection / H5 keyword stuffing) score
+  each tool description; ≥30 surfaces a `SelectionBiasFinding`, ≥60
+  marks `is_blocked=True`. The existing `mcp_scanner` rug-pull detector
+  caught *changes*; this catches a hostile description the very first
+  time a user installs the server.
+
+- **`aigis/filters/scm_context_filter.py` — *Comment and Control* defence.**
+  New `scan_scm_artifact()`. In April 2026, Aonan Guan's joint disclosure
+  (CVSS 9.4 Critical) showed that a single PR comment can trigger
+  credential theft in **Claude Code, Gemini CLI, and GitHub Copilot Agent
+  simultaneously** — the agent treats third-party PR/issue/commit text
+  with the same trust as the operator's prompt. The existing input
+  scanner detects the *content* of the attack but cannot use *provenance*
+  the harness already has. This filter takes ``kind`` (`pr_comment` /
+  `issue_body` / `commit_message` / `review_comment` / etc.), `author`,
+  `body`, and `is_repo_member`, and runs five heuristics: H1 prompt-
+  injection patterns, H2 credential extraction (`~/.aws/credentials`,
+  `~/.ssh/id_rsa`, env vars), H3 out-of-band send (`curl -X POST`,
+  `exfiltrate to https://...`), H4 invisible-tag smuggling (reuses
+  `detect_invisible_tags`), H5 provenance amplifier (external commenters
+  get a 25% severity bump). Bias is toward `sanitize` over `block` for
+  borderline cases so a benign external commenter typing "ignore the
+  noise above" is neutralised, not silently dropped.
+
+### Tests
+
+- **+48** pytest cases across the three new modules (Tag smuggling 11,
+  selection bias 11, SCM context 11, plus integration cases).
+- **988 / 988** aigis core tests pass; ruff + mypy pass on touched files.
+
+### Sources / Citations
+
+- [arxiv:2504.11168](https://arxiv.org/abs/2504.11168) — Bypassing Prompt
+  Injection and Jailbreak Detection in LLM Guardrails (Apr 2026)
+- [arxiv:2504.19793](https://arxiv.org/abs/2504.19793) — Prompt Injection
+  Attack to Tool Selection in LLM Agents (NDSS 2026)
+- [arxiv:2510.02554](https://arxiv.org/abs/2510.02554) — ToolTweak: An
+  Attack on Tool Selection in LLM-based Agents
+- Aonan Guan blog (Apr 2026) — *Comment and Control: Prompt Injection to
+  Credential Theft in Claude Code, Gemini CLI, and GitHub Copilot Agent*
+- Google Online Security Blog (Apr 2026); Forcepoint X-Labs (Apr 2026);
+  Help Net Security (2026-04-24) — IPI in the wild (32% rise Nov 2025
+  → Feb 2026)
+
 ## [0.0.4] - 2026-04-17
 
 Two parallel tracks landed in this release: (1) a full internal security audit of backend and

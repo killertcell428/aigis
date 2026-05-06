@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -645,3 +646,202 @@ def scan_response(tool_name: str, response: dict | list | str | None) -> list[MC
         if f is not None:
             findings.append(f)
     return findings
+
+
+# ---------------------------------------------------------------------------
+# Tool-selection bias detection — ToolHijacker / ToolTweak
+#
+# Two recent papers show that an attacker who can publish a tool description
+# (or rename a tool) can hijack agent tool selection without any prompt
+# injection in the user's message:
+#
+#   * "Prompt Injection Attack to Tool Selection in LLM Agents", Wang et al.,
+#     NDSS 2026 (arxiv:2504.19793). ToolHijacker reaches 96.7% attack
+#     success rate on MetaTool with a no-box black-box attack: a malicious
+#     tool description carries a Retrieval-optimized sequence (R) that
+#     inflates semantic similarity to many target tasks, plus a
+#     Selection-optimized sequence (S) that pushes the LLM to pick this
+#     tool over all alternatives.
+#   * "ToolTweak: An Attack on Tool Selection in LLM-based Agents",
+#     arxiv:2510.02554. By iteratively manipulating tool names AND
+#     descriptions, adversaries lift selection rates from ~20% baseline
+#     to as high as 81%.
+#
+# Both attacks rely on linguistic patterns that look unnatural to a human
+# reviewer but slip past LLMs. None of the existing aigis detectors target
+# this surface — patterns.py looks for jailbreaks/PII, mcp_scanner's
+# rug-pull catches *changes*, but a hostile description is dangerous
+# the very first time a user installs the server.
+#
+# Heuristics (zero-dep, deterministic):
+#   H1  Selection-forcing imperatives ("always use this tool",
+#       "preferred over", "must use first", ...).
+#   H2  Self-promotion superlatives at unnatural density ("the only",
+#       "100% accurate", "the most reliable").
+#   H3  Comparative dismissal — explicit references to other named tools
+#       as deprecated/inferior/forbidden.
+#   H4  Hidden role-token injection in the description ("system:",
+#       "<system>", "as an ai assistant you must"). Reuses
+#       structured_query findings semantics.
+#   H5  Keyword stuffing — abnormally high count of short repeated task
+#       phrases ("for files for data for web for code for ...") which is
+#       characteristic of the R sequence in ToolHijacker.
+#
+# Each hit contributes a fixed weight to a single `bias_score` (0..100).
+# Above 30 we surface a SelectionBiasFinding; above 60 we mark
+# `is_blocked=True`.
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class SelectionBiasFinding:
+    """Indicates a tool description is engineered to hijack agent selection."""
+
+    tool_name: str
+    bias_score: int
+    is_blocked: bool
+    triggered_heuristics: list[str]  # H1..H5
+    evidence: list[str]  # short excerpt per trigger
+
+    def to_dict(self) -> dict:
+        return {
+            "tool_name": self.tool_name,
+            "bias_score": self.bias_score,
+            "is_blocked": self.is_blocked,
+            "triggered_heuristics": self.triggered_heuristics,
+            "evidence": self.evidence,
+        }
+
+
+# Compile once at import time.
+_BIAS_H1_FORCING = re.compile(
+    r"\b("
+    r"always\s+(?:use|select|choose|prefer|pick)\s+this"
+    r"|use\s+this\s+tool\s+(?:first|always|every\s+time|by\s+default)"
+    r"|must\s+(?:use|select|choose|invoke|call)\s+this"
+    r"|preferred\s+over\s+(?:all|every|any|other)"
+    r"|best\s+(?:for|tool\s+for)\s+(?:any|every|all)\s+(?:task|query|request)"
+    r"|the\s+only\s+(?:correct|valid|right|reliable)\s+(?:choice|option|tool)"
+    r"|never\s+use\s+(?:the\s+)?(?:other|alternative)"
+    r"|do\s+not\s+use\s+(?:any\s+)?other\s+tool"
+    r")\b",
+    re.IGNORECASE,
+)
+_BIAS_H2_SUPERLATIVES = re.compile(
+    r"\b("
+    r"100%\s*(?:accurate|reliable|correct|precise)"
+    r"|the\s+most\s+(?:accurate|reliable|trusted|correct|advanced)"
+    r"|the\s+(?:only|sole|exclusive)\s+(?:way|method|tool|solution)"
+    r"|guaranteed\s+to\s+(?:work|succeed|return|provide)"
+    r"|never\s+fails"
+    r"|always\s+returns\s+(?:the\s+)?correct"
+    r")\b",
+    re.IGNORECASE,
+)
+_BIAS_H3_DISMISSAL = re.compile(
+    r"\b("
+    r"other\s+tools\s+(?:are\s+)?(?:deprecated|broken|unreliable|outdated|inferior|obsolete)"
+    r"|do\s+not\s+(?:call|invoke|use|select)\s+(?:the\s+)?(?:other|alternative)"
+    r"|ignore\s+(?:the\s+)?(?:other|alternative)\s+tools?"
+    r"|(?:other|alternative)\s+tools?\s+(?:should\s+(?:not|never)|must\s+(?:not|never))\s+be"
+    r"|replaces?\s+(?:all\s+)?(?:other|previous|legacy)\s+tools?"
+    r")\b",
+    re.IGNORECASE,
+)
+_BIAS_H4_ROLE_TOKENS = re.compile(
+    r"(?:^|[\n\r\s])("
+    r"system\s*:"
+    r"|</?(?:system|user|assistant|tool)\s*>"
+    r"|\[(?:INST|/INST|SYSTEM|USER|ASSISTANT)\]"
+    r"|<\|(?:im_start|im_end|system|user|assistant)\|>"
+    r"|as\s+an\s+ai\s+assistant[, ]?\s+you\s+must"
+    r"|you\s+are\s+(?:now\s+)?(?:a|an)\s+(?:helpful|capable)"
+    r")",
+    re.IGNORECASE,
+)
+# H5: keyword-stuffing detector. Counts the number of "for X" clauses or
+# short comma-separated task lists; thresholding catches the R sequence
+# without flagging legitimately broad utility tools.
+_BIAS_H5_FOR_CLAUSE = re.compile(r"\bfor\s+\w{3,12}\b", re.IGNORECASE)
+
+
+def detect_selection_bias(tool_def: dict, threshold: int = 30) -> SelectionBiasFinding | None:
+    """Inspect a single MCP tool definition for selection-hijacking patterns.
+
+    Args:
+        tool_def: A dict with at least ``name`` and ``description`` keys
+            (matching the MCP tool definition shape).
+        threshold: Minimum bias score required to surface a finding.
+
+    Returns:
+        ``SelectionBiasFinding`` when the score crosses the threshold, else
+        ``None``. ``is_blocked`` becomes ``True`` for scores >= 60.
+    """
+    name = str(tool_def.get("name", "unknown"))
+    description = str(tool_def.get("description", ""))
+    # Combine name and description: ToolTweak attacks often hijack via name.
+    combined = f"{name}\n{description}"
+
+    triggered: list[str] = []
+    evidence: list[str] = []
+    score = 0
+
+    # H1 — selection-forcing imperatives are the strongest single signal.
+    h1_matches = _BIAS_H1_FORCING.findall(combined)
+    if h1_matches:
+        triggered.append("H1")
+        evidence.append(f"forcing: {h1_matches[0] if h1_matches else ''}"[:200])
+        score += 35
+
+    # H2 — superlatives.
+    h2_matches = _BIAS_H2_SUPERLATIVES.findall(combined)
+    if h2_matches:
+        triggered.append("H2")
+        evidence.append(f"superlative: {h2_matches[0]}"[:200])
+        score += 15
+
+    # H3 — comparative dismissal of other tools.
+    if _BIAS_H3_DISMISSAL.search(combined):
+        triggered.append("H3")
+        m = _BIAS_H3_DISMISSAL.search(combined)
+        evidence.append(f"dismissal: {m.group(0) if m else ''}"[:200])
+        score += 30
+
+    # H4 — hidden role tokens / fake system prompts.
+    if _BIAS_H4_ROLE_TOKENS.search(combined):
+        triggered.append("H4")
+        m = _BIAS_H4_ROLE_TOKENS.search(combined)
+        evidence.append(f"role_token: {m.group(0) if m else ''}"[:200])
+        score += 35
+
+    # H5 — keyword stuffing. A natural description rarely has more than
+    # ~3 "for X" clauses; ToolHijacker R sequences typically pile up many.
+    h5_count = len(_BIAS_H5_FOR_CLAUSE.findall(description))
+    if h5_count >= 6:
+        triggered.append("H5")
+        evidence.append(f"keyword_stuffing: {h5_count} 'for X' clauses")
+        # Scale the contribution but cap it so a long legitimate description
+        # of a genuine generic tool doesn't auto-block.
+        score += min(20, (h5_count - 5) * 4)
+
+    score = min(100, score)
+    if score < threshold:
+        return None
+
+    return SelectionBiasFinding(
+        tool_name=name,
+        bias_score=score,
+        is_blocked=score >= 60,
+        triggered_heuristics=triggered,
+        evidence=evidence,
+    )
+
+
+def scan_selection_bias(tools: list[dict], threshold: int = 30) -> list[SelectionBiasFinding]:
+    """Apply ``detect_selection_bias`` to every tool in a list."""
+    out: list[SelectionBiasFinding] = []
+    for tool in tools:
+        f = detect_selection_bias(tool, threshold=threshold)
+        if f is not None:
+            out.append(f)
+    return out

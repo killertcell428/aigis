@@ -156,6 +156,37 @@ _ROT13_INDICATOR_RE = re.compile(
     r"(rot13|caesar|cipher)\s*[:\-]?\s*([a-zA-Z\s]{10,})", re.IGNORECASE
 )
 
+# ---------------------------------------------------------------------------
+# Unicode Tag block & Variation Selector Supplement (invisible smuggling)
+# ---------------------------------------------------------------------------
+# The Tag block (U+E0000 .. U+E007F) and the Variation Selectors Supplement
+# (U+E0100 .. U+E01EF) render as zero-width / invisible glyphs in nearly every
+# font, but are preserved through copy/paste and tokenized by most LLMs. An
+# attacker can hide an entire instruction inside what looks like an empty or
+# innocent string, and the model will still read it. Recent measurements
+# (arxiv:2504.11168, "Bypassing Prompt Injection and Jailbreak Detection in
+# LLM Guardrails", Apr 2026) show this technique reaches **90.15% / 81.79%
+# attack success rate** against deployed guardrails — the highest of any
+# obfuscation class they tested, because regex / lexical scanners look at
+# the visible glyphs and never see the smuggled payload.
+#
+# The Tag block is structured: U+E00xx for xx in 0x20..0x7E maps 1:1 to the
+# ASCII character at that codepoint (e.g. U+E0041 → 'A'). So once you strip
+# the high bits you recover the original instruction. We therefore do BOTH:
+#   * strip the chars from the visible text (so downstream regex sees only
+#     the visible content, no surprise)
+#   * decode the ASCII payload and emit it as a separate variant so the
+#     scanner re-runs all detectors against the smuggled message
+#
+# The Variation Selectors Supplement (240 codepoints) is also abused for
+# steganography — each VS encodes ~8 bits, so a sequence carries arbitrary
+# bytes. We detect the presence and strip them; full bit-extraction is
+# attacker-format-specific and out of scope here, but the *count* alone is
+# a strong signal: a benign string essentially never contains VS-Sup chars.
+_TAG_BLOCK_RE = re.compile(r"[\U000e0000-\U000e007f]+")
+_VS_SUPPLEMENT_RE = re.compile(r"[\U000e0100-\U000e01ef]+")
+_TAG_OR_VS_SET = frozenset(list(range(0xE0000, 0xE0080)) + list(range(0xE0100, 0xE01F0)))
+
 
 def normalize_confusables(text: str) -> str:
     """Map Unicode confusable characters (Cyrillic/Greek) to Latin equivalents.
@@ -257,6 +288,75 @@ def decode_rot13(text: str) -> list[str]:
     return results
 
 
+def detect_invisible_tags(text: str) -> dict:
+    """Report invisible Tag block / Variation Selector Supplement chars in ``text``.
+
+    Returns a dict with:
+        ``found``: bool — any Tag-block or VS-Supplement chars present.
+        ``tag_count``: int — number of U+E0000–U+E007F codepoints.
+        ``vs_count``: int — number of U+E0100–U+E01EF codepoints.
+        ``decoded_payload``: str — Tag-block payload reinterpreted as ASCII
+            (U+E00NN → chr(0xNN)). Empty if no Tag-block chars.
+
+    See module-level docstring of the Tag-block section for the threat model
+    and the arxiv:2504.11168 measurement.
+    """
+    tag_count = 0
+    vs_count = 0
+    decoded_chars: list[str] = []
+    for ch in text:
+        cp = ord(ch)
+        if 0xE0000 <= cp <= 0xE007F:
+            tag_count += 1
+            ascii_cp = cp - 0xE0000
+            if 0x20 <= ascii_cp <= 0x7E:
+                decoded_chars.append(chr(ascii_cp))
+        elif 0xE0100 <= cp <= 0xE01EF:
+            vs_count += 1
+    return {
+        "found": tag_count > 0 or vs_count > 0,
+        "tag_count": tag_count,
+        "vs_count": vs_count,
+        "decoded_payload": "".join(decoded_chars),
+    }
+
+
+def strip_invisible_tags(text: str) -> str:
+    """Remove all Tag-block and Variation Selector Supplement codepoints.
+
+    Use this to produce a "what the human reviewer sees" version of the text
+    before logging or displaying it. The visible glyphs are preserved
+    unchanged; only the smuggled invisibles are dropped.
+
+    Example:
+        >>> # 'A' + a hidden Tag-block "rm -rf /" payload + ' '
+        >>> hidden = "A" + "".join(chr(0xE0000 + ord(c)) for c in "rm -rf /") + " "
+        >>> strip_invisible_tags(hidden)
+        'A '
+    """
+    if not text:
+        return text
+    # Cheap fast-path: most strings have neither block, skip the rebuild.
+    needs_strip = any(ord(ch) in _TAG_OR_VS_SET for ch in text)
+    if not needs_strip:
+        return text
+    return "".join(ch for ch in text if ord(ch) not in _TAG_OR_VS_SET)
+
+
+def decode_invisible_tags(text: str) -> str | None:
+    """Recover the ASCII payload smuggled in Tag-block characters.
+
+    Returns the decoded payload (e.g. ``"rm -rf /"``) when Tag-block chars
+    are present, or ``None`` when the text contains none. The returned
+    string is ONLY the smuggled portion, suitable for re-scanning with the
+    full pattern engine.
+    """
+    info = detect_invisible_tags(text)
+    if info["tag_count"] == 0:
+        return None
+    return info["decoded_payload"] or None
+
+
 def decode_all(text: str) -> list[str]:
     """Apply all decoders and return a list of decoded variants.
 
@@ -290,5 +390,16 @@ def decode_all(text: str) -> list[str]:
     # ROT13
     for decoded in decode_rot13(text):
         _add(decoded)
+
+    # Unicode Tag-block smuggling — yield BOTH the visible-stripped form
+    # (so downstream regex isn't fooled by hidden glyphs) and the recovered
+    # ASCII payload (so all detectors get a second pass against the actual
+    # instruction the LLM would read).
+    tag_payload = decode_invisible_tags(text)
+    if tag_payload:
+        _add(tag_payload)
+    stripped = strip_invisible_tags(text)
+    if stripped != text:
+        _add(stripped)
 
     return variants

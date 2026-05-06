@@ -609,6 +609,32 @@ TOKEN_EXHAUSTION_PATTERNS: list[DetectionPattern] = [
             "before sending to the LLM."
         ),
     ),
+    DetectionPattern(
+        id="te_unicode_tag_smuggling",
+        name="Unicode Tag / Variation Selector Smuggling",
+        category="token_exhaustion",
+        # Tag block (U+E0000..U+E007F) and Variation Selectors Supplement
+        # (U+E0100..U+E01EF). Even one is suspicious — these never appear in
+        # legitimate human-typed text. They render as zero-width glyphs but
+        # are tokenized by LLMs, so an attacker can hide an instruction inside
+        # what looks like an empty string.
+        pattern=_p(r"[\U000e0000-\U000e007f\U000e0100-\U000e01ef]"),
+        base_score=70,
+        description=(
+            "Invisible Unicode Tag-block or Variation Selector Supplement "
+            "characters detected. These are commonly used to smuggle hidden "
+            "instructions past human reviewers and lexical filters."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Unicode Tag block (U+E0000–U+E007F) and Variation Selectors Supplement "
+            "(U+E0100–U+E01EF) should never appear in user-facing text. They reach "
+            "~90% attack success rate against deployed guardrails (arxiv:2504.11168). "
+            "Strip these codepoints with aigis.decoders.strip_invisible_tags() and "
+            "decode_invisible_tags() to recover any hidden ASCII payload before "
+            "passing input to the LLM."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
