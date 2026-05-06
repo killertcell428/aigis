@@ -1,5 +1,37 @@
 # Aigis コンテンツマーケティング — 投稿ログ
 
+## 2026-05-07 (Qiita：2026年春の新攻撃3つを「セキュリティ素人でも分かる」粒度で解説)
+
+### Qiita 記事
+- **テーマ**: 「絵文字や空白に攻撃命令を隠せる」って本当？— 2026年春のAIへの新攻撃3つを解説
+- **ファイル**: `articles/20260507_three_new_ai_attacks_qiita.md`
+- **タグ**: Security, AI, LLM, AIエージェント, MCPサーバー
+- **ステータス**: 公開（published: true）— `git push` 後に `sync-zenn-qiita.yml` 経由で Qiita 自動公開
+- **文字数**: 約 14,400 字
+- **タイトル字数**: 40字（content_insights ヒット型 30-45字 を踏襲）
+
+### 選定理由
+- 直前のセキュリティ機能拡充作業（Aigis に3検出器追加：Tag-block / ToolHijacker / Comment-and-Control）の **コンテンツ化**
+- 元論文・開示が **2026年4月発表で時事性が極めて高い**（[arxiv:2504.11168] Tag-block ASR 90%、[arxiv:2504.19793] ToolHijacker NDSS 2026 ASR 96.7%、Aonan Guan Comment-and-Control CVSS 9.4）
+- ユーザー指示「セキュリティに全然詳しくない人でもわかるように」に従い、 **専門用語を使わず／類比と短いコードで** 攻撃の中身を説明する構成に
+- 末尾に Aigis での実装（`detect_invisible_tags` / `detect_selection_bias` / `scan_scm_artifact`）を3つ並べて、 **「だから OSS でこう守れます」** までを1本に収めた
+- content_insights タイトル形式仮説の3条件: 40字 / 問いかけ形（〜って本当？）/ 主語暗黙だが「AIへの」で明示
+
+### Qiita / Zenn の差別化
+- Qiita 版（PoC 中心・How-to 寄り）: 各攻撃ごとに **再現コード + 守り方の3行コード** を必ず添付。末尾に `pip install pyaigis` の5分クイックスタートで「今日試せる」状態に
+- Zenn 自動同期で同じ本文が cross-post される（`sync-zenn-qiita.yml` の挙動）。今回はクロスポスト容認（同期コストゼロ・両プラットフォームのリーチを狙う）
+
+### 公開オペレーション
+- `articles/20260507_three_new_ai_attacks_qiita.md` に `published: true` で配置済み
+- `git push origin master` 実行 → GitHub Actions の `sync-zenn-qiita.yml` が動作 → `public/{id}.md` 自動生成 → `qiita-cli/actions/publish@v1` で Qiita 公開
+- Zenn は GitHub 連携で `articles/**` の `published: true` を検知して自動公開
+
+### 関連
+- 直前のコード変更: コミット `c360b9d feat(detectors): three 2026-Q2 research-driven additions`（CHANGELOG Unreleased セクションに記載）
+- 直前のコンテンツ: `2026-05-06_weekly_report.md` で「5/3 Qiita ヒットの Zenn 横展開」が最優先と指摘 → そちらは 5/6 公開済（`articles/ai-agent-security-design-answer.md`）
+
+---
+
 ## 2026-05-06 (Zenn リライト：5/3 Qiita ヒット記事の再ヒット狙い)
 
 ### Zenn 記事
