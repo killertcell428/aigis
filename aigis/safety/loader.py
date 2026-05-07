@@ -90,7 +90,7 @@ def _parse_yaml(text: str) -> dict:
     schema (flat keys, lists of dicts).
     """
     try:
-        import yaml  # type: ignore[import-untyped]
+        import yaml
 
         return yaml.safe_load(text) or {}
     except ImportError:

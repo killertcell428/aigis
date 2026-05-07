@@ -88,7 +88,7 @@ def _load_yaml_policy(path: Path) -> Policy:
             enabled: true
     """
     try:
-        import yaml  # type: ignore[import-untyped]
+        import yaml
     except ImportError as e:
         raise ImportError(
             "PyYAML is required for YAML policy files. Install it with: pip install pyyaml"
