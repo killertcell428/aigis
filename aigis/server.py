@@ -98,15 +98,18 @@ class AigisHandler(BaseHTTPRequestHandler):
             self._send_json(HTTPStatus.OK, {"status": "ok"})
             return
         if self.path == "/v1/info":
-            self._send_json(HTTPStatus.OK, {
-                "name": "aigis",
-                "version": aigis_version,
-                "endpoints": [
-                    "POST /v1/check/input",
-                    "POST /v1/check/output",
-                    "POST /v1/check/messages",
-                ],
-            })
+            self._send_json(
+                HTTPStatus.OK,
+                {
+                    "name": "aigis",
+                    "version": aigis_version,
+                    "endpoints": [
+                        "POST /v1/check/input",
+                        "POST /v1/check/output",
+                        "POST /v1/check/messages",
+                    ],
+                },
+            )
             return
         self._send_json(HTTPStatus.NOT_FOUND, {"error": f"unknown path: {self.path}"})
 
