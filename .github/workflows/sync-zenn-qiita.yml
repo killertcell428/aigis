@@ -1,14 +1,8 @@
-# Auto-sync: Zenn articles (articles/) → Qiita (public/) → auto-publish
+# Manual sync: Zenn articles (articles/) → Qiita (public/) → publish
+# Disabled auto-trigger: QIITA_TOKEN secret is unset, so run on demand only.
 name: Sync Zenn to Qiita
 
 on:
-  push:
-    branches: [main, master]
-    paths:
-      - 'articles/**'
-  schedule:
-    # Every day at 00:00 UTC (09:00 JST) — catch any missed syncs
-    - cron: '0 0 * * *'
   workflow_dispatch:
 
 permissions:
