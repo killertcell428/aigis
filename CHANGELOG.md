@@ -8,10 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-05-07
 
 First stable release. Pre-release `0.0.x` line graduates to `1.0.0` —
-the feature set is production-ready (940+ tests passing, 44 compliance
-templates, 4-wall + L4–L7 defense, 7 published papers implemented in
-v0.0.4, three new 2026-Q2 research-driven detectors below). No
-breaking API changes from `0.0.4`.
+the feature set is production-ready (**1,002 tests passing**, 44
+compliance templates, 4-wall + L4–L7 defense, 7 published papers
+implemented in v0.0.4, three new 2026-Q2 research-driven detectors
+below). No breaking API changes from `0.0.4`.
 
 ### Added — Sidecar / proxy deployment
 
@@ -23,6 +23,34 @@ breaking API changes from `0.0.4`.
 - **Docker image at `ghcr.io/killertcell428/aigis`.** Multi-arch
   (amd64 + arm64). `docker run -p 8080:8080 ghcr.io/killertcell428/aigis`
   is a complete deployment — no config required.
+
+### Added — Supply-chain security hardening
+
+- **OpenSSF Scorecard** workflow (`.github/workflows/scorecard.yml`)
+  with weekly cron + PR scans; results published to the OpenSSF
+  Scorecard dashboard.
+- **CodeQL SAST** workflow covering `python` + `javascript-typescript`
+  + `actions` languages with the `security-extended` and
+  `security-and-quality` query packs.
+- **Dependabot** configured for `github-actions`, `pip`, `docker`, and
+  `npm` ecosystems (weekly bumps).
+- **Workflow hardening:** all GitHub Actions pinned to commit SHA,
+  Docker `FROM` lines pinned to image SHA digest, top-level
+  `permissions: contents: read` with write scopes pushed down to the
+  specific job that needs them.
+- **`AIGuardianCallback.on_blocked` parameter** — optional callable
+  invoked with the `CheckResult` on every block event, regardless of
+  `raise_on_block`. Useful for telemetry / audit logging in LangChain
+  pipelines.
+
+### Changed — License + repository metadata
+
+- LICENSE replaced with the canonical Apache-2.0 text and the
+  matching `NOTICE` file added (resolves GitHub `NOASSERTION` license
+  detection).
+- Repository description tightened to lead with paper coverage and
+  three deployment modes; README quick-start expanded to library /
+  Docker / CLI parallel paths.
 
 ### Added — Three research-driven detectors (2026-Q2 papers / disclosures)
 

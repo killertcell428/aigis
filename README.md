@@ -10,7 +10,7 @@
 <table align="center">
   <tr>
     <td align="center"><strong>98.9%</strong><br /><sub>Detection Rate</sub></td>
-    <td align="center"><strong>940</strong><br /><sub>Tests Passing</sub></td>
+    <td align="center"><strong>1,002</strong><br /><sub>Tests Passing</sub></td>
     <td align="center"><strong>44</strong><br /><sub>Compliance Templates<br />(US/CN/JP/EU)</sub></td>
     <td align="center"><strong>$0</strong><br /><sub>Forever</sub></td>
   </tr>
@@ -22,6 +22,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg" alt="License" /></a>
   <a href="https://pepy.tech/projects/pyaigis"><img src="https://static.pepy.tech/badge/pyaigis" alt="Downloads" /></a>
   <a href="https://github.com/killertcell428/aigis/actions/workflows/ci.yml"><img src="https://github.com/killertcell428/aigis/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/killertcell428/aigis/actions/workflows/codeql.yml"><img src="https://github.com/killertcell428/aigis/actions/workflows/codeql.yml/badge.svg" alt="CodeQL" /></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/killertcell428/aigis"><img src="https://api.scorecard.dev/projects/github.com/killertcell428/aigis/badge" alt="OpenSSF Scorecard" /></a>
 </p>
 
@@ -115,11 +116,11 @@ Beyond the 4 walls, Aigis has deeper defense layers for advanced use cases:
 - **L4: Capability-Based Access Control** — CaMeL-inspired taint tracking. Even if an attack is undetectable, untrusted data can't trigger privileged tools.
 - **L5: Atomic Execution Pipeline** — Run agent actions in a sealed sandbox, destroy all traces after.
 - **L6: Safety Specification Verifier** — Formal safety specs with proof-certificate verification.
-- **L7: Goal-Conditioned FSM** *(v0.0.4)* — Operator-declared agent state machines; any transition or tool call outside the spec is a hard `FSMViolation`, not a soft anomaly. Complements the statistical drift detector in `monitor/drift.py`. Inspired by [MI9](https://arxiv.org/abs/2508.03858) (Aug 2025).
+- **L7: Goal-Conditioned FSM** — Operator-declared agent state machines; any transition or tool call outside the spec is a hard `FSMViolation`, not a soft anomaly. Complements the statistical drift detector in `monitor/drift.py`. Inspired by [MI9](https://arxiv.org/abs/2508.03858) (Aug 2025).
 
-### v0.0.4 — what each layer gained
+### The seven-paper stack
 
-Aigis tracks the live LLM-security literature and maps each paper into an existing layer rather than adding a parallel framework. Seven additions in v0.0.4:
+Aigis tracks the live LLM-security literature and maps each paper into an existing layer rather than adding a parallel framework. The seven research-driven detectors below are the core of [**v1.0.0**](https://github.com/killertcell428/aigis/releases/tag/v1.0.0) (released 2026-05-07; pre-release `0.0.x` graduated to stable with no breaking changes).
 
 **Wall 1 (Pattern Matching)**
 
