@@ -51,7 +51,7 @@ jobs:
 
       - name: Publish to Qiita
         if: steps.changes.outputs.changed == 'true'
-        uses: increments/qiita-cli/actions/publish@e835a44c5edb5d151a710d229316ef5036a13d84 # v1
+        uses: increments/qiita-cli/actions/publish@3d1289cc1b48fd3d6cd4c7e5dde9745292997046 # v1
         with:
           qiita-token: ${{ secrets.QIITA_TOKEN }}
           root: "."
