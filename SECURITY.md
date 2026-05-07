@@ -4,13 +4,11 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.3.x   | :white_check_mark: |
-| 1.2.x   | :white_check_mark: |
-| 1.1.x   | :white_check_mark: |
-| 1.0.x   | :x:                |
+| 1.0.x   | :white_check_mark: |
 | 0.x.x   | :x:                |
 
-Security patches are released only for the latest minor version.
+Security patches are released only for the latest minor version. Pre-1.0
+releases are no longer supported as of v1.0.0 (2026-05-07).
 
 ## Reporting a Vulnerability
 
