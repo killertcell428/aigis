@@ -72,7 +72,17 @@ jobs:
         run: pip install -e '.[dev]'
 
       - name: Run tests
-        run: pytest tests/ -v --cov=aigis --cov-report=xml --cov-report=term-missing
+        # Coverage ratchet: 68% is the current floor (measured 2026-05-07 at 69%).
+        # Bump --cov-fail-under as we close the Silver gap toward 80%.
+        # Only enforce on the canonical Linux + Python 3.11 job to avoid
+        # OS-specific coverage drift fighting the ratchet.
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ] && [ "${{ matrix.python-version }}" = "3.11" ]; then
+            pytest tests/ -v --cov=aigis --cov-report=xml --cov-report=term-missing --cov-fail-under=68
+          else
+            pytest tests/ -v --cov=aigis --cov-report=xml --cov-report=term-missing
+          fi
+        shell: bash
 
       - name: Upload coverage
         uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5
