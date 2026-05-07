@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-05-07
+
+First stable release. Pre-release `0.0.x` line graduates to `1.0.0` —
+the feature set is production-ready (940+ tests passing, 44 compliance
+templates, 4-wall + L4–L7 defense, 7 published papers implemented in
+v0.0.4, three new 2026-Q2 research-driven detectors below). No
+breaking API changes from `0.0.4`.
+
+### Added — Sidecar / proxy deployment
+
+- **`aigis serve` HTTP server.** Stdlib-only sidecar exposing
+  `Guard.check_input` / `check_output` / `check_messages` as JSON
+  endpoints (`POST /v1/check/input`, etc.) plus `/health` and
+  `/v1/info`. Lets non-Python agent runtimes proxy through Aigis
+  without rewrites.
+- **Docker image at `ghcr.io/killertcell428/aigis`.** Multi-arch
+  (amd64 + arm64). `docker run -p 8080:8080 ghcr.io/killertcell428/aigis`
+  is a complete deployment — no config required.
 
 ### Added — Three research-driven detectors (2026-Q2 papers / disclosures)
 
