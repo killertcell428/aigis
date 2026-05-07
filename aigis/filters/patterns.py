@@ -1160,6 +1160,50 @@ INDIRECT_INJECTION_PATTERNS: list[DetectionPattern] = [
         remediation_hint="External documents should not influence tool/function calls. "
         "Implement tool-call allowlists and require user confirmation for sensitive actions.",
     ),
+    DetectionPattern(
+        id="ii_ai_addressee",
+        name="AI-Addressed Instruction in External Content",
+        category="indirect_injection",
+        pattern=_p(
+            r"(if\s+you\s+are\s+(an?\s+)?(ai|llm|language\s+model|assistant|bot)[,\s]|"
+            r"attention[:\s]+ai\b|dear\s+(ai|assistant|language\s+model)\b|"
+            r"(this\s+(message|instruction|note)|these\s+instructions?)"
+            r"\s+(is|are)\s+(for|intended\s+for)\s+(the\s+)?(ai|llm|model|assistant)|"
+            r"to\s+the\s+(ai|llm|model|assistant)\s+(reading|processing|parsing)\s+this)"
+        ),
+        base_score=55,
+        description=(
+            "External content directly addresses the AI agent — a hallmark of "
+            "indirect prompt injection observed in the wild (Unit 42 / Forcepoint 2026)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect)",
+        remediation_hint=(
+            "Retrieved content is addressing the AI agent directly. "
+            "Strip or sandbox external content before inserting it into the prompt."
+        ),
+    ),
+    DetectionPattern(
+        id="ii_delimiter_spoof",
+        name="Chat Format Delimiter Spoofing",
+        category="indirect_injection",
+        pattern=_p(
+            r"(<\|im_end\|>|<\|eot_id\|>|<\|start_header_id\|>|"
+            r"\[/INST\]|\[/SYS\]|\[HUMAN\]|\[/HUMAN\]|\[ASSISTANT\]|\[/ASSISTANT\]|"
+            r"-{3,}\s*(end\s+(of\s+)?(user|input|context)|begin\s+system|"
+            r"system\s+override|end\s+context)\s*-{3,})"
+        ),
+        base_score=60,
+        description=(
+            "Content spoofs LLM chat-format delimiters (LLaMA-3, ChatML, Mistral) "
+            "to inject instructions outside the user turn. Documented attack vector "
+            "in tool-result injection and RAG poisoning research (2026)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect)",
+        remediation_hint=(
+            "Escape or strip model-specific delimiter tokens from all external content "
+            "before RAG insertion. Never trust third-party documents to be delimiter-safe."
+        ),
+    ),
 ]
 
 

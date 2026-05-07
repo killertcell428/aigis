@@ -14,6 +14,10 @@ what got documented across releases.
 
 <!-- auto-improvement loop appends one-line user-visible conclusions here. -->
 
+### Hardened
+
+- Indirect prompt injection from retrieved documents and tool results is now harder to hide: two new detectors flag in-the-wild patterns where attackers address the AI directly ("If you are an LLM…") or spoof LLM chat-format delimiters (`<|eot_id|>`, `[/INST]`, `---END OF USER INPUT---`) to smuggle system-level instructions through RAG pipelines and agent tool responses.
+
 ## [1.0.0] - 2026-05-07
 
 First stable release. Pre-release `0.0.x` line graduates to `1.0.0` —

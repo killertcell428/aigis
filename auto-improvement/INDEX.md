@@ -4,4 +4,4 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
-| _(初回はここに追加される)_ | | | | | | |
+| 2026-05-07T14-24 | 0 | prompt-injection | [research](research/2026-05-07T14-24_0-prompt-injection.md) | [changes](changes/2026-05-07T14-24_changes.md) | — | 1 |
