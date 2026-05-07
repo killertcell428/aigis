@@ -259,6 +259,13 @@ def main(argv: list[str] | None = None) -> int:
         "--badge", action="store_true", help="Output shields.io badge JSON (requires --latency)"
     )
 
+    # aig serve
+    serve_p = sub.add_parser(
+        "serve", help="Run Aigis as an HTTP sidecar (POST /v1/check/input etc.)"
+    )
+    serve_p.add_argument("--host", default="0.0.0.0", help="Bind host (default: 0.0.0.0)")
+    serve_p.add_argument("--port", type=int, default=8080, help="Bind port (default: 8080)")
+
     args = parser.parse_args(argv)
 
     if args.command == "init":
@@ -287,9 +294,18 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_adversarial_loop(args)
     elif args.command == "benchmark":
         return cmd_benchmark(args)
+    elif args.command == "serve":
+        return cmd_serve(args)
     else:
         parser.print_help()
         return 0
+
+
+def cmd_serve(args: argparse.Namespace) -> int:
+    from aigis.server import serve
+
+    serve(host=args.host, port=args.port)
+    return 0
 
 
 def _warn_if_hooks_disabled(project_dir: str = ".") -> None:
