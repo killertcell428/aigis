@@ -14,6 +14,11 @@ what got documented across releases.
 
 <!-- auto-improvement loop appends one-line user-visible conclusions here. -->
 
+### Hardened
+
+- LLM outputs containing markdown image tags with encoded query parameters (the primary "Link Trap" / markdown injection exfiltration channel documented against ChatGPT, Bing, and Claude) are now detected and scored by the output filter.
+- LLM outputs referencing known out-of-band exfiltration relay services (webhook.site, requestbin, interactsh, pipedream, burpcollaborator, and oast.* domains) are now flagged with high confidence, covering the exfiltration infrastructure used in APT28 Operation MacroMaze and common red-team tooling.
+
 ## [1.0.1] - 2026-05-07
 
 ### Hardened

