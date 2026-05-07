@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <strong>The open-source firewall for AI agents.</strong><br />
-  Block prompt injections, jailbreaks, and data leaks — before they reach your LLM.
+  <strong>The first AI agent firewall built on the 2025–2026 LLM-security literature.</strong><br />
+  Seven published papers — Mirror, StruQ, MI9, MemoryGraft, MSB, DataFilter, AdvJudge-Zero — shipped as a single zero-dependency Python package. Drop-in for Claude Code, Cursor, FastAPI, and LangChain.
 </p>
 
 <table align="center">
@@ -70,15 +70,18 @@ aigis scan "DROP TABLE users; --"
 
 Your AI agents are one prompt injection away from leaking secrets, executing malicious code, or ignoring every safety rule you've set.
 
-| | Commercial tools | Cloud guardrails | **Aigis** |
-|---|---|---|---|
-| Price | $50,000+/yr | Pay-per-call | **Free forever** |
-| Setup | Weeks + vendor calls | Locked to one provider | **`pip install` (30 sec)** |
-| Agent-era security | Limited | None | **MCP, capability control, auto-fix** |
-| Multi-country compliance | US/EU only | None | **US, China, Japan, EU (44 templates)** |
-| Defense layers | 1 | 1 | **4 (regex → similarity → decoded → multi-turn)** |
-| Self-improving | No | No | **Learns from attacks automatically** |
-| Source code | Closed | Closed | **Open (Apache 2.0)** |
+| | Commercial ($50K+/yr) | Cloud guardrails | OSS alternatives¹ | **Aigis** |
+|---|---|---|---|---|
+| License | Closed | Closed | OSS (varies) | **Apache 2.0** |
+| Pricing | $$$$ | $$ pay-per-call | Free | **Free forever** |
+| Setup | Weeks + vendor calls | Vendor lock-in | `pip install` + ML deps | **`pip install pyaigis` (zero deps, 30 sec)** |
+| Defense layers | 1 (typical) | 1 (typical) | 1 (scanners / validators / rails) | **4 walls + L4–L7 deep defense** |
+| Paper-grounded patterns (2025–2026) | — | — | — | **7 papers (Mirror · StruQ · MI9 · MemoryGraft · MSB · DataFilter · AdvJudge-Zero)** |
+| Multi-country compliance | US/EU only | — | — | **44 templates (US · CN · JP · EU)** |
+| MCP tool scanning | — | — | — | **3-stage (definitions + invocations + responses)** |
+| Self-improving | — | — | — | **Adversarial loop + auto-generated rules** |
+
+<sub>¹ LLM Guard, Guardrails AI, NeMo Guardrails — all single-layer scanner/validator architectures. Aigis is the only OSS firewall implementing the 2025–2026 paper stack and 4-wall deep defense. Suggestions / corrections welcome via Issues.</sub>
 
 ---
 
