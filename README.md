@@ -22,6 +22,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg" alt="License" /></a>
   <a href="https://pepy.tech/projects/pyaigis"><img src="https://static.pepy.tech/badge/pyaigis" alt="Downloads" /></a>
   <a href="https://github.com/killertcell428/aigis/actions/workflows/ci.yml"><img src="https://github.com/killertcell428/aigis/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/killertcell428/aigis"><img src="https://api.scorecard.dev/projects/github.com/killertcell428/aigis/badge" alt="OpenSSF Scorecard" /></a>
 </p>
 
 <p align="center">
