@@ -361,8 +361,9 @@ class SecurityMonitor:
             learned = load_learned_patterns()
             learned_count = len(learned)
             auto_fix_count = sum(1 for p in learned if p.get("auto_applied", False))
-        except Exception:
-            pass
+        except Exception as exc:
+            # auto_fix module is optional — leave counts at 0.
+            _ = exc
 
         snap = MonitoringSnapshot(
             timestamp=datetime.now(UTC).isoformat(),

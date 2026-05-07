@@ -210,8 +210,9 @@ class TestErrorHandling:
                         if not chunk:
                             break
                         resp += chunk
-                except (TimeoutError, OSError):
-                    pass
+                except (TimeoutError, OSError) as e:
+                    # Server may close the connection mid-recv after 413.
+                    _ = e
                 status_line = resp.split(b"\r\n", 1)[0]
                 assert b" 413 " in status_line, f"expected 413, got: {status_line!r}"
                 assert b"body too large" in resp

@@ -10,7 +10,6 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.billing.plans import PLAN_LIMITS, get_plan_limits
 from app.billing.stripe_client import PRICE_IDS
 from app.config import settings
 from app.db.session import get_db

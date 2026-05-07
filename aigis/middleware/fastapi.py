@@ -124,7 +124,8 @@ class AIGuardianMiddleware(BaseHTTPMiddleware):
                             },
                         )
                 except (json.JSONDecodeError, ValueError, AttributeError):
-                    pass
+                    # Response wasn't valid JSON — pass it through unchecked.
+                    return response
 
         return response
 

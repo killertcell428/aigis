@@ -112,5 +112,9 @@ docs/_build/
 # ── Claude Code (private config) ─────────────────────────────────────────────
 .claude/
 
+# ── Aigis runtime artifacts (demo keys, local logs) ──────────────────────────
+.aigis/
+backend/.aigis/
+
 # ── Legacy / internal copies (not for OSS release) ───────────────────────────
 sdk/python/

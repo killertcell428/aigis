@@ -70,7 +70,7 @@ def patch_anthropic(monkeypatch):
 
 def _make_client(guard: Guard | None = None, response_text: str = "Hello!"):
     """Import and instantiate SecureAnthropic using the stubbed SDK."""
-    from aigis.middleware.anthropic_proxy import SecureAnthropic
+    from aigis.middleware.anthropic_proxy import SecureAnthropic, _SecureMessages
 
     class _CustomAnthropic:
         def __init__(self, **kwargs):
@@ -93,10 +93,7 @@ def _make_client(guard: Guard | None = None, response_text: str = "Hello!"):
     client = SecureAnthropic.__new__(SecureAnthropic)
     client._guard = g
     client._check_output = True
-
-    import aigis.middleware.anthropic_proxy as _mod
-
-    client.messages = _mod._SecureMessages(_make_stub_messages(response_text), g, True)
+    client.messages = _SecureMessages(_make_stub_messages(response_text), g, True)
     return client
 
 

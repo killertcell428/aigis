@@ -1,7 +1,6 @@
 """Tests for review queue service."""
 import uuid
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio

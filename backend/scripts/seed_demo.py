@@ -7,11 +7,14 @@ Usage:
     python -m scripts.seed_demo
 """
 import asyncio
+import logging
 import sys
 import uuid
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 # Ensure app package is importable
 sys.path.insert(0, ".")
@@ -132,8 +135,8 @@ async def seed() -> None:
         key_file.write_text(raw_key)
         try:
             key_file.chmod(0o600)
-        except OSError:
-            pass
+        except OSError as exc:
+            logger.debug("chmod 0600 failed (likely Windows / non-POSIX FS): %s", exc)
 
 
 async def main() -> None:

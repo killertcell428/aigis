@@ -241,8 +241,8 @@ class AtomicPipeline:
                 import shutil
 
                 shutil.rmtree(work_dir, ignore_errors=True)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("cleanup_dir(%s) failed: %s", work_dir, exc)
 
     def __repr__(self) -> str:
         return (

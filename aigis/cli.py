@@ -322,8 +322,9 @@ def _warn_if_hooks_disabled(project_dir: str = ".") -> None:
             print("  WARNING: disableAllHooks=true in .claude/settings.local.json")
             print("  All Claude Code hooks are disabled -- Aigis will NOT run.")
             print("  Fix: set disableAllHooks to false, or remove the key.")
-    except (json.JSONDecodeError, UnicodeDecodeError, Exception):
-        pass
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError) as exc:
+        # Settings file unreadable — silent fail is acceptable for the warning.
+        _ = exc
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -504,8 +505,9 @@ def cmd_status(args: argparse.Namespace) -> int:
         print(
             f"\n  Compliance: {comp['coverage_rate']}% ({comp['covered']}/{comp['total_requirements']} covered)"
         )
-    except Exception:
-        pass
+    except Exception as exc:
+        # Compliance section is optional — module may not be installed.
+        print(f"  Compliance: not available ({exc.__class__.__name__})")
 
     return 0
 

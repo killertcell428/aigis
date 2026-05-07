@@ -1,5 +1,4 @@
 """Tests for proxy handler logic (no real upstream LLM call)."""
-import uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest

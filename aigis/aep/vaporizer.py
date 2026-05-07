@@ -202,7 +202,7 @@ class Vaporizer:
             try:
                 d.rmdir()  # Only succeeds if empty.
             except OSError:
-                pass
+                continue  # Non-empty directory — leave it alone.
 
     @staticmethod
     def _normalise_keep(keep: list[str] | None) -> set[str]:

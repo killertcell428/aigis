@@ -21,11 +21,14 @@ Usage::
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from aigis.monitor import SecurityMonitor
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -162,8 +165,8 @@ class WeeklyReportGenerator:
             from aigis.auto_fix import load_learned_patterns
 
             learned_count = len(load_learned_patterns())
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("auto_fix module unavailable for learned-pattern count: %s", exc)
 
         return WeeklyReport(
             generated_at=now.isoformat(),
@@ -454,8 +457,8 @@ class WeeklyReportGenerator:
                         f"Run `aigis adversarial-loop --auto-fix` to apply.",
                     }
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("auto_fix module unavailable for recommendations: %s", exc)
 
         # 6. Detection layers with zero hits
         active_layers = {k for k, v in snap.detection_by_layer.items() if v > 0}

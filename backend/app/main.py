@@ -49,7 +49,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         try:
             await task
         except asyncio.CancelledError:
-            pass
+            # Expected on graceful shutdown — task acknowledged the cancel.
+            continue
     logger.info("Aigis shut down")
 
 

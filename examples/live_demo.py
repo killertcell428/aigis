@@ -333,7 +333,8 @@ def demo_watch() -> None:
             print()
 
     except (KeyboardInterrupt, EOFError):
-        pass
+        # User exited the live-demo loop cleanly (Ctrl-C or EOF).
+        print()
 
     print("\n  Watch mode ended. View logs with: aigis logs --days 1")
 

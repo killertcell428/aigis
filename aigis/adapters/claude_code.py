@@ -222,8 +222,9 @@ def install_hooks(project_dir: str = ".") -> None:
     # Make executable on Unix
     try:
         script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC)
-    except Exception:
-        pass
+    except OSError as exc:
+        # chmod is best-effort: Windows and some filesystems don't honor mode bits.
+        _ = exc
 
     # Merge hooks into settings.json
     settings_path = project / ".claude" / "settings.json"
@@ -268,5 +269,6 @@ def install_hooks(project_dir: str = ".") -> None:
                     "Set disableAllHooks to false to enable.",
                     stacklevel=2,
                 )
-        except (json.JSONDecodeError, Exception):
-            pass
+        except (json.JSONDecodeError, OSError) as exc:
+            # Settings file unreadable — the warning is best-effort.
+            _ = exc
