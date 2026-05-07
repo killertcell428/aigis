@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Entries below `## [Unreleased]` are appended automatically by the auto-improvement
+loop (`auto-improvement/`). Each line is written as **a single user-visible
+conclusion** so reading top-to-bottom shows what got safer, what got visible, and
+what got documented across releases.
+
+## [Unreleased]
+
+<!-- auto-improvement loop appends one-line user-visible conclusions here. -->
+
 ## [1.0.0] - 2026-05-07
 
 First stable release. Pre-release `0.0.x` line graduates to `1.0.0` —
