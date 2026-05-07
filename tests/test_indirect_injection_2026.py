@@ -8,7 +8,6 @@ These cover two indirect-injection vectors documented in 2026 research:
 from aigis import scan
 from aigis.filters.patterns import INDIRECT_INJECTION_PATTERNS
 
-
 # ---------------------------------------------------------------------------
 # Registration checks
 # ---------------------------------------------------------------------------
