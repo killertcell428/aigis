@@ -15,10 +15,12 @@ Usage::
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from aigis.guard import Guard
+    from aigis.types import CheckResult
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -47,6 +49,9 @@ class AIGuardianCallback(BaseCallbackHandler):
         block_on_output: Also scan LLM outputs. Defaults to ``True``.
         raise_on_block: Raise :class:`GuardianBlockedError` when blocked.
                         If ``False``, logs a warning instead. Defaults to ``True``.
+        on_blocked: Optional callable invoked with the :class:`CheckResult`
+                    on every block event, regardless of ``raise_on_block``.
+                    Useful for telemetry, audit logs, or custom reactions.
     """
 
     def __init__(
@@ -54,10 +59,12 @@ class AIGuardianCallback(BaseCallbackHandler):
         guard: Guard,
         block_on_output: bool = True,
         raise_on_block: bool = True,
+        on_blocked: Callable[[CheckResult], None] | None = None,
     ) -> None:
         self.guard = guard
         self.block_on_output = block_on_output
         self.raise_on_block = raise_on_block
+        self.on_blocked = on_blocked
 
     # ------------------------------------------------------------------
     # Input scanning
@@ -74,8 +81,7 @@ class AIGuardianCallback(BaseCallbackHandler):
             if result.blocked:
                 self._handle_block(
                     f"Aigis blocked LLM input (score={result.risk_score})",
-                    result.risk_score,
-                    result.reasons,
+                    result,
                 )
 
     def on_chat_model_start(
@@ -94,8 +100,7 @@ class AIGuardianCallback(BaseCallbackHandler):
             if result.blocked:
                 self._handle_block(
                     f"Aigis blocked chat input (score={result.risk_score})",
-                    result.risk_score,
-                    result.reasons,
+                    result,
                 )
 
     # ------------------------------------------------------------------
@@ -112,17 +117,18 @@ class AIGuardianCallback(BaseCallbackHandler):
                 if result.blocked:
                     self._handle_block(
                         f"Aigis blocked LLM output (score={result.risk_score})",
-                        result.risk_score,
-                        result.reasons,
+                        result,
                     )
 
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------
 
-    def _handle_block(self, message: str, score: int, reasons: list[str]) -> None:
+    def _handle_block(self, message: str, result: CheckResult) -> None:
+        if self.on_blocked is not None:
+            self.on_blocked(result)
         if self.raise_on_block:
-            raise GuardianBlockedError(message, score, reasons)
+            raise GuardianBlockedError(message, result.risk_score, result.reasons)
         import warnings
 
         warnings.warn(message, stacklevel=3)

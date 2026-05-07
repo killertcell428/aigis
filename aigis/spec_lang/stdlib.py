@@ -26,10 +26,8 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 from fnmatch import fnmatch
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from aigis.spec_lang.evaluator import EvaluationContext
+from aigis.spec_lang._context import EvaluationContext
 
 
 def _resource_is(ctx: EvaluationContext, value: str | int | float) -> bool:

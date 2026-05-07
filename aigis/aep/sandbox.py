@@ -98,7 +98,6 @@ class ProcessSandbox:
         """
         if work_dir is None:
             work_dir = Path(tempfile.mkdtemp(prefix="aep_sandbox_"))
-            pass  # work_dir created
 
         work_dir.mkdir(parents=True, exist_ok=True)
 

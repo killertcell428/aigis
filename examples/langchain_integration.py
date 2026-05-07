@@ -115,7 +115,11 @@ def demo_custom_on_blocked() -> None:
 
     guard = Guard()
     # on_blocked receives the CheckResult — raise manually or handle silently
-    callback = AIGuardianCallback(guard=guard, on_blocked=record_block)
+    callback = AIGuardianCallback(
+        guard=guard,
+        raise_on_block=False,
+        on_blocked=record_block,
+    )
 
     from langchain_core.callbacks import CallbackManager
     manager = CallbackManager(handlers=[callback])

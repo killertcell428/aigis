@@ -31,8 +31,11 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
 
+from aigis.spec_lang._context import EvaluationContext
 from aigis.spec_lang.parser import PolicyDSL, Predicate
 from aigis.spec_lang.stdlib import BUILTIN_PREDICATES
+
+__all__ = ["EvaluationContext", "RuleEvaluationResult", "RuleEvaluator"]
 
 
 @dataclass
@@ -54,35 +57,6 @@ class RuleEvaluationResult:
     enforcement_action: str
     message: str
     predicate_results: list[dict] = field(default_factory=list)
-
-
-@dataclass
-class EvaluationContext:
-    """Context passed to the evaluator for each check.
-
-    Carries all runtime data needed to evaluate predicates: the tool
-    being invoked, the resource being accessed, risk scores, taint
-    labels, session metrics, and arbitrary custom data.
-
-    Attributes:
-        tool_name: Name of the tool being called (e.g. ``"Bash"``).
-        resource: Resource type being accessed (e.g. ``"shell:exec"``).
-        target: The target of the action (e.g. file path, command).
-        risk_score: Numeric risk score (0-100).
-        taint: Taint label (``"trusted"`` / ``"untrusted"`` / ``"sanitized"``).
-        session_age_seconds: Time since session start in seconds.
-        action_count: Number of actions performed in this session.
-        custom_data: Arbitrary key-value data for custom predicates.
-    """
-
-    tool_name: str = ""
-    resource: str = ""
-    target: str = ""
-    risk_score: int = 0
-    taint: str = "untrusted"
-    session_age_seconds: float = 0.0
-    action_count: int = 0
-    custom_data: dict = field(default_factory=dict)
 
 
 class RuleEvaluator:

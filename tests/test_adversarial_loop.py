@@ -228,7 +228,8 @@ class TestLoopReport:
         path = str(tmp_path / "report.md")
         report.save_report(path, fmt="markdown")
 
-        content = open(path, encoding="utf-8").read()
+        with open(path, encoding="utf-8") as f:
+            content = f.read()
         assert "# Adversarial Loop Report" in content
 
     def test_save_report_json(self, tmp_path):

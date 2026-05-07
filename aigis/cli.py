@@ -810,7 +810,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     log_files = sorted(log_dir.glob("*.jsonl")) if log_dir.is_dir() else []
     if log_files:
         latest = log_files[-1]
-        line_count = sum(1 for _ in open(latest, encoding="utf-8"))
+        with open(latest, encoding="utf-8") as f:
+            line_count = sum(1 for _ in f)
         ok(f"Recent logs found: {latest.name} ({line_count} events)")
     else:
         warn("No log files found. If you've used Claude Code recently, the hook may not be firing.")

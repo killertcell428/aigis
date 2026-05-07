@@ -73,19 +73,13 @@ class TestProcessSandbox:
             shutil.rmtree(work_dir, ignore_errors=True)
 
     def test_env_stripping(self):
-        """Environment should only contain safe keys."""
-        if platform.system() == "Windows":
-            result = self.sandbox.execute("set")
-        else:
-            result = self.sandbox.execute("env")
-        # SECRET_VALUE should never leak through.
+        """Secrets in the parent process env should be stripped before exec."""
         os.environ["AEP_TEST_SECRET"] = "super_secret_123"
         try:
             if platform.system() == "Windows":
                 result = self.sandbox.execute("set AEP_TEST_SECRET")
             else:
                 result = self.sandbox.execute("echo $AEP_TEST_SECRET")
-            # The secret should not appear in output (it was stripped).
             assert "super_secret_123" not in result.stdout
         finally:
             del os.environ["AEP_TEST_SECRET"]
