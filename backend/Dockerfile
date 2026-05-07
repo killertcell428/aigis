@@ -1,9 +1,9 @@
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:46cb7cc2877e60fbd5e21a9ae6115c30ace7a077b9f8772da879e4590c18c2e3
 
 WORKDIR /app
 
-# Install uv
-RUN pip install uv
+# Install uv (version-pinned for reproducibility)
+RUN pip install --no-cache-dir uv==0.5.14
 
 # Copy dependency files
 COPY pyproject.toml ./
