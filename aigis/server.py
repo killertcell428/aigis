@@ -150,7 +150,10 @@ def make_server(host: str, port: int, guard: Guard | None = None) -> ThreadingHT
 
 def serve(host: str = "0.0.0.0", port: int = 8080, guard: Guard | None = None) -> None:
     if not logging.getLogger().handlers:
-        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s %(name)s %(levelname)s %(message)s",
+        )
     server = make_server(host, port, guard)
     logger.info("Aigis %s listening on http://%s:%d", aigis_version, host, port)
     try:
