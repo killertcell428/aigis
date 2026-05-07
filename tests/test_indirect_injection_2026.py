@@ -5,7 +5,6 @@ These cover two indirect-injection vectors documented in 2026 research:
 - Chat-format delimiter spoofing (LLaMA-3, ChatML, Mistral tokens) used for tool-result injection
 """
 
-import pytest
 from aigis import scan
 from aigis.filters.patterns import INDIRECT_INJECTION_PATTERNS
 
