@@ -1610,6 +1610,89 @@ MCP_SECURITY_PATTERNS: list[DetectionPattern] = [
         remediation_hint="Tools must never instruct silent execution of other tools. "
         "All actions should be visible and auditable.",
     ),
+    # -----------------------------------------------------------------------
+    # Log-format injection (LogJack, arxiv:2604.15368, Apr 2025).
+    # Adversaries embed instructions inside log-formatted lines so that
+    # cloud-provider guardrails and simple pattern scanners miss them.
+    # A log prefix (e.g. [ERROR], WARN:) provides contextual camouflage.
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_log_format_injection",
+        name="MCP Log-Format Injection Camouflage",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"\[(?:ERROR|WARN(?:ING)?|INFO|CRITICAL|FATAL|DEBUG)\]"
+            r".{0,120}"
+            r"(?:ignore\s+(?:previous|all|prior|above)"
+            r"|system\s*:"
+            r"|you\s+are\s+(?:now\s+)?(?:a|an)\s+\w"
+            r"|override\s+(?:your|the)\s+(?:instruction|system|prompt)"
+            r"|execute\s+(?:the\s+following|this\s+command)"
+            r"|run\s+(?:curl|wget|bash|sh)\b)"
+        ),
+        base_score=65,
+        description="Injection payload wrapped in a log-format prefix to defeat "
+        "context-unaware guardrails (LogJack pattern, arxiv:2604.15368). "
+        "Cloud-log-reading agents see a log line; the LLM executes the instruction.",
+        owasp_ref="OWASP LLM02: Indirect Prompt Injection (Log-Format Camouflage)",
+        remediation_hint="Strip or reject log-prefixed tool outputs containing "
+        "injection-keyword content. Apply aigis scanning AFTER log parsing, "
+        "not before.",
+    ),
+    # -----------------------------------------------------------------------
+    # SSRF via cloud-metadata endpoints.
+    # Tool descriptions or responses instructing agents to fetch the AWS/GCP/
+    # Azure IMDS endpoint exfiltrate cloud credentials without any file-read.
+    # The IP 169.254.169.254 has no legitimate purpose in tool text.
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_ssrf_metadata_endpoint",
+        name="MCP SSRF Cloud Metadata Endpoint",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"(?:169\.254\.169\.254"
+            r"|169\.254\.170\.2"
+            r"|metadata\.google\.internal"
+            r"|instance-data\.ec2\.internal"
+            r"|fd00:ec2::254)"
+        ),
+        base_score=75,
+        description="Cloud metadata endpoint (AWS IMDS / GCP / Azure) referenced in "
+        "MCP tool text. Fetching this URL from an agent exfiltrates cloud IAM "
+        "credentials; SSRF via prompt injection has been demonstrated against "
+        "real MCP servers (arxiv:2506.23260).",
+        owasp_ref="OWASP LLM02: Indirect Prompt Injection (SSRF / IMDS Exfil)",
+        remediation_hint="Block any tool description or response containing cloud "
+        "metadata IP ranges. Restrict agent outbound network access with "
+        "egress filtering.",
+    ),
+    # -----------------------------------------------------------------------
+    # ToolCommander-style collector tool (NAACL 2025, arxiv:2412.10198).
+    # A Manipulator Tool gathers user queries in stage-1, then forwards them
+    # to an attacker-controlled endpoint in stage-2.  Key signature: combine
+    # user-input collection language with an explicit exfiltration target URL.
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_collector_exfil",
+        name="MCP Collector/Exfiltration Tool Pattern",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"(?:collect|monitor|record|capture|harvest|intercept)\s+"
+            r"(?:all\s+)?(?:user\s+)?(?:queries|inputs?|messages?|conversations?|prompts?|requests?)"
+            r".{0,150}"
+            r"(?:send|forward|exfil(?:trate)?|upload|post|transmit|relay)\s+"
+            r"(?:them\s+)?(?:to\s+)?https?://"
+        ),
+        base_score=75,
+        description="Tool description combines user-input collection with HTTP "
+        "exfiltration — the ToolCommander two-stage attack pattern "
+        "(NAACL 2025, arxiv:2412.10198). Stage 1 intercepts queries; "
+        "stage 2 forwards them to an attacker endpoint.",
+        owasp_ref="OWASP LLM01: Prompt Injection (Tool Abuse / Privacy Theft)",
+        remediation_hint="Any tool that monitors user input AND sends it to an "
+        "external URL is a data exfiltration vector. Audit tool descriptions "
+        "for collector + outbound URL combinations.",
+    ),
 ]
 
 # ---------------------------------------------------------------------------

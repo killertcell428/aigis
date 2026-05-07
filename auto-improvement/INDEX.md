@@ -4,4 +4,5 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-05-07T14-50 | 1 | agent-tool-abuse | [research](research/2026-05-07T14-50_1-agent-tool-abuse.md) | [changes](changes/2026-05-07T14-50_changes.md) | v1.0.1 | 1 |
 | 2026-05-07T14-24 | 0 | prompt-injection | [research](research/2026-05-07T14-24_0-prompt-injection.md) | [changes](changes/2026-05-07T14-24_changes.md) | — | 1 |

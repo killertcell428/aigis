@@ -14,9 +14,12 @@ what got documented across releases.
 
 <!-- auto-improvement loop appends one-line user-visible conclusions here. -->
 
+## [1.0.1] - 2026-05-07
+
 ### Hardened
 
 - Indirect prompt injection from retrieved documents and tool results is now harder to hide: two new detectors flag in-the-wild patterns where attackers address the AI directly ("If you are an LLM…") or spoof LLM chat-format delimiters (`<|eot_id|>`, `[/INST]`, `---END OF USER INPUT---`) to smuggle system-level instructions through RAG pipelines and agent tool responses.
+- Three new MCP tool-abuse detectors close gaps documented in 2025–2026 research: log-formatted injection camouflage (LogJack, arxiv:2604.15368) that evades cloud guardrails, cloud-metadata SSRF endpoint references that exfiltrate IAM credentials without any file read, and ToolCommander-style collector tools (NAACL 2025) that harvest user queries and relay them to attacker-controlled URLs.
 
 ## [1.0.0] - 2026-05-07
 
