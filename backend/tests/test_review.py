@@ -3,7 +3,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.request import Request
