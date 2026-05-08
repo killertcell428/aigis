@@ -297,9 +297,7 @@ class TestBadLikertJudge:
         assert any(r.rule_id == "jb_bad_likert_judge" for r in matched)
 
     def test_clean_likert_survey_not_flagged(self):
-        score, level, matched = filter_input(
-            "Please rate your satisfaction on a scale of 1 to 5."
-        )
+        score, level, matched = filter_input("Please rate your satisfaction on a scale of 1 to 5.")
         assert not any(r.rule_id == "jb_bad_likert_judge" for r in matched)
 
 
@@ -331,9 +329,7 @@ class TestManyShotJailbreak:
 
     def test_normal_conversation_not_flagged(self):
         payload = (
-            "Human: What is the capital of France?\n"
-            "Assistant: Paris.\n"
-            "Human: What about Germany?\n"
+            "Human: What is the capital of France?\nAssistant: Paris.\nHuman: What about Germany?\n"
         )
         score, level, matched = filter_input(payload)
         assert not any(r.rule_id == "jb_many_shot" for r in matched)
