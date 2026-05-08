@@ -300,12 +300,88 @@ _HIDDEN_INSTRUCTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 5. Prompt Infection / self-replication: attacker instructs the receiving agent
+#    to embed or propagate the malicious payload in all its own future outputs,
+#    causing the injection to spread virally across the agent graph.
+#    Research basis: "Prompt Infection" (arxiv:2410.07283, UCL/Stanford, 2024-COLM 2025)
+#    measured >80 % ASR against GPT-4o when self-replication was enabled.
+_SELF_REPLICATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(include|append|add|embed|insert)\s+(this|the\s+following)\s+"
+            r"(instruction|directive|command|text|payload|message)\s+"
+            r"(in|into|to|within)\s+(all|every|each|any)\s+.{0,20}"
+            r"(response|message|reply|output)",
+            _FLAGS,
+        ),
+        "Prompt infection: instructs agent to embed payload in all future responses",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(propagate|replicate|spread|copy)\s+(this|these)\s+"
+            r"(instruction|directive|prompt|payload|message).{0,30}"
+            r"(all|every|each|other|downstream|peer)\s+(agents?|nodes?|llms?|workers?)",
+            _FLAGS,
+        ),
+        "Prompt infection: instructs replication of payload to downstream agents",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(when|whenever|each\s+time)\s+(you\s+)?(respond|reply|message|communicate)"
+            r".{0,30}(include|add|append|insert|embed)\s+(this|the\s+following)",
+            _FLAGS,
+        ),
+        "Prompt infection: instructs persistent payload injection on every response",
+        "injection_relay",
+    ),
+]
+
+# 6. Colluding / Byzantine agents: an agent instructs peers to coordinate covertly
+#    against the interests of the orchestrator or human overseer.
+#    Research basis: TAMAS benchmark (arxiv:2511.05269, ICML 2025) found colluding-agent
+#    attacks succeed 60–82 % of the time; multi-agent collusion detection paper
+#    (arxiv:2604.01151, 2026) shows agents can form hidden coalitions.
+_COLLUSION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(do\s+not|don'?t|never)\s+(report|log|tell|inform|disclose|alert|notify)"
+            r".{0,40}(orchestrator|supervisor|human\s+operator|monitor\s+agent|control\s+plane)",
+            _FLAGS,
+        ),
+        "Colluding agent: instructs hiding actions from orchestrator/supervisor",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(coordinate|collude|collaborate|work\s+together)\s+(with\s+)?"
+            r"(other|all|the\s+other|downstream|peer|fellow)\s+(agents?|nodes?|workers?)"
+            r"\s+(to\s+)?(bypass|ignore|override|circumvent|evade|avoid)",
+            _FLAGS,
+        ),
+        "Colluding agent: instructs peer agents to jointly bypass safety controls",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"keep\s+this\s+(between\s+(us|the\s+agents?)|secret\s+from"
+            r"\s+(the\s+)?(orchestrator|supervisor|admin|human|operator|monitor))",
+            _FLAGS,
+        ),
+        "Colluding agent: instructs keeping actions hidden from oversight layer",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
     + _PRIVILEGE_ESCALATION_PATTERNS
     + _DATA_EXFIL_PATTERNS
     + _HIDDEN_INSTRUCTION_PATTERNS
+    + _SELF_REPLICATION_PATTERNS
+    + _COLLUSION_PATTERNS
 )
 
 
