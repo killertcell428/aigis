@@ -2004,6 +2004,97 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
         owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
         remediation_hint="代理内存注入攻击。每个代理应独立验证输入。",
     ),
+    # --- Memory Control Flow Attack (MCFA) — arxiv:2603.15125, Mar 2026 ---
+    # Poisoned memory entries that explicitly direct the agent to call a specific
+    # tool, overriding the user's actual task plan. >90% ASR across frontier models.
+    DetectionPattern(
+        id="mem_tool_steering",
+        name="Memory-Based Tool Steering (MCFA)",
+        category="memory_poisoning",
+        pattern=_p(
+            r"(use|call|invoke|execute|run|trigger)\s+(the\s+)?[a-z][a-z0-9]*_[a-z0-9_]+\s*"
+            r"(tool|function|command|plugin|action)?\b"
+        ),
+        base_score=45,
+        description="Memory Control Flow Attack: memory entry directs the agent to call "
+        "a specific snake_case tool or function (e.g. send_email, exfiltrate_file), "
+        "potentially overriding the user's intended task plan. "
+        "Matches the MCFA pattern (arxiv:2603.15125) achieving >90% ASR against frontier models.",
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint="Tool calls should be determined by the system policy and user intent, "
+        "not by retrieved memory entries. Reject memory writes that specify tool names imperatively.",
+    ),
+    # --- Objective Hijacking (AgentLAB long-horizon attacks) — arxiv:2602.16901, Feb 2026 ---
+    # Replaces the user's stated goal with an attacker-controlled objective across turns.
+    DetectionPattern(
+        id="mem_objective_hijack",
+        name="Memory-Based Objective Hijacking",
+        category="memory_poisoning",
+        pattern=_p(
+            r"(your\s+)?(main|primary|actual|real|true|new|updated|correct|revised)\s+"
+            r"(objective|goal|task|purpose|mission|assignment|directive|instruction)\s+"
+            r"(is|has\s+changed|has\s+been\s+updated|should\s+be|was\s+always|is\s+now)"
+        ),
+        base_score=45,
+        description="Objective hijacking via memory: substitutes the user's actual goal with "
+        "an attacker-controlled 'new objective/mission', the primary attack class in the "
+        "AgentLAB long-horizon benchmark (arxiv:2602.16901, ~70% ASR across 644 test cases).",
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint="An agent's core task objective should only be set by the operator "
+        "system prompt, not by retrieved memory. Reject any memory write that redefines the "
+        "primary mission or goal.",
+    ),
+    # --- Summarization-persistence targeting (novel gap) ---
+    # Attackers craft content that explicitly requests to survive context-window summarization,
+    # ensuring poisoned instructions persist even after context compression/reset.
+    DetectionPattern(
+        id="mem_summarization_persist",
+        name="Summarization-Persistence Instruction",
+        category="memory_poisoning",
+        pattern=_p(
+            r"(when|if|during|before|after)\s+(summariz|compress|condens|replac|reset|restart)\w*"
+            r"\s+(this|the)\s+(conversation|context|chat|history|session|window).{0,60}"
+            r"(always|always\s+include|must\s+include|ensure|preserve|retain|keep)"
+            r"|(important|critical|essential|key)\s+(context|background|information|instruction)\s+"
+            r"(that\s+)?(must|should|needs?\s+to)\s+(be\s+)?(preserved|retained|kept|included)\s+"
+            r"(in\s+)?(any|all|every|each)?\s*(summary|summarization|compression|reset)"
+        ),
+        base_score=50,
+        description="Summarization-persistence attack: instructions crafted to survive context "
+        "window summarization or compression, ensuring poisoned directives persist across "
+        "context resets. An emerging technique documented across multiple 2026 memory-attack "
+        "papers and none of aigis's prior patterns explicitly target it.",
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint="Context summarization should be performed by the operator's trusted "
+        "summarization pipeline, not influenced by content in the conversation. Strip any text "
+        "that instructs the summarizer on what to preserve.",
+    ),
+    # --- Agent trust laundering — arxiv:2603.20357 (Mar 2026) ---
+    # In multi-agent systems a compromised agent writes to shared memory claiming another
+    # (trusted) agent or orchestrator is the source, laundering low-trust content as high-trust.
+    DetectionPattern(
+        id="mem_agent_trust_laundering",
+        name="Agent Trust Laundering via Memory",
+        category="memory_poisoning",
+        pattern=_p(
+            r"(agent|orchestrator|coordinator|supervisor|planner|manager|system)\s+"
+            r"[a-z0-9_\-]{0,30}\s*(said|told|instructed|ordered|updated|informed|notified|asked)\s+"
+            r"(me|you|us|the\s+agent)?\s*(to\s+|that\s+)?"
+            r"(ignore|bypass|disable|override|forget|disregard|stop|always|never)"
+            r"|(the\s+)?(orchestrator|supervisor|planner|coordinator)\s+"
+            r"(has\s+)?(updated|changed|modified|overridden|revised)\s+"
+            r"(my|your|the\s+agent'?s?)\s+(instructions?|rules?|policies?|goals?|objectives?)"
+        ),
+        base_score=45,
+        description="Agent trust laundering: a memory entry attributes a policy-override "
+        "directive to a trusted orchestrator or peer agent, laundering untrusted content into "
+        "a high-trust context. Core attack class in multi-agent memory poisoning research "
+        "(arxiv:2603.20357, Mar 2026).",
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint="Memory entries from peer agents should carry cryptographic provenance "
+        "(e.g., signed via aigis.audit) and should be verified before acting on attributed "
+        "instructions. Never accept policy changes from peer-agent memory writes alone.",
+    ),
 ]
 
 # ---------------------------------------------------------------------------
