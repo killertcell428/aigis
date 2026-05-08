@@ -14,10 +14,14 @@ what got documented across releases.
 
 <!-- auto-improvement loop appends one-line user-visible conclusions here. -->
 
+## [1.0.2] - 2026-05-08
+
 ### Hardened
 
 - LLM outputs containing markdown image tags with encoded query parameters (the primary "Link Trap" / markdown injection exfiltration channel documented against ChatGPT, Bing, and Claude) are now detected and scored by the output filter.
 - LLM outputs referencing known out-of-band exfiltration relay services (webhook.site, requestbin, interactsh, pipedream, burpcollaborator, and oast.* domains) are now flagged with high confidence, covering the exfiltration infrastructure used in APT28 Operation MacroMaze and common red-team tooling.
+- The "Bad Likert Judge" jailbreak (Palo Alto Unit 42, 2025) is now detected: inputs that ask the model to rate content harmfulness on a numeric scale and then generate examples at each rating level are flagged before reaching the LLM.
+- Many-shot jailbreaking is now detected: inputs containing three or more consecutive fabricated Human/Assistant dialogue pairs — a priming technique that achieves 60–86% attack success rates across frontier models — are flagged and scored.
 
 ## [1.0.1] - 2026-05-07
 

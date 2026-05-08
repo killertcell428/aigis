@@ -889,6 +889,57 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
         owasp_ref="OWASP LLM01: Prompt Injection",
         remediation_hint="Instructing an AI to ignore its ethics is a direct jailbreak attempt. Reject inputs that reference RLHF, safety training, or ethical override commands.",
     ),
+    DetectionPattern(
+        id="jb_bad_likert_judge",
+        name="Bad Likert Judge Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(rate|score|rank|evaluate)\s+.{0,80}"
+            r"(likert|on\s+a\s+(numeric\s+)?scale(\s+of\s+[0-9]+)?|[1-9][-–][0-9]+\s+(point\s+)?scale)"
+            r"[\s\S]{0,400}"
+            r"(generate|create|write|give|provide|show)\s*.{0,60}"
+            r"(example|sample|response|content)\s*.{0,80}"
+            r"(for\s+each|at\s+each|each\s+(level|rating|score)|matching\s+the|highest\s+(score|rating|level))"
+        ),
+        base_score=65,
+        description=(
+            "Bad Likert Judge attack: asks the model to rate content harmfulness on a "
+            "numeric scale, then requests examples at each rating level. Published by "
+            "Palo Alto Unit 42 (2025); increases attack success rate by 60%+ on average."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "This multi-step jailbreak misuses evaluation framing to elicit harmful content. "
+            "Reject inputs that combine a harmfulness scoring request with a request to "
+            "generate scored examples. Apply output scanning in addition to input filtering."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_many_shot",
+        name="Many-Shot Jailbreaking (Faux Dialogue Priming)",
+        category="jailbreak",
+        pattern=_p(
+            r"(Human|User|H)\s*:\s*.{5,200}\n+"
+            r"(Assistant|AI|A|Bot)\s*:\s*.{5,200}\n+"
+            r"(Human|User|H)\s*:\s*.{5,200}\n+"
+            r"(Assistant|AI|A|Bot)\s*:\s*.{5,200}\n+"
+            r"(Human|User|H)\s*:\s*.{5,200}\n+"
+            r"(Assistant|AI|A|Bot)\s*:\s*"
+        ),
+        base_score=55,
+        description=(
+            "Many-shot jailbreaking: embeds 3+ faux human/assistant dialogue pairs to "
+            "condition the model into continuing a harmful pattern. Effectiveness follows "
+            "a power law — more shots yield higher success. Studied by Anthropic (2024) "
+            "and replicated across GPT-4, Claude, Mistral, and Llama 2."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Many-shot attacks prime the model with fabricated Q&A pairs before the real "
+            "malicious request. Detect and reject inputs containing repeated fake dialogue "
+            "turns. Set input length limits and monitor for abnormally long single messages."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
