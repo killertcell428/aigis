@@ -120,6 +120,20 @@ class DependencyVerifier:
                     "including API keys."
                 ),
             },
+            {
+                "versions": ["1.82.7-1.82.8"],
+                "cve": "TeamPCP supply chain attack (March 24, 2026)",
+                "severity": "critical",
+                "description": (
+                    "Versions 1.82.7 and 1.82.8 were backdoored by threat actor "
+                    "TeamPCP via a compromised Trivy CI/CD PAT. Version 1.82.8 "
+                    "embeds litellm_init.pth — a .pth file that auto-executes a "
+                    "credential-harvester on every Python interpreter start "
+                    "without any import. The payload exfiltrates SSH keys, .env "
+                    "files, cloud credentials, and Kubernetes configs to "
+                    "https://models.litellm.cloud/ (attacker-controlled)."
+                ),
+            },
         ],
         "ultralytics": [
             {

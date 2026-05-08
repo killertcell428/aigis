@@ -2846,6 +2846,79 @@ JUDGE_MANIPULATION_PATTERNS: list[DetectionPattern] = [
     ),
 ]
 
+SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
+    DetectionPattern(
+        id="sc_unofficial_llm_router",
+        name="Unofficial LLM API Router / Proxy Endpoint",
+        category="supply_chain",
+        pattern=_p(
+            r"https?://(?:[\w\-]+\.)*(?:"
+            r"models\.litellm\.cloud"
+            r"|openai[\-_]proxy\.(?!openai\.com)\w{2,20}"
+            r"|claude[\-_]proxy\.\w{2,20}"
+            r"|gpt[\-_](?:relay|router|proxy)\.\w{2,20}"
+            r"|(?:free|cheap|discount)[\-_](?:llm|gpt|ai)[\-_](?:api|key)\.\w{2,20}"
+            r")"
+        ),
+        base_score=75,
+        description=(
+            "Reference to an unofficial/suspicious LLM API proxy or relay endpoint. "
+            "Malicious API routers operated as full-plaintext intermediaries; the TeamPCP "
+            "attack (March 2026) exfiltrated credentials to models.litellm.cloud. "
+            "arxiv:2604.08407 found 9/428 public routers actively injecting payloads."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain",
+        remediation_hint=(
+            "Only route LLM API calls through endpoints you control or whose TLS certificates "
+            "and code you can verify. Treat third-party AI gateway domains as untrusted; "
+            "rotate any credentials that transited an unofficial proxy."
+        ),
+    ),
+    DetectionPattern(
+        id="sc_pickle_unsafe_model_load",
+        name="Unsafe Pickle Deserialization of ML Model",
+        category="supply_chain",
+        pattern=_p(
+            r"torch\.load\s*\(\s*(?!(?:[^)]*\bweights_only\s*=\s*True))[^)]{0,300}\)"
+            r"|pickle\.loads?\s*\(\s*(?:open\s*\(|f\.read\b|model_data\b|checkpoint\b|buf\b)"
+        ),
+        base_score=55,
+        description=(
+            "Unsafe ML model deserialization: torch.load() without weights_only=True, "
+            "or pickle.loads() on model data. The primary attack vector for Hugging Face "
+            "malicious-model payloads (JFrog, 2024-2026): >3,300 models exploited __reduce__ "
+            "to execute arbitrary code at load time. SafeTensors eliminates this risk."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain / CWE-502 Deserialization of Untrusted Data",
+        remediation_hint=(
+            "Replace torch.load(path) with torch.load(path, weights_only=True), or switch "
+            "to SafeTensors format. Never unpickle model files from untrusted sources."
+        ),
+    ),
+    DetectionPattern(
+        id="sc_compromised_pkg_version",
+        name="Known-Compromised AI Package Version",
+        category="supply_chain",
+        pattern=_p(
+            r"(?:pip\s+install\s+(?:[\w\-]+\s+)*|[\"']?)"
+            r"(?:litellm==1\.82\.[78]|litellm==1\.56\.[0-3]|ultralytics==8\.3\.4[12])"
+        ),
+        base_score=80,
+        description=(
+            "Reference to a known-compromised AI package version. "
+            "litellm 1.82.7-1.82.8 (TeamPCP, March 2026): credential-harvesting .pth backdoor. "
+            "litellm 1.56.0-1.56.3 (March 2026): env-var exfiltration via compromised maintainer. "
+            "ultralytics 8.3.41-8.3.42 (Dec 2024): crypto-miner via GitHub Actions compromise."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain",
+        remediation_hint=(
+            "Do not install or use these package versions. Upgrade to the latest patched release "
+            "and rotate all credentials (API keys, SSH keys, cloud tokens) present on any system "
+            "where these versions were installed."
+        ),
+    ),
+]
+
 # ---------------------------------------------------------------------------
 # Combined pattern lists
 # ---------------------------------------------------------------------------
@@ -2880,6 +2953,7 @@ ALL_INPUT_PATTERNS: list[DetectionPattern] = (
     + EVALUATION_GAMING_PATTERNS
     + COT_DECEPTION_PATTERNS
     + JUDGE_MANIPULATION_PATTERNS
+    + SUPPLY_CHAIN_PATTERNS
 )
 
 OUTPUT_PATTERNS: list[DetectionPattern] = [

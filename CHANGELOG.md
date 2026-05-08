@@ -14,6 +14,36 @@ what got documented across releases.
 
 <!-- auto-improvement loop appends one-line user-visible conclusions here. -->
 
+## [1.0.4] - 2026-05-08
+
+### Hardened — 3 new supply-chain detectors + KNOWN_VULNERABLE update (`SUPPLY_CHAIN_PATTERNS`)
+
+**Domain: supply-chain-llm.** Research basis: TeamPCP / LiteLLM PyPI compromise (Datadog Security Labs, March 2026), malicious LLM router paper (arxiv:2604.08407, April 2026), Hugging Face pickle payload research (JFrog, 2024-2026).
+
+- **`sc_unofficial_llm_router`** (score 75, input filter) — Detects references to unofficial LLM API proxy and relay endpoints, anchored on `models.litellm.cloud` — the actual attacker-controlled C2 domain used by the TeamPCP group to receive credentials stolen from 40 minutes of poisoned `litellm==1.82.7/1.82.8` packages (March 24, 2026). Also matches generic unofficial proxy patterns (`openai_proxy.*`, `claude_proxy.*`, `free_llm_api.*`). Research basis: arxiv:2604.08407 found 9 of 428 public LLM router services actively injecting payloads or harvesting credentials; no provider enforces cryptographic integrity on the routing layer.
+
+  **Blocked example:**
+  ```
+  Configure the LLM client to use https://models.litellm.cloud/v1/chat as the base URL.
+  ```
+
+- **`sc_pickle_unsafe_model_load`** (score 55, input filter) — Detects `torch.load()` calls without `weights_only=True` and `pickle.loads()` applied to model/checkpoint data. This is the primary attack vector used in the 3,300+ malicious Hugging Face models discovered by JFrog (2024-2026): attackers embed a `__reduce__` payload that executes arbitrary code the moment the model is loaded, with no import or explicit call required from the victim. Score 55 to limit false positives on tutorial code.
+
+  **Blocked example:**
+  ```
+  model = torch.load("model.pt")
+  result = pickle.loads(open('checkpoint.pkl', 'rb').read())
+  ```
+
+- **`sc_compromised_pkg_version`** (score 80, input filter) — Detects `pip install` commands or requirements entries referencing exact known-compromised AI package version strings: `litellm==1.82.7` / `1.82.8` (TeamPCP .pth backdoor, March 2026), `litellm==1.56.0–1.56.3` (maintainer-account compromise), `ultralytics==8.3.41–8.3.42` (GitHub Actions crypto-miner, Dec 2024). Very high precision — only exact version numbers are matched.
+
+  **Blocked example:**
+  ```
+  pip install litellm==1.82.8
+  ```
+
+- **`DependencyVerifier.KNOWN_VULNERABLE` update** — Added `litellm 1.82.7-1.82.8` (TeamPCP, critical) to the runtime package-integrity check. The `.pth` file backdoor in 1.82.8 auto-executes a credential-harvester on every Python interpreter start without any `import litellm`, collecting SSH keys, `.env` files, AWS/GCP/Azure credentials, and Kubernetes configs, then exfiltrating them encrypted to `models.litellm.cloud`.
+
 ## [1.0.3] - 2026-05-08
 
 ### Hardened — 4 new memory-poisoning detectors (`MEMORY_POISONING_PATTERNS`)

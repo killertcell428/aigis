@@ -349,6 +349,17 @@ class TestDependencyVerifier:
         assert vuln["severity"] == "critical"
         assert len(vuln["versions"]) > 0
 
+    def test_litellm_teampcp_versions_in_database(self):
+        """TeamPCP attack (March 2026) — litellm 1.82.7 and 1.82.8 must be present."""
+        vulns = DependencyVerifier.KNOWN_VULNERABLE["litellm"]
+        teampcp = next(
+            (v for v in vulns if "1.82.7-1.82.8" in v.get("versions", [])),
+            None,
+        )
+        assert teampcp is not None, "TeamPCP litellm 1.82.7-1.82.8 entry missing"
+        assert teampcp["severity"] == "critical"
+        assert "TeamPCP" in teampcp["cve"] or "1.82" in str(teampcp["versions"])
+
     def test_verify_package_not_installed(self):
         verifier = DependencyVerifier()
         result = verifier.verify_package("definitely_not_a_real_package_xyzzy")
