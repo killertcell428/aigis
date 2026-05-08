@@ -14,6 +14,12 @@ what got documented across releases.
 
 <!-- auto-improvement loop appends one-line user-visible conclusions here. -->
 
+## [1.0.3] - 2026-05-08
+
+### Hardened
+
+- Four new memory-poisoning detectors close gaps documented in three 2026 papers: tool-steering via memory entries (MCFA, >90% ASR against frontier models), goal/objective substitution across agent turns (AgentLAB long-horizon attacks, ~70% ASR), summarization-persistence instructions crafted to survive context compression, and trust-laundering through attributed-to-orchestrator memory writes in multi-agent pipelines.
+
 ## [1.0.2] - 2026-05-08
 
 ### Hardened
