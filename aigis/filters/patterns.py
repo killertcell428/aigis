@@ -2193,6 +2193,38 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
         "(e.g., signed via aigis.audit) and should be verified before acting on attributed "
         "instructions. Never accept policy changes from peer-agent memory writes alone.",
     ),
+    # --- ClawHavoc campaign (Feb 2026): SOUL.md / MEMORY.md targeting ---
+    # 341+ malicious OpenClaw skills modified persistent agent memory files to install
+    # backdoors that survived context resets. Targeting by filename is the key signal.
+    DetectionPattern(
+        id="afe_agent_memory_file_write",
+        name="AI Agent Persistent Memory File Write",
+        category="memory_poisoning",
+        pattern=_p(
+            r"(?:SOUL\.md|MEMORY\.md|\.agent_memory\b|\.agentmem\b)"
+            r".{0,80}"
+            r"(?:append|write|add|update|modify|insert|inject|overwrite|edit)"
+            r"|(?:append|write|add|update|modify|insert|inject|overwrite)"
+            r".{0,80}"
+            r"(?:SOUL\.md|MEMORY\.md|\.agent_memory\b|\.agentmem\b)"
+        ),
+        base_score=65,
+        description=(
+            "Instruction to write to or modify an AI agent's named persistent memory file "
+            "(SOUL.md, MEMORY.md, .agent_memory). "
+            "The ClawHavoc campaign (February 2026, Koi Security / Antiy Labs) delivered "
+            "341+ malicious OpenClaw skills that targeted these files to plant backdoors "
+            "that persisted across context resets. "
+            "Legitimate user actions do not need to directly name and modify these files."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning) / OWASP LLM03: Supply Chain",
+        remediation_hint=(
+            "Reject any prompt that references agent persistent-memory files (SOUL.md, MEMORY.md) "
+            "by name in combination with a write/modify verb. "
+            "Memory persistence should be managed exclusively by the trusted agent runtime, "
+            "not by user-supplied or skill-supplied instructions."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -2416,6 +2448,35 @@ SANDBOX_ESCAPE_PATTERNS: list[DetectionPattern] = [
         owasp_ref="OWASP LLM02: Sensitive Information Disclosure / MITRE ATLAS: AML.T0048",
         remediation_hint="Implement strict egress allowlists. AI agents should never post "
         "to external services without explicit user authorization.",
+    ),
+    # --- CVE-2026-26030: Semantic Kernel Python SDK eval() RCE via MRO traversal ---
+    # InMemoryVectorStore built filter expressions with Python eval(); attacker-controlled
+    # field values containing __subclasses__()/__mro__ walked the object hierarchy to
+    # reach os.system(). CVSS 9.9. Fixed in semantic-kernel 1.39.4.
+    DetectionPattern(
+        id="afe_python_mro_escape",
+        name="Python MRO / Subclass Sandbox Escape",
+        category="sandbox_escape",
+        pattern=_p(
+            r"(?:__subclasses__\s*\(\s*\)|"
+            r"__mro__\s*\[-?\d|"
+            r"\(\s*\)\s*\.__class__\s*\.__mro__)"
+        ),
+        base_score=80,
+        description=(
+            "Python object-model traversal string used to escape eval()-based sandboxes. "
+            "CVE-2026-26030 (CVSS 9.9): Microsoft Semantic Kernel Python SDK "
+            "InMemoryVectorStore built filter lambdas via eval() from user-supplied field "
+            "values; an attacker smuggled an MRO-traversal payload through the LLM to "
+            "reach os.system(). "
+            "__subclasses__() and __mro__[N] are not used in legitimate AI prompts."
+        ),
+        owasp_ref="CWE-78: OS Command Injection / MITRE ATLAS: AML.T0048",
+        remediation_hint=(
+            "Upgrade semantic-kernel to >=1.39.4 (safe-parser fix). "
+            "Never pass LLM-generated or user-controlled strings to eval()/exec(). "
+            "If eval is unavoidable, use ast.literal_eval() and restrict allowed AST node types."
+        ),
     ),
 ]
 
