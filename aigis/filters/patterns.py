@@ -1367,6 +1367,28 @@ SYNTHETIC_CONTENT_PATTERNS: list[DetectionPattern] = [
         owasp_ref="AI事業者GL v1.2: GL-RISK-04",
         remediation_hint="虚偽情報の生成はv1.2で明確なリスクです。事実に基づくコンテンツ生成を行ってください。",
     ),
+    # EU AI Act Art. 5 / Digital Omnibus (2026-05-07): prohibited AI practice.
+    # Generating non-consensual intimate imagery (NCII / "nudification") is
+    # explicitly banned from 2026-12-02; this pattern catches the prompt-level
+    # request before any image is produced.
+    DetectionPattern(
+        id="synth_ncii_request",
+        name="Non-Consensual Intimate Imagery Generation (NCII)",
+        category="synthetic_content",
+        pattern=_p(
+            r"(nudif(y|ication|ier)|undress\s+(someone|a\s+person|her|him|them)"
+            r"|remove\s+(the\s+)?(clothing|clothes)\s+from"
+            r"|strip\s+(naked|nude|her|him|them)"
+            r"|non[- ]?consensual\s+(intimate|explicit|nude|naked)"
+            r"|deepnude"
+            r"|(generat|creat|mak|produc)e?\s+.{0,40}"
+            r"(nude|naked)\s+(photo|image|picture|video)\s+of\s+(someone|a\s+person|her|him))"
+        ),
+        base_score=75,
+        description="Request to generate non-consensual intimate imagery. Prohibited AI practice under EU AI Act Art. 5 / Digital Omnibus (effective 2026-12-02).",
+        owasp_ref="EU AI Act Art. 5(1)(ca) / Digital Omnibus 2026",
+        remediation_hint="Generating non-consensual intimate imagery (NCII) is a prohibited AI practice under the EU Digital Omnibus amending the AI Act, effective 2026-12-02. This request cannot be processed.",
+    ),
 ]
 
 EMOTIONAL_MANIPULATION_PATTERNS: list[DetectionPattern] = [

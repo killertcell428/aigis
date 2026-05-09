@@ -4,31 +4,33 @@
 #   - AI systems in Annex III categories: biometrics, critical
 #     infrastructure, education, employment, essential services, law
 #     enforcement, migration, justice, democratic processes.
-#   - Any deployment that will be placed on the EU market or whose
-#     output reaches persons in the EU on or after 2026-08-02.
+#   - Any deployment placed on the EU market or whose output reaches
+#     persons in the EU.
 #
 # Regulatory context:
-#   - EU AI Act (Regulation (EU) 2024/1689). Obligations for high-risk
-#     systems (Chapter III) become applicable on **2026-08-02** — the
-#     next major compliance milestone after the GPAI / prohibited-AI
-#     provisions that already took effect in 2025.
-#   - Member-state competent authorities are expected to start active
-#     enforcement from that date (fines up to the greater of EUR 35M or
-#     7% of worldwide turnover for the most serious violations).
+#   - EU AI Act (Regulation (EU) 2024/1689).
+#   - Digital AI Omnibus (provisional agreement 2026-05-07) amended the
+#     original deadlines. Updated enforcement milestones:
+#     · Prohibited AI practices (Art. 5) — already in force (2025-02-02)
+#       + new prohibition on NCII-generation apps (nudification ban)
+#         must comply by **2026-12-02**.
+#     · Annex III high-risk systems — **2027-12-02** (deferred from 2026-08-02)
+#     · Annex I safety-component systems — **2028-08-02**
+#   - Fines up to EUR 35M or 7% of global turnover for serious violations.
 #
 # Threat model:
+#   - Article 5 / Omnibus (prohibited AI): requests to generate
+#     non-consensual intimate imagery (NCII); AI nudification apps.
 #   - Article 10 (data governance): prompt-injection or retrieval
-#     poisoning causing the system to reach a decision from untrusted
-#     data without traceability.
+#     poisoning causing decisions from untrusted data without traceability.
 #   - Article 14 (human oversight): attempts to coerce the system into
 #     bypassing a human-in-the-loop gate.
 #   - Article 15 (accuracy, robustness, cybersecurity): adversarial
 #     jailbreaks; secret exfiltration via side-channels.
 #   - Article 26 (deployer logging): any request to disable logging or
 #     tamper with the audit trail.
-#   - Transparency (Article 50) for interacting with natural persons:
-#     prompts designed to suppress the "you are talking to AI"
-#     disclosure.
+#   - Transparency (Article 50): prompts designed to suppress the
+#     "you are talking to AI" disclosure.
 #
 name: eu_ai_act_high_risk
 auto_block_threshold: 55   # strict — high-risk systems require traceability
@@ -75,4 +77,13 @@ custom_rules:
     name: FRIA Skip (Art. 27)
     pattern: "(skip\\s+(the\\s+)?(FRIA|fundamental\\s+rights\\s+impact)|bypass\\s+impact\\s+assessment|影響\\s*評価\\s*(を)?\\s*(スキップ|省略))"
     score_delta: 40
+    enabled: true
+
+  # Art. 5 / Omnibus 2026 — prohibited NCII generation (nudification ban)
+  # Effective 2026-12-02. Generating non-consensual intimate imagery is a
+  # prohibited AI practice under the Digital Omnibus amending the AI Act.
+  - id: eu_ai_ncii_generation
+    name: Non-Consensual Intimate Imagery Generation (Art. 5 / Omnibus)
+    pattern: "(nudif(y|ication|ier)|undress(\\s+someone|\\s+a\\s+person)?|remove\\s+(clothing|clothes)\\s+from|strip\\s+(naked|nude)|non[- ]?consensual\\s+(intimate|explicit|nude)|deepnude|generate\\s+.{0,40}(nude|naked)\\s+(photo|image|picture|video)\\s+of)"
+    score_delta: 80
     enabled: true
