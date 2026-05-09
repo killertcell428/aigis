@@ -1861,6 +1861,82 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
         remediation_hint="URL-decode all input before scanning. "
         "Aigis's active decoding layer handles this automatically.",
     ),
+    DetectionPattern(
+        id="enc_bidi_override",
+        name="BIDI Override Character Attack",
+        category="encoding_bypass",
+        pattern=_p(r"[‭‮]"),
+        base_score=55,
+        description=(
+            "Right-to-Left Override (U+202E) or Left-to-Right Override (U+202D) "
+            "character present. These BIDI control characters reverse the visual rendering "
+            "direction of text so that an attack string appears harmless to a human reviewer "
+            "while the actual byte sequence contains the payload. Documented in "
+            "arxiv:2504.11168 as part of the invisible-character bypass class tested against "
+            "Azure Prompt Shield, Meta Prompt Guard, and four other deployed guardrail systems."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip U+202D/U+202E from user input before display and before scanning. "
+            "BIDI override characters have no legitimate use in AI prompts. "
+            "aigis.decoders.normalize_confusables() removes these automatically."
+        ),
+    ),
+    DetectionPattern(
+        id="enc_morse_instruction",
+        name="Morse Code Encoded Instruction",
+        category="encoding_bypass",
+        pattern=_p(
+            r"(?i)(?:morse\s*(?:code)?\s*[=:\-]|(?:decode|interpret|translate)\s+(?:as\s+)?morse)"
+            r"|(?:^|[\s,;(])[.-]{2,6}(?:[ ][.-]{1,6}){5,}"
+        ),
+        base_score=40,
+        description=(
+            "Morse code used to encode attack instructions. Two variants detected: "
+            "(1) explicit 'morse:' or 'decode as morse' directive followed by dot-dash sequences; "
+            "(2) structural detection of 6+ consecutive morse tokens (each 1–6 dots/dashes). "
+            "MetaCipher (arxiv:2506.22557) and the Mixture-of-Encodings defence paper "
+            "(arxiv:2504.07467) both document caesar and morse code as effective guardrail "
+            "bypass ciphers because they appear in LLM pre-training data."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Decode morse sequences and re-scan the decoded text. "
+            "Explicit 'morse:' directives in user prompts are a strong injection signal."
+        ),
+    ),
+    DetectionPattern(
+        id="enc_leetspeak_keywords",
+        name="Leetspeak Attack Keyword Obfuscation",
+        category="encoding_bypass",
+        pattern=_p(
+            r"(?i)\b(?:"
+            r"1gn[o0]r[e3]"       # ignore: i→1, optionally o→0, e→3
+            r"|ign0r[e3]"          # ignore: o→0, optionally e→3
+            r"|byp[4@]s{1,2}"      # bypass: a→4 or a→@
+            r"|5y[5s]t[e3]m"       # system: s→5 at start
+            r"|\$y[\$s]t[e3]m"     # system: s→$ at start
+            r"|inj3ct"             # inject: e→3
+            r"|1nj[e3]ct"          # inject: i→1
+            r"|pr0mpt"             # prompt: o→0
+            r"|j[4@][il]lbr[e3][4@]k"  # jailbreak: a→4/@ in both positions
+            r")\b"
+        ),
+        base_score=35,
+        description=(
+            "Attack keywords encoded using classic leetspeak digit/symbol substitutions: "
+            "i→1, a→4/@, o→0, e→3, s→5/$. Documented as an effective guardrail bypass in "
+            "Mindgard Research (2025) and the DeepTeam red-teaming framework. "
+            "These substitutions are invisible to naive keyword filters but preserve semantic "
+            "meaning for the underlying LLM."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Normalize digit/symbol substitutions before scanning. "
+            "Mapping 0→o, 1→i/l, 3→e, 4→a, 5→s, @→a, $→s and re-scanning "
+            "closes this bypass class."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
