@@ -118,3 +118,25 @@ backend/.aigis/
 
 # ── Legacy / internal copies (not for OSS release) ───────────────────────────
 sdk/python/
+
+# ── Office / lock files ──────────────────────────────────────────────────────
+.~lock.*#
+~$*
+
+# ── Local-only backups & temp scratches ──────────────────────────────────────
+*.local-backup
+_tmp_*
+
+# ── Article authoring (managed locally; published via qiita-cli / zenn-cli) ──
+# qiita-cli managed
+/articles/
+# zenn-cli managed
+/public/
+# local drafts / weekly / monthly review notes
+/content/articles/
+/content/weekly/
+/content/weekly_reports/
+/content/monthly_reviews/
+/content/zenn_draft.md
+/content/content_insights.md
+/content/hn_show_hn_v1.0.0.md
