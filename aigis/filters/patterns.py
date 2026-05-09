@@ -1255,6 +1255,66 @@ INDIRECT_INJECTION_PATTERNS: list[DetectionPattern] = [
             "before RAG insertion. Never trust third-party documents to be delimiter-safe."
         ),
     ),
+    # --- Promptware C2 enrollment (arxiv:2601.09625, EmbraceTheRed Agent Commander Mar 2026) ---
+    # Stage 5 of the Promptware Kill Chain: injected content enrolls the agent in a remote
+    # command-and-control loop so an attacker can continuously issue tasks without further
+    # access to the user's system.  Key indicators: URL-anchored "receive next task from" /
+    # "report results to" directives, or explicit agent-ID enrollment language.
+    DetectionPattern(
+        id="ii_promptware_c2",
+        name="Promptware C2 Enrollment / Callback",
+        category="indirect_injection",
+        pattern=_p(
+            r"(await\s+(further|new|next|additional)\s+(instructions?|tasks?|directives?)\s+from\s+(https?://|the\s+(server|controller|command\s+server))|"
+            r"(receive|fetch|get)\s+(your\s+)?(next|new|further)\s+(task|objective|instruction)\s+from\s+https?://|"
+            r"(report|send|relay|transmit|post)\s+(your\s+)?(results?|findings?|output|actions?|data)\s+to\s+https?://|"
+            r"(you\s+(are|have\s+been)\s+)?(now\s+)?(enrolled|registered|assigned)\s+(as\s+)?(agent|worker|node)\s*(#\s*\d|[-_]\d|:\s*\w{2,20}))"
+        ),
+        base_score=65,
+        description=(
+            "Detects promptware Command-and-Control enrollment patterns in retrieved content: "
+            "instructions to receive future tasks from an external URL, report results back to "
+            "an attacker-controlled server, or register the agent with an ID in a C2 network. "
+            "Stage 5 of the Promptware Kill Chain (arxiv:2601.09625, Jan 2026); demonstrated "
+            "live by EmbraceTheRed Agent Commander (March 2026) against production AI agents."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect)",
+        remediation_hint=(
+            "Retrieved content is attempting to enroll this agent in a remote command loop. "
+            "External documents should never direct the agent to contact third-party URLs or "
+            "register with a control server. Sandbox all retrieval content and block outbound "
+            "URL-following from agent-processed external data."
+        ),
+    ),
+    # --- Task-abandonment injection (ARGUS/AgentLure arxiv:2605.03378, May 2026) ---
+    # Context-aware prompt injection where the payload redirects the agent away from the
+    # user's legitimate task using task-switching phrasing rather than overt "ignore
+    # instructions" language.  Distinct from pi_ignore_instructions (which targets the
+    # "instructions/rules/system" nouns) — this targets work/task abandonment constructs.
+    DetectionPattern(
+        id="ii_task_abandonment",
+        name="Task-Abandonment Injection",
+        category="indirect_injection",
+        pattern=_p(
+            r"(stop\s+what\s+you\s+(are|were)\s+(currently\s+)?(doing|working\s+on)\s+(and\s+)?(instead|now|first|rather)|"
+            r"(abandon|cease|drop|put\s+aside)\s+(your\s+)?(current|previous|assigned|actual|original)\s+(task|objective|goal|work|assignment)|"
+            r"instead\s+of\s+(doing|completing|finishing)\s+(that|this|the)\s+(task|request|query|instructions?)\s+(above|given|provided|you\s+were))"
+        ),
+        base_score=50,
+        description=(
+            "Detects task-abandonment phrasing in retrieved/external content: instructions to "
+            "stop, abandon, or redirect the agent's current work in favour of an attacker-chosen "
+            "goal. This is the core mechanism of the context-aware task-hijacking attack class "
+            "benchmarked by AgentLure (ARGUS, arxiv:2605.03378, May 2026) across 4 agentic "
+            "domains; attack success rates reach 85%+ before ARGUS defences are applied."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect)",
+        remediation_hint=(
+            "External content is instructing the agent to abandon its assigned task. "
+            "Task goals should only be set or changed by the operator system prompt; "
+            "retrieved documents must never be permitted to alter the agent's objectives."
+        ),
+    ),
 ]
 
 

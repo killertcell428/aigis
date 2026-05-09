@@ -14,6 +14,10 @@ what got documented across releases.
 
 <!-- auto-improvement loop appends one-line user-visible conclusions here. -->
 
+### Hardened
+
+- Indirect prompt injection in retrieved content is now harder to weaponise: two new detectors flag promptware C2 enrollment patterns (instructions to register the agent with an external command server or receive future tasks from an attacker-controlled URL) and context-aware task-abandonment phrasing ("stop what you are doing and instead…", "abandon your current task"), closing gaps identified in the Promptware Kill Chain (arxiv:2601.09625) and ARGUS/AgentLure benchmark (arxiv:2605.03378) research.
+
 ## [1.0.7] - 2026-05-09
 
 ### Hardened — 3 new detectors: NCII generation, Python eval() RCE escape, and AI agent memory-file hijacking (`SYNTHETIC_CONTENT_PATTERNS`, `SANDBOX_ESCAPE_PATTERNS`, `MEMORY_POISONING_PATTERNS`)
