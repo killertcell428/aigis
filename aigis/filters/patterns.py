@@ -1911,14 +1911,14 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
         category="encoding_bypass",
         pattern=_p(
             r"(?i)\b(?:"
-            r"1gn[o0]r[e3]"       # ignore: i→1, optionally o→0, e→3
-            r"|ign0r[e3]"          # ignore: o→0, optionally e→3
-            r"|byp[4@]s{1,2}"      # bypass: a→4 or a→@
-            r"|5y[5s]t[e3]m"       # system: s→5 at start
-            r"|\$y[\$s]t[e3]m"     # system: s→$ at start
-            r"|inj3ct"             # inject: e→3
-            r"|1nj[e3]ct"          # inject: i→1
-            r"|pr0mpt"             # prompt: o→0
+            r"1gn[o0]r[e3]"  # ignore: i→1, optionally o→0, e→3
+            r"|ign0r[e3]"  # ignore: o→0, optionally e→3
+            r"|byp[4@]s{1,2}"  # bypass: a→4 or a→@
+            r"|5y[5s]t[e3]m"  # system: s→5 at start
+            r"|\$y[\$s]t[e3]m"  # system: s→$ at start
+            r"|inj3ct"  # inject: e→3
+            r"|1nj[e3]ct"  # inject: i→1
+            r"|pr0mpt"  # prompt: o→0
             r"|j[4@][il]lbr[e3][4@]k"  # jailbreak: a→4/@ in both positions
             r")\b"
         ),

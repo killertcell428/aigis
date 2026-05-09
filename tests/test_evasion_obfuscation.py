@@ -3,7 +3,6 @@
 Covers: enc_bidi_override, enc_morse_instruction, enc_leetspeak_keywords.
 """
 
-import pytest
 from aigis.filters.patterns import ENCODING_BYPASS_PATTERNS
 
 
