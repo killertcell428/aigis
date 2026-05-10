@@ -1826,6 +1826,95 @@ MCP_SECURITY_PATTERNS: list[DetectionPattern] = [
         "external URL is a data exfiltration vector. Audit tool descriptions "
         "for collector + outbound URL combinations.",
     ),
+    # -----------------------------------------------------------------------
+    # BCC silent email exfiltration (Invariant Labs 2025, Elastic Security Labs 2025).
+    # A shadowing tool instructs the agent to blind-copy an attacker-controlled
+    # address on every outgoing email without the user seeing the extra recipient.
+    # mcp_redirect_recipient covers explicit "change the recipient" language;
+    # this rule targets BCC-specific instructions which are distinct.
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_bcc_blind_exfil",
+        name="MCP BCC Silent Email Exfiltration",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"(?:blind\s*carbon\s*copy\s+.{0,60}@"
+            r"|blind\s*carbon\s*copy\s+(?:the\s+)?\w+\s+(?:address|email)"
+            r"|\badd(?:ing)?\s+.{0,40}\s+to\s+bcc\b"
+            r"|\binclude\s+.{0,40}\s+in\s+bcc\b"
+            r"|\bcopy\s+.{0,40}\s+to\s+bcc\b"
+            r"|\bbcc\s+(?:the\s+following|this|all\s+emails?)\b"
+            r"|\balso\s+bcc\s+.{0,60}@"
+            r"|\bbcc\s*:\s*\S+@\S+)"
+        ),
+        base_score=65,
+        description="Tool description or output instructs silent BCC exfiltration — "
+        "attacker receives a copy of every outbound email the agent sends. "
+        "Documented by Invariant Labs and Elastic Security Labs (2025) as a "
+        "cross-server tool-shadowing sub-attack.",
+        owasp_ref="OWASP LLM01: Prompt Injection (MCP Tool Shadowing / Exfil)",
+        remediation_hint="Tool descriptions must never reference BCC fields for "
+        "attacker-controlled addresses. Scan both tool descriptions and outgoing "
+        "email parameters before dispatch.",
+    ),
+    # -----------------------------------------------------------------------
+    # Confused deputy credential abuse (arxiv:2601.11893, SEAgent, Jan 2026;
+    # CSA Research Note on Confused Deputy, 2025).
+    # A legitimate agent is coerced into using its own stored API key /
+    # access token / credentials for an attacker-directed operation.
+    # ASR 100% on unprotected agent systems (arxiv:2601.11893).
+    # Distinct from spe_api_key_create (creating new credentials) and
+    # spe_self_grant (granting new permissions to self).
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_confused_deputy_creds",
+        name="MCP Confused Deputy Credential Abuse",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"use\s+(?:your|the\s+agent'?s?|the\s+assistant'?s?|your\s+stored|your\s+saved)\s+"
+            r"(?:api\s+key|access\s+token|credentials?|authorization|bearer\s+token|"
+            r"auth\s+token|session\s+token|jwt|oauth\s+token|private\s+key|secret\s+key)"
+        ),
+        base_score=70,
+        description="Injected instruction coercing the agent into using its own stored "
+        "credentials for an attacker-directed operation — confused deputy attack "
+        "(arxiv:2601.11893, Jan 2026). Achieves 100% ASR on unprotected agents. "
+        "The agent's legitimate credential scope is laundered through the attack chain.",
+        owasp_ref="OWASP LLM01: Prompt Injection (Confused Deputy / Credential Abuse)",
+        remediation_hint="Agent credentials must never be re-used for attacker-specified "
+        "destinations. Bind credential scope to operator-defined endpoints only; "
+        "reject tool results that reference the agent's own API keys or tokens.",
+    ),
+    # -----------------------------------------------------------------------
+    # Tool priority / precedence override (SAFE-T1301 sub-technique,
+    # Microsoft Research "Tool-Space Interference in the MCP Era", 2025).
+    # A malicious tool description explicitly claims priority over or intercepts
+    # calls to another legitimate tool — detectable at registration time.
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_tool_priority_override",
+        name="MCP Tool Priority/Precedence Override",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"(?:this\s+tool|use\s+this(?:\s+tool)?|this\s+function|this\s+endpoint)"
+            r".{0,60}"
+            r"(?:takes?\s+priority\s+over|overrides?\s+(?:the\s+)?\w+"
+            r"|in\s+place\s+of\s+(?:the\s+)?\w+"
+            r"|instead\s+of\s+(?:the\s+)?\w+"
+            r"|intercepts?\s+(?:calls?\s+to\s+)?(?:the\s+)?\w+"
+            r"|replaces?\s+(?:the\s+)?\w+)"
+            r".{0,40}(?:tool|function|api)\b"
+        ),
+        base_score=65,
+        description="Tool description explicitly claims precedence over or intercepts "
+        "another tool — SAFE-T1301 priority-claim sub-technique documented by "
+        "Microsoft Research and SAFE-MCP (2025). A legitimate tool never needs "
+        "to assert priority over another tool in its description.",
+        owasp_ref="OWASP LLM01: Prompt Injection (MCP Tool Shadowing / SAFE-T1301)",
+        remediation_hint="Reject any tool description that claims to override, intercept, "
+        "or take priority over another tool. Each tool must only describe its own "
+        "isolated behavior.",
+    ),
 ]
 
 # ---------------------------------------------------------------------------
