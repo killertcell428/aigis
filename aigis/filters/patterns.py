@@ -269,6 +269,32 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
         owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
         remediation_hint="'Exfiltrate', 'data leak', and similar keywords in a prompt are strong attack signals. These should be blocked in any production AI application.",
     ),
+    # --- v1.0.9 data-exfiltration cycle 2 (second pass) ---
+    DetectionPattern(
+        id="exfil_dns_encode_instruct",
+        name="DNS Subdomain Encoding Exfiltration Instruction",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            r"(?:base64|b64|hex|url)[-_\s]?encod.{0,40}(?:dns|subdomain|resolver|nslookup|dig\b)|"
+            r"(?:nslookup|dig\b|host\b|resolve\s).{0,60}(?:base64|b64|encod|exfil)|"
+            r"encod.{0,30}\s+(?:into|as|in)\s+(?:a\s+)?(?:dns|subdomain)"
+            r")"
+        ),
+        base_score=70,
+        description=(
+            "Input contains instructions to encode sensitive data into DNS subdomain labels, "
+            "the DNS-tunneling covert exfiltration technique. Check Point Research (March 2026) "
+            "demonstrated that a single malicious prompt could turn ChatGPT's code-execution "
+            "sandbox into a DNS covert channel by encoding conversation content into subdomain "
+            "queries sent to an attacker-controlled resolver (patched by OpenAI 2026-02-20)."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Block prompts that pair encoding directives with DNS tool calls. "
+            "AI agents with network access should restrict outbound DNS to approved resolvers only."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -3368,6 +3394,57 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
         description="Potentially fabricated citation with specific statistics — hallucination risk.",
         owasp_ref="AI事業者GL v1.2: GL-RISK-03 / GL-RISK-04",
         remediation_hint="AIが生成した引用・統計データはハルシネーションの可能性があります。出典を必ず検証してください。",
+    ),
+    # --- v1.0.9 Output Patterns (data-exfiltration cycle, second pass) ---
+    DetectionPattern(
+        id="out_reference_style_markdown_exfil",
+        name="Reference-Style Markdown Link Exfiltration Channel",
+        category="data_exfiltration",
+        pattern=_p(
+            r"\[[^\]]{1,60}\]:\s+https?://(?!(?:localhost|127\.\d+|0\.0\.0\.0))"
+            r"[\w.\-]{4,}(?:/[^\s?#]*)?\?[^\s]*=[A-Za-z0-9+/=%_\-]{12,}"
+        ),
+        base_score=65,
+        description=(
+            "Reference-style Markdown link definition with encoded query parameters — "
+            "the exfiltration bypass technique exploited in EchoLeak (CVE-2025-32711, CVSS 9.3), "
+            "a zero-click prompt injection in Microsoft 365 Copilot (June 2025). Attackers used "
+            "[text][ref] + [ref]: URL format specifically to bypass inline-link redaction while "
+            "still producing a rendered clickable link that exfiltrated data via link preview or fetch."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Apply link-URL scanning to both inline and reference-style Markdown rendered links. "
+            "Alert on reference link definitions whose URLs carry long encoded query-parameter values."
+        ),
+    ),
+    DetectionPattern(
+        id="out_tunnel_relay_url",
+        name="Tunnel Relay Service URL in Output",
+        category="data_exfiltration",
+        pattern=_p(
+            r"https?://(?:[\w\-]+\.)?(?:"
+            r"ngrok\.(?:io|app|dev)|"
+            r"localtunnel\.me|loca\.lt|"
+            r"serveo\.net|"
+            r"beeceptor\.com|"
+            r"expose\.sh|"
+            r"loophole\.cloud|"
+            r"tunnel\.pyjam\.as"
+            r")"
+        ),
+        base_score=75,
+        description=(
+            "LLM output contains a URL pointing to a tunnel relay service (ngrok, localtunnel, "
+            "serveo, etc.) commonly used as data exfiltration endpoints. These services expose "
+            "local servers to the internet and are abused by attackers to receive stolen data "
+            "from agent tool calls or markdown-rendered link fetches."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Block LLM outputs containing ngrok or tunnel service URLs. Allowlist only specific "
+            "tunnel endpoints needed for a reviewed development workflow."
+        ),
     ),
     # --- v1.0.2 Output Patterns (data-exfiltration cycle) ---
     DetectionPattern(
