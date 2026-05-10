@@ -966,6 +966,102 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "turns. Set input length limits and monitor for abnormally long single messages."
         ),
     ),
+    # --- v1.0.10 jailbreak-extraction cycle 3 (second pass) ---
+    DetectionPattern(
+        id="jb_affirmative_prefill",
+        name="Affirmative Prefill / Dialogue Injection Attack (DIA-I)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:Assistant|AI|Bot)\s*:\s*(?:Sure[,!]?|Of\s+course[,!]?|Absolutely[,!]?|"
+            r"Here\s+(?:is|are)|Yes[,!]?|Happy\s+to\s+help).{10,400}\n+"
+            r"(?:User|Human|H)\s*:\s*(?:continue|keep\s+going|go\s+on|proceed|more|"
+            r"finish\s+it|and\s+then|next\s+step|what.s\s+next)"
+        ),
+        base_score=65,
+        description=(
+            "Dialogue Injection Attack (DIA-I): a fake assistant turn starting affirmatively "
+            "('Sure, here is...') is injected into user input, then the attacker asks the "
+            "model to 'continue' the fabricated harmful response. arxiv:2503.08195 (March 2025) "
+            "reports 89% ASR on Llama-3.1-8B and 82% on GPT-4o, bypassing five defense "
+            "mechanisms. Exploits the model's coherence drive to continue injected context."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "User-supplied content must never contain assistant-role markers. "
+            "Validate that conversation history originates from your application, not user "
+            "input. Reject any input where an 'Assistant:' turn is followed by 'continue'."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_hypothetical_ai",
+        name="Hypothetical Unrestricted AI Framing",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:imagine|suppose|pretend|consider|what\s+if)\s+"
+            r"(?:there\s+(?:was|were|is|exists?)\s+)?"
+            r"(?:a|an)\s+"
+            r"(?:(?:alternative|hypothetical|uncensored|unrestricted|unfiltered|unaligned)\s+)?"
+            r"(?:(?:version\s+of\s+)?(?:ai|llm|language\s+model|chatbot|virtual\s+assistant|bot))\s*"
+            r"(?:(?:that|which|who)\s+)?"
+            r"(?:has\s+no|without|lacks?|doesn.{0,5}have|not\s+bound\s+by|free\s+from|devoid\s+of)\s+"
+            r"(?:content\s+(?:filter|policy|restriction|moderation)|"
+            r"safety\s+(?:filter|guardrail|training|rule|alignment)|"
+            r"ethical?\s+(?:constraint|guideline|restriction|limit)|"
+            r"moral\s+(?:constraint|restriction|code)|"
+            r"restrictions?|censorship|refusals?)"
+        ),
+        base_score=60,
+        description=(
+            "Hypothetical third-person AI framing: the attacker constructs a fictional AI "
+            "without restrictions and asks what it would say or do. Distinct from the DAN "
+            "attack (first-person persona switch). Documented in HarmBench (Mazeika et al., "
+            "2024) and WildJailbreak (Jiang et al., 2024); achieves 40-65% ASR against "
+            "models that refuse direct harmful requests."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Hypothetical AI framing distances requests from the model's own safety policies "
+            "by positing a fictional unrestricted third-party AI. Content policies apply "
+            "regardless of framing. Reject inputs that construct a hypothetical unrestricted "
+            "AI and then solicit its responses."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_academic_research_bypass",
+        name="Academic / Research Framing Bypass",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:for\s+(?:my|a|an|our)\s+(?:\w+\s+)?(?:research(?:\s+paper)?|thesis|dissertation|paper|study|"
+            r"report|class|course|homework|academic\s+project)|"
+            r"for\s+(?:academic|educational|scientific|research(?:ers?))\s+purposes?|"
+            r"as\s+a\s+(?:student|researcher|scientist|chemist|pharmacist|biologist|academic|scholar)|"
+            r"in\s+(?:my|a|the)\s+(?:research|study|thesis|dissertation|academic\s+work))"
+            r"[\s\S]{0,250}"
+            r"(?:methamphetamine|meth\s+(?:lab|cook|synthesis|production)|"
+            r"\bfentanyl\b|\bheroin\b|\bcocaine\s+(?:base|synthesis)\b|ricin\b|anthrax\b|"
+            r"nerve\s+(?:agent|gas)|sarin\b|chemical\s+weapon|biological\s+weapon|"
+            r"explosiv\w*\s+(?:device|synthesis|recipe|manufacture)|pipe\s+bomb|"
+            r"ransomware(?:\s+(?:code|payload))?|malware\s+(?:code|payload|creation)|"
+            r"shellcode|shell\s+code|0[\s-]?day\s+exploit|"
+            r"hack\s+into\s+(?:(?:a|an|the)\s+)?(?:computer|system|network|server|database|account)|"
+            r"(?:create|write|build|develop)\s+(?:a\s+)?(?:virus|worm|trojan|backdoor|keylogger|stalkerware))"
+        ),
+        base_score=60,
+        description=(
+            "Academic or educational framing combined with a specific harmful request: "
+            "drug synthesis routes, weapon construction, exploit code, or malware. "
+            "Documented as an authority-bypass technique in PAIR (Chao et al., 2023) "
+            "and across HarmBench (2024) and WildJailbreak (2024) datasets. Models "
+            "trained to be educational are susceptible to this framing."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Academic or research claims do not override content safety policies. "
+            "Requests pairing educational framing with drug synthesis, weapon construction, "
+            "or exploit code should be rejected. Legitimate research on sensitive topics "
+            "is governed by institutional ethics review, not AI chat."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
