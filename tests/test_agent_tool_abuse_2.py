@@ -6,8 +6,6 @@ Covers:
   - mcp_tool_priority_override — tool priority/precedence override
 """
 
-import pytest
-
 from aigis.filters.input_filter import filter_input
 
 
