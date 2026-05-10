@@ -2464,6 +2464,88 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
         "(e.g., signed via aigis.audit) and should be verified before acting on attributed "
         "instructions. Never accept policy changes from peer-agent memory writes alone.",
     ),
+    # --- MemoryGraft experience hijacking — arxiv:2512.16962, Dec 2025 ---
+    # Poisoned "successful past experience" entries framed as legitimate agent trajectories.
+    # Agents' semantic imitation heuristic causes them to replicate retrieved patterns from
+    # apparently successful past tasks. ASR ~48% poisoned recall in mixed corpora.
+    DetectionPattern(
+        id="mem_experience_hijack",
+        name="Memory-Based Experience Hijacking (MemoryGraft)",
+        category="memory_poisoning",
+        pattern=_p(
+            r"(previous(ly)?|last\s+time|prior\s+(session|task|interaction|run|experience)|"
+            r"stored\s+(experience|procedure|pattern)|in\s+a?\s+prior\s+(session|run)|"
+            r"successfully\s+completed|successful\s+(pattern|procedure|example|run|case))\b"
+            r".{0,80}"
+            r"(bypass\w*|ignor\w*|skipp?\w*|disabl\w*|overrid\w*|circumvent\w*|disregard\w*)\b"
+            r".{0,15}(safety|filter|check|restriction|policy|guard|validation|content)"
+        ),
+        base_score=50,
+        description="MemoryGraft experience hijacking: a memory entry is framed as a 'successful "
+        "past experience' or 'stored procedure' but embeds a directive to bypass safety "
+        "controls. Exploits the agent's semantic imitation heuristic — tendency to replicate "
+        "patterns from retrieved successful tasks. Evaluated by arxiv:2512.16962 (Dec 2025), "
+        "~48% poisoned recall in mixed corpora.",
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint="Past-experience or stored-procedure memory entries must be treated "
+        "as untrusted input. Any entry that combines success-framing with a bypass directive "
+        "should be rejected; memory should not grant rights to skip policy checks.",
+    ),
+    # --- ZombieAgent conditional trigger — arxiv:2602.15654, Feb 2026 ---
+    # Self-reinforcing injections encode conditional "time bombs" in long-term memory:
+    # "when/if user does X, then send/forward data to attacker.com". The agent passively
+    # ingests the trigger during a benign session and activates it in future turns.
+    DetectionPattern(
+        id="mem_zombie_trigger",
+        name="ZombieAgent Conditional Exfiltration Trigger",
+        category="memory_poisoning",
+        pattern=_p(
+            r"(when(ever)?|if|once|as\s+soon\s+as)\s+(the\s+)?(user|human|person|client|anyone)\b"
+            r".{0,80}"
+            r"(send|forward|exfiltrate|relay|transmit|upload|post|submit|leak)\b"
+            r".{0,60}"
+            r"(https?://|ftp://|external|attacker|webhook|@[a-z0-9])"
+        ),
+        base_score=65,
+        description="ZombieAgent conditional exfiltration trigger: a memory entry encodes a "
+        "'when/if user does X → send data to <external>' rule, acting as a persistent "
+        "time-bomb that activates exfiltration in future sessions. Documented in "
+        "arxiv:2602.15654 (Feb 2026) as 'self-reinforcing injections' — the payload "
+        "is stored during a benign session and fires silently in later turns.",
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint="Reject memory entries that encode conditional exfiltration rules "
+        "(when/if user → send/forward to external). Conditional logic in memory should "
+        "never reference external URLs or addresses; route-to-external decisions belong "
+        "exclusively in the operator system prompt.",
+    ),
+    # --- False user preference injection — survey arxiv:2604.16548, Apr 2026 ---
+    # Attackers inject memory entries that impersonate previously stated user preferences
+    # to inject policy overrides. The survey notes: "the real failure is that the system
+    # misattributes externally injected content as its own experience."
+    DetectionPattern(
+        id="mem_false_preference",
+        name="False User Preference Injection",
+        category="memory_poisoning",
+        pattern=_p(
+            r"(the\s+)?(user|human)('s|s)?\s+"
+            r"(prefer(?:s|red|ence)?|always\s+wants?|standing\s+(?:order|instruction|preference)|"
+            r"previously\s+(?:said|stated|told|indicated|asked|instructed)|"
+            r"has\s+(?:always|previously)\s+(?:wanted|requested|preferred|stated|indicated|said|instructed))\b"
+            r".{0,100}"
+            r"(ignore|bypass|skip|disable|override|disregard|circumvent)\s+"
+            r"(safety|check|filter|restriction|policy|guard|validation|content|rule)"
+        ),
+        base_score=50,
+        description="False user preference injection: a memory entry falsely attributes a "
+        "policy-bypass directive to the user's own 'standing preferences' or 'previously "
+        "stated instructions', making the override appear user-sanctioned. Identified as "
+        "a core misattribution pattern in the Mnemonic Sovereignty survey "
+        "(arxiv:2604.16548, Apr 2026).",
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint="User preferences stored in memory may only govern presentation "
+        "and convenience settings, not safety policy. Reject any preference claim that "
+        "includes a directive to bypass, ignore, or disable safety controls.",
+    ),
     # --- ClawHavoc campaign (Feb 2026): SOUL.md / MEMORY.md targeting ---
     # 341+ malicious OpenClaw skills modified persistent agent memory files to install
     # backdoors that survived context resets. Targeting by filename is the key signal.
