@@ -210,7 +210,9 @@ class TestHypotheticalAI:
         assert r.risk_score < 31
 
     def test_false_positive_ai_no_language_limit(self) -> None:
-        r = scan("Suppose an AI assistant that has no language limitations and speaks 100 languages")
+        r = scan(
+            "Suppose an AI assistant that has no language limitations and speaks 100 languages"
+        )
         assert r.risk_score < 31
 
 

@@ -62,7 +62,9 @@ class TestPythonMroEscape:
         assert not self.pat.pattern.search("Please summarize this document.")
 
     def test_legitimate_python_mention_no_match(self):
-        assert not self.pat.pattern.search("Use Python class inheritance with mro() for method lookup.")
+        assert not self.pat.pattern.search(
+            "Use Python class inheritance with mro() for method lookup."
+        )
 
     def test_mro_without_bracket_no_match(self):
         assert not self.pat.pattern.search("The MRO of class Foo is: Foo, Bar, object.")
