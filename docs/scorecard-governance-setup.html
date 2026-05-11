@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scorecard Governance Setup — Aigis</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.7;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    color: #1f2328;
+    background: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0d1117; color: #e6edf3; }
+    a { color: #58a6ff; }
+    code, pre { background: #161b22 !important; color: #f0f6fc; }
+    table { border-color: #30363d; }
+    th, td { border-color: #30363d !important; }
+    th { background: #161b22; }
+    .card { background: #161b22; border-color: #30363d; }
+    .badge-error { background: #4a1a1a; color: #ffa198; }
+    .badge-info { background: #1a3a5a; color: #79c0ff; }
+  }
+  h1 { border-bottom: 2px solid #d1d9e0; padding-bottom: .4rem; }
+  h2 { margin-top: 2.4rem; border-bottom: 1px solid #d1d9e0; padding-bottom: .3rem; }
+  h3 { margin-top: 1.6rem; }
+  code { background: #f3f4f6; padding: .15rem .4rem; border-radius: 4px; font-size: .92em; }
+  pre { background: #f3f4f6; padding: .9rem 1rem; border-radius: 6px; overflow-x: auto; }
+  pre code { background: transparent; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #d1d9e0; padding: .5rem .8rem; text-align: left; vertical-align: top; }
+  th { background: #f6f8fa; }
+  .card { border: 1px solid #d1d9e0; border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: #f9fafb; }
+  .badge-error { background: #ffeef0; color: #82071e; padding: .12rem .55rem; border-radius: 10px; font-size: .8em; font-weight: 600; }
+  .badge-info { background: #ddf4ff; color: #0969da; padding: .12rem .55rem; border-radius: 10px; font-size: .8em; font-weight: 600; }
+  .step { margin: .4rem 0; }
+  details { margin: .6rem 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  ol li, ul li { margin: .3rem 0; }
+  .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: #f3f4f6; border: 1px solid #d1d9e0; border-radius: 4px; padding: .05rem .4rem; font-size: .85em; }
+</style>
+</head>
+<body>
+
+<h1>Scorecard Governance — 手動設定ガイド</h1>
+
+<p>
+OpenSSF Scorecard が指摘する 5 件のガバナンス項目は、いずれもリポジトリ設定 / 運用変更が必要で、PR では解消できません。各項目の対応コストと手順をまとめます。
+</p>
+
+<div class="card">
+<strong>対象リポジトリ:</strong> <a href="https://github.com/killertcell428/aigis"><code>killertcell428/aigis</code></a>
+</div>
+
+<h2>サマリ</h2>
+
+<table>
+<thead>
+<tr><th>項目</th><th>重要度</th><th>対応コスト</th><th>推奨</th></tr>
+</thead>
+<tbody>
+<tr><td>BranchProtection</td><td><span class="badge-error">error</span></td><td>5分</td><td>今すぐ設定</td></tr>
+<tr><td>Maintained</td><td><span class="badge-info">info</span></td><td>時間経過</td><td>放置でOK（90日後に自動解消）</td></tr>
+<tr><td>CodeReview</td><td><span class="badge-info">info</span></td><td>運用変更</td><td>BranchProtection と一緒に解決</td></tr>
+<tr><td>CIIBestPractices</td><td><span class="badge-info">info</span></td><td>30分〜数時間</td><td>OSS 公開ならやる価値あり</td></tr>
+<tr><td>Fuzzing</td><td><span class="badge-info">info</span></td><td>数日</td><td>後回しでOK</td></tr>
+</tbody>
+</table>
+
+<h2>1. BranchProtection — master ブランチ保護</h2>
+
+<p><strong>Scorecard 指摘:</strong> <code>branch protection not enabled for branch 'master'</code></p>
+
+<h3>手順（GitHub UI）</h3>
+
+<ol>
+<li><a href="https://github.com/killertcell428/aigis/settings/branches">Settings → Branches</a> を開く</li>
+<li><strong>Add branch protection rule</strong> をクリック</li>
+<li><strong>Branch name pattern:</strong> <code>master</code></li>
+<li>以下にチェック（推奨セット）:
+  <ul>
+    <li>✅ <strong>Require a pull request before merging</strong>
+      <ul>
+        <li>✅ Require approvals (count: 1 以上) — これで CodeReview alert も解消</li>
+        <li>✅ Dismiss stale pull request approvals when new commits are pushed</li>
+      </ul>
+    </li>
+    <li>✅ <strong>Require status checks to pass before merging</strong>
+      <ul>
+        <li>✅ Require branches to be up to date before merging</li>
+        <li>必須チェック追加: <code>Lint &amp; Type Check</code>, <code>Test / Python 3.11</code>, <code>Test / Python 3.12</code>, <code>Build package</code></li>
+      </ul>
+    </li>
+    <li>✅ <strong>Require linear history</strong>（推奨）</li>
+    <li>✅ <strong>Do not allow bypassing the above settings</strong>（管理者にも適用）</li>
+  </ul>
+</li>
+<li><strong>Create</strong> をクリック</li>
+</ol>
+
+<details>
+<summary>CLI で設定する場合 (<code>gh</code>)</summary>
+<pre><code>gh api -X PUT repos/killertcell428/aigis/branches/master/protection \
+  -F required_status_checks.strict=true \
+  -F 'required_status_checks.contexts[]=Lint &amp; Type Check' \
+  -F 'required_status_checks.contexts[]=Test / Python 3.11 (ubuntu-latest)' \
+  -F 'required_status_checks.contexts[]=Test / Python 3.12 (ubuntu-latest)' \
+  -F 'required_status_checks.contexts[]=Build package' \
+  -F enforce_admins=true \
+  -F required_pull_request_reviews.required_approving_review_count=1 \
+  -F required_pull_request_reviews.dismiss_stale_reviews=true \
+  -F restrictions= \
+  -F required_linear_history=true \
+  -F allow_force_pushes=false \
+  -F allow_deletions=false</code></pre>
+</details>
+
+<div class="card">
+<strong>注意:</strong> 1 人開発のリポでも approval=1 を要求するとマージできなくなる場合があります。その場合は approval を 0 にしつつ status checks のみ必須化する、または GitHub の "Allow specified actors to bypass required pull requests" を使ってください。
+</div>
+
+<h2>2. Maintained — リポジトリ作成から90日未満</h2>
+
+<p><strong>Scorecard 指摘:</strong> <code>Repository was created within the last 90 days</code></p>
+
+<p>これは「メンテされていることの証拠が不足している」という指摘で、リポジトリが 90 日以上経過して継続的にコミットがあれば自動的に解消されます。<strong>対応不要</strong>。</p>
+
+<h3>気になる場合の対応</h3>
+<p>Scorecard alert を Code scanning UI から <strong>Dismiss → Won't fix</strong> で消すこともできます（コメント例: "Repo just created; will resolve naturally with time."）。</p>
+
+<h2>3. CodeReview — 30 changeset 中 0 件が approved review</h2>
+
+<p><strong>Scorecard 指摘:</strong> <code>Found 0/30 approved changesets</code></p>
+
+<p>BranchProtection で <code>Require approvals (1+)</code> を有効化し、今後のマージは PR 経由＋承認必須にすれば、徐々に approved changeset が積み上がってスコアが上がります。<strong>BranchProtection の設定と同時に解決可能</strong>。</p>
+
+<h2>4. CIIBestPractices — OpenSSF Best Practices バッジ未取得</h2>
+
+<p><strong>Scorecard 指摘:</strong> <code>no effort to earn an OpenSSF best practices badge detected</code></p>
+
+<h3>手順</h3>
+<ol>
+<li><a href="https://www.bestpractices.dev/">bestpractices.dev</a> にアクセス</li>
+<li><strong>GET YOUR BADGE NOW</strong> → GitHub でログイン</li>
+<li><strong>Submit a New Project</strong> をクリック</li>
+<li>プロジェクト情報入力:
+  <ul>
+    <li><strong>URL:</strong> <code>https://github.com/killertcell428/aigis</code></li>
+    <li><strong>Description:</strong> "LLM guardrail / prompt injection detection toolkit"</li>
+  </ul>
+</li>
+<li>67 個の質問に回答（"passing" レベルなら数十分）。多くは既にこのリポで満たしている内容（README、LICENSE、CI、テストカバレッジ等）</li>
+<li>取得後、バッジを README に貼る（例:）
+  <pre><code>[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/&lt;ID&gt;/badge)](https://www.bestpractices.dev/projects/&lt;ID&gt;)</code></pre>
+</li>
+</ol>
+
+<p>このバッジが README に存在するだけで Scorecard はパスを検出します。</p>
+
+<h2>5. Fuzzing — fuzzer 統合なし</h2>
+
+<p><strong>Scorecard 指摘:</strong> <code>no fuzzer integrations found</code></p>
+
+<p>このリポの主要コードパス（detector regex / decoder pipeline）はファジング対象として有意義です。ただし統合には数日の作業が必要。</p>
+
+<h3>推奨アプローチ: Atheris (Python ネイティブ)</h3>
+
+<p>Google の Atheris を使うと、Python 関数を libFuzzer ハーネスで fuzz できます。</p>
+
+<ol>
+<li><code>fuzz/</code> ディレクトリ作成</li>
+<li>例: <code>fuzz/fuzz_scan.py</code>
+<pre><code>import atheris
+import sys
+with atheris.instrument_imports():
+    from aigis import scan
+
+def TestOneInput(data: bytes):
+    try:
+        text = data.decode("utf-8", errors="replace")
+    except Exception:
+        return
+    scan(text)
+
+atheris.Setup(sys.argv, TestOneInput)
+atheris.Fuzz()</code></pre>
+</li>
+<li>CI に <code>.github/workflows/cifuzz.yml</code> を追加（OSS-Fuzz の CIFuzz アクション利用が標準）</li>
+<li>本格運用するなら <a href="https://google.github.io/oss-fuzz/getting-started/new-project-guide/">OSS-Fuzz</a> へ申請</li>
+</ol>
+
+<p><strong>後回しでOK</strong>。先に他の項目を片付けてから検討。</p>
+
+<h2>完了確認</h2>
+
+<p>すべて設定後、Scorecard を再実行して結果を確認できます:</p>
+
+<pre><code># GitHub Actions の Scorecard workflow を手動実行
+gh workflow run scorecard.yml -R killertcell428/aigis
+
+# または scorecard CLI（要 GITHUB_AUTH_TOKEN）
+docker run -e GITHUB_AUTH_TOKEN=ghp_xxx \
+  gcr.io/openssf/scorecard:stable \
+  --repo=github.com/killertcell428/aigis</code></pre>
+
+<p>Code scanning UI でアラートが <strong>Closed</strong> に変わります（次回スキャン後）。</p>
+
+<hr style="margin-top:3rem;">
+<p style="color:#6b7280;font-size:.85em;text-align:center;">
+Generated 2026-05-11 — Aigis governance setup guide
+</p>
+
+</body>
+</html>

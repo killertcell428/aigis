@@ -5,9 +5,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-// Use built-in API route (no external backend needed)
-const API_BASE = "";
-
 interface Message {
   role: "user" | "assistant" | "system";
   content: string;

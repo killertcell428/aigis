@@ -292,7 +292,6 @@ def demo_watch() -> None:
     print("  Type any text and see Aigis scan it in real-time.")
     print("  Type 'quit' or Ctrl+C to exit.\n")
 
-    guard = Guard()
     stream = ActivityStream()
     sec_monitor = SecurityMonitor()
 

@@ -40,7 +40,6 @@ class Sandbox(Protocol):
         work_dir: Path,
     ) -> SandboxResult:
         """Execute *code* inside the sandbox and return results."""
-        ...
 
 
 class ProcessSandbox:

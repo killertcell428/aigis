@@ -619,7 +619,7 @@ def render_pdf(report_data: dict) -> bytes:
 def render_excel(report_data: dict) -> bytes:
     """Render report data as an Excel workbook."""
     from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.styles import Font, PatternFill
     from openpyxl.utils import get_column_letter
 
     wb = Workbook()
@@ -629,7 +629,6 @@ def render_excel(report_data: dict) -> bytes:
     soc2_fill = PatternFill(start_color="7C3AED", end_color="7C3AED", fill_type="solid")
     gdpr_fill = PatternFill(start_color="16A34A", end_color="16A34A", fill_type="solid")
     japan_fill = PatternFill(start_color="DC2626", end_color="DC2626", fill_type="solid")
-    wrap = Alignment(wrap_text=True, vertical="top")
 
     summary = report_data["executive_summary"]
     meta = report_data["report_metadata"]
