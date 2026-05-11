@@ -20,7 +20,11 @@ interface ContactEntry {
 }
 
 function sanitizeForLog(value: string): string {
-  return value.replace(/[\r\n\t\x00-\x1f\x7f]/g, "_").slice(0, 200);
+  const normalized = String(value ?? "");
+  return normalized
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[\t\x00-\x1f\x7f]/g, "_")
+    .slice(0, 200);
 }
 
 function clampString(value: unknown, max: number): string {
