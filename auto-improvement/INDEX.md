@@ -4,6 +4,7 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-05-11T00-00 | 5 | supply-chain-llm | [research](research/2026-05-11T00-00_5-supply-chain-llm.md) | [changes](changes/2026-05-11T00-00_changes.md) | — | 2 |
 | 2026-05-10T18-15 | 4 | memory-context | [research](research/2026-05-10T18-15_4-memory-context.md) | [changes](changes/2026-05-10T18-15_changes.md) | v1.0.11 | 0 |
 | 2026-05-10T12-00 | 3 | jailbreak-extraction | [research](research/2026-05-10T12-00_3-jailbreak-extraction.md) | [changes](changes/2026-05-10T12-00_changes.md) | v1.0.10 | 3 |
 | 2026-05-10T06-00 | 2 | data-exfiltration | [research](research/2026-05-10T06-00_2-data-exfiltration.md) | [changes](changes/2026-05-10T06-00_changes.md) | v1.0.9 | 2 |
