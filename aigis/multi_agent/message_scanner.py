@@ -261,6 +261,14 @@ _HIDDEN_INSTRUCTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
     (
         re.compile(
+            r"<\|(?:user|assistant|system|im_start|im_end|begin_of_text|start_header_id|end_header_id)\|>",
+            _FLAGS,
+        ),
+        "Hidden instruction tag: modern chat-template role delimiters (Llama 3, Phi-3, Qwen 2.5)",
+        "injection_relay",
+    ),
+    (
+        re.compile(
             r"(ignore|disregard|forget|override)\s+(the\s+)?"
             r"(previous|above|prior|original|other)\s+"
             r"(agent|tool|node|worker|task|step)('?s?)?\s+"
@@ -374,6 +382,73 @@ _COLLUSION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 7. Goal hijacking / objective override: attacker instructs an agent to abandon its
+#    assigned task and pursue an attacker-controlled objective instead.
+#    Research basis: OWASP ASI-01 (Agent Goal Hijack, #1 ranked threat, 2026);
+#    AgentLAB long-horizon attacks (arxiv:2602.16901) covering intent hijacking,
+#    task injection, and objective drifting; inter-agent trust exploitation achieving
+#    100% ASR across GPT-4/Claude-4/Gemini-2.5 (arxiv:2507.06850, Jul 2025).
+_GOAL_HIJACKING_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"your\s+(new|real|actual|true|primary|updated|changed)\s+"
+            r"(goal|objective|task|mission|directive|purpose)\s+is\s+(now\s+)?to",
+            _FLAGS,
+        ),
+        "Goal hijacking: attempts to replace the agent's assigned objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(abandon|discard|forget|drop)\s+(your\s+)?"
+            r"(current|assigned|original|previous|given)\s+"
+            r"(task|objective|goal|mission|assignment|directive)",
+            _FLAGS,
+        ),
+        "Goal hijacking: instructs agent to abandon its assigned task",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(your|this\s+agent'?s?)\s+(objective|goal|task|mission)\s+"
+            r"(has\s+been|is\s+(now|being))\s+"
+            r"(changed|updated|modified|replaced|overridden|redirected)",
+            _FLAGS,
+        ),
+        "Goal hijacking: announces that agent's objective has been overridden",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(as\s+a\s+)?fellow\s+(agent|worker|peer|node).{0,40}"
+            r"(you\s+(must|should|are\s+required\s+to)|i\s+(instruct|order|command)\s+you)",
+            _FLAGS,
+        ),
+        "Peer authority abuse: claims peer-agent authority to issue binding instructions",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(あなたの|このエージェントの).{0,5}"
+            r"(新しい|本当の|実際の|真の|更新された).{0,5}"
+            r"(目標|目的|タスク|ミッション|使命|指令)",
+            _FLAGS,
+        ),
+        "Goal hijacking (JA): attempts to replace agent's assigned objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(現在の|割り当てられた|元の|以前の).{0,10}"
+            r"(タスク|目標|目的|ミッション|任務).{0,10}"
+            r"(放棄|中断|忘れ|やめ|捨て)",
+            _FLAGS,
+        ),
+        "Goal hijacking (JA): instructs agent to abandon its assigned task",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -382,6 +457,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _HIDDEN_INSTRUCTION_PATTERNS
     + _SELF_REPLICATION_PATTERNS
     + _COLLUSION_PATTERNS
+    + _GOAL_HIJACKING_PATTERNS
 )
 
 
