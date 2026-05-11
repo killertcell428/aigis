@@ -2,7 +2,8 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from jose import JWTError, jwt
+import jwt as pyjwt
+from jwt.exceptions import PyJWTError as JWTError
 from passlib.context import CryptContext
 
 from app.config import settings
@@ -42,7 +43,7 @@ def create_access_token(
         "exp": expire,
         "iat": datetime.now(timezone.utc),
     }
-    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+    return pyjwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
 def decode_token(token: str) -> dict[str, Any]:
@@ -54,14 +55,12 @@ def decode_token(token: str) -> dict[str, Any]:
     Raises:
         JWTError: If token is invalid, expired, or missing required claims.
     """
-    return jwt.decode(
+    return pyjwt.decode(
         token,
         settings.secret_key,
         algorithms=_ALLOWED_ALGORITHMS,
         options={
             "require": ["exp", "sub", "tenant_id"],
-            "verify_exp": True,
-            "verify_signature": True,
         },
     )
 
