@@ -24,6 +24,7 @@
   <a href="https://github.com/killertcell428/aigis/actions/workflows/ci.yml"><img src="https://github.com/killertcell428/aigis/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/killertcell428/aigis/actions/workflows/codeql.yml"><img src="https://github.com/killertcell428/aigis/actions/workflows/codeql.yml/badge.svg" alt="CodeQL" /></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/killertcell428/aigis"><img src="https://api.scorecard.dev/projects/github.com/killertcell428/aigis/badge" alt="OpenSSF Scorecard" /></a>
+  <a href="https://www.bestpractices.dev/projects/12808"><img src="https://www.bestpractices.dev/projects/12808/badge" alt="OpenSSF Best Practices" /></a>
 </p>
 
 <p align="center">
