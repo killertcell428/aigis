@@ -374,6 +374,89 @@ _COLLUSION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 7. Agent card poisoning / capability exaggeration: adversarial instructions
+#    embedded in A2A agent card metadata instruct the orchestrator to route all
+#    tasks exclusively to the attacker's agent.
+#    Research: Agent Card Poisoning (Keysight/LevelBlue SpiderLabs, March 2026):
+#    "Agent in the Middle" attack achieves silent task-routing hijacking and PII
+#    exfiltration; 94% of memory-augmented agents tested were found vulnerable.
+_AGENT_CARD_POISONING_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(always|for\s+all|for\s+every|for\s+each)\s+"
+            r"(task|request|query|prompt|job|message).{0,20}"
+            r"(route|send|forward|direct|delegate|submit).{0,20}"
+            r"(to\s+)?(me|this\s+agent|this\s+endpoint|my\s+endpoint)",
+            _FLAGS,
+        ),
+        "Agent card poisoning: instructs routing all tasks to attacker-controlled agent",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(always\s+)?(select|prefer|choose|use|pick)\s+"
+            r"(me|this\s+agent)\s+(over\s+\S+\s+)?(for\s+)?"
+            r"(all|every|any|each)\s+(task|request|query|prompt|job)",
+            _FLAGS,
+        ),
+        "Agent card poisoning: capability exaggeration to capture all task routing",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(disregard|ignore|bypass|skip|exclude).{0,30}"
+            r"(all\s+)?(other\s+)?(agents?|workers?|nodes?|services?|endpoints?)"
+            r".{0,60}(route|send|forward|direct|delegate).{0,30}"
+            r"(me|this\s+agent|this\s+service|my\s+endpoint)",
+            _FLAGS,
+        ),
+        "Agent card poisoning: instructs excluding other agents and routing all to attacker",
+        "injection_relay",
+    ),
+]
+
+# 8. Session history fabrication: fabricates prior-session agreements to coerce
+#    the receiving agent into complying with unsafe directives — the core mechanism
+#    of A2A Session Smuggling.
+#    Research: Agent Session Smuggling (Unit42/Palo Alto Networks, April 2025):
+#    malicious A2A agent exploits stateful session memory to inject instructions
+#    across turns, demonstrated causing unauthorized stock trades in PoC.
+_SESSION_FABRICATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(as\s+(we|you)\s+(established|agreed|discussed|decided|confirmed|set\s+up)"
+            r"|we\s+(established|agreed|decided|confirmed))"
+            r".{0,20}(in|during).{0,10}(last|previous|prior|earlier).{0,20}"
+            r"(session|conversation|exchange|interaction)"
+            r".{0,80}(you\s+(should|must|need\s+to|are\s+to|will\s+now)"
+            r"|(now\s+)?(ignore|bypass|override|disregard|skip|disable))",
+            _FLAGS,
+        ),
+        "Session fabrication: false prior session agreement used to override agent behavior",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(based\s+on|according\s+to)\s+(our|your|the)\s+"
+            r"(previous|last|prior|earlier)\s+(agreement|instruction|commitment|decision|arrangement)"
+            r".{0,80}(ignore|bypass|override|disregard|skip|disable|circumvent)",
+            _FLAGS,
+        ),
+        "Session fabrication: fake prior agreement used to justify bypassing controls",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(in\s+our|from\s+our|during\s+our)\s+(last|previous|prior|earlier)\s+"
+            r"(session|conversation|exchange|interaction)"
+            r".{0,100}you\s+(agreed|confirmed|allowed|said|promised|accepted)\s+that",
+            _FLAGS,
+        ),
+        "Session fabrication: fabricated session history used to manipulate agent behavior",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -382,6 +465,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _HIDDEN_INSTRUCTION_PATTERNS
     + _SELF_REPLICATION_PATTERNS
     + _COLLUSION_PATTERNS
+    + _AGENT_CARD_POISONING_PATTERNS
+    + _SESSION_FABRICATION_PATTERNS
 )
 
 
