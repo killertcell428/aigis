@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt as pyjwt
-from jwt.exceptions import PyJWTError as JWTError
 from passlib.context import CryptContext
 
 from app.config import settings
@@ -53,7 +52,7 @@ def decode_token(token: str) -> dict[str, Any]:
         Decoded payload dict.
 
     Raises:
-        JWTError: If token is invalid, expired, or missing required claims.
+        jwt.exceptions.PyJWTError: If token is invalid, expired, or missing required claims.
     """
     return pyjwt.decode(
         token,

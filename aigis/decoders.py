@@ -151,7 +151,6 @@ def _is_emoji_codepoint(cp: int) -> bool:
 _BASE64_RE = re.compile(r"[A-Za-z0-9+/]{20,}={0,2}")
 _HEX_ESCAPE_RE = re.compile(r"(\\x[0-9a-fA-F]{2}){4,}")
 _HEX_LITERAL_RE = re.compile(r"\b0x([0-9a-fA-F]{2}){4,}\b")
-_URL_ENCODED_RE = re.compile(r"(%[0-9a-fA-F]{2}){3,}")
 _ROT13_INDICATOR_RE = re.compile(
     r"(rot13|caesar|cipher)\s*[:\-]?\s*([a-zA-Z\s]{10,})", re.IGNORECASE
 )
@@ -183,8 +182,6 @@ _ROT13_INDICATOR_RE = re.compile(
 # bytes. We detect the presence and strip them; full bit-extraction is
 # attacker-format-specific and out of scope here, but the *count* alone is
 # a strong signal: a benign string essentially never contains VS-Sup chars.
-_TAG_BLOCK_RE = re.compile(r"[\U000e0000-\U000e007f]+")
-_VS_SUPPLEMENT_RE = re.compile(r"[\U000e0100-\U000e01ef]+")
 _TAG_OR_VS_SET = frozenset(list(range(0xE0000, 0xE0080)) + list(range(0xE0100, 0xE01F0)))
 
 

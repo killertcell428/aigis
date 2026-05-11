@@ -6,7 +6,7 @@ Run:
     python examples/basic_usage.py
 """
 
-from aigis import Guard, RiskLevel
+from aigis import Guard
 
 
 def demo_prompt_injection() -> None:

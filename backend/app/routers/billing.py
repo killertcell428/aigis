@@ -1,5 +1,5 @@
 """Billing API endpoints for subscription management."""
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,7 +11,6 @@ from app.billing.plans import get_plan_limits
 from app.billing.stripe_client import (
     create_checkout_session,
     create_customer_portal_session,
-    get_subscription_status,
 )
 from app.db.session import get_db
 from app.dependencies import get_admin_user, get_current_user

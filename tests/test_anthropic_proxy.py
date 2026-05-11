@@ -72,13 +72,6 @@ def _make_client(guard: Guard | None = None, response_text: str = "Hello!"):
     """Import and instantiate SecureAnthropic using the stubbed SDK."""
     from aigis.middleware.anthropic_proxy import SecureAnthropic, _SecureMessages
 
-    class _CustomAnthropic:
-        def __init__(self, **kwargs):
-            self.messages = _make_stub_messages(response_text)
-
-        def __getattr__(self, name: str):
-            return MagicMock()
-
     def _make_stub_messages(text: str):
         class _M:
             def create(self, **kwargs):
