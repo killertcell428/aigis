@@ -4,6 +4,7 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-05-11T12-15 | 7 | evasion-obfuscation | [research](research/2026-05-11T12-15_7-evasion-obfuscation.md) | [changes](changes/2026-05-11T12-15_changes.md) | — | 2 |
 | 2026-05-11T06-12 | 6 | multi-agent | [research](research/2026-05-11T06-12_6-multi-agent.md) | [changes](changes/2026-05-11T06-12_changes.md) | v1.0.12 | 2 |
 | 2026-05-11T00-00 | 5 | supply-chain-llm | [research](research/2026-05-11T00-00_5-supply-chain-llm.md) | [changes](changes/2026-05-11T00-00_changes.md) | — | 2 |
 | 2026-05-10T18-15 | 4 | memory-context | [research](research/2026-05-10T18-15_4-memory-context.md) | [changes](changes/2026-05-10T18-15_changes.md) | v1.0.11 | 0 |

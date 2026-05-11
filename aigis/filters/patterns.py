@@ -2230,6 +2230,56 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "closes this bypass class."
         ),
     ),
+    DetectionPattern(
+        id="enc_tag_block_ascii",
+        name="Unicode Tag Block ASCII Smuggling",
+        category="encoding_bypass",
+        pattern=_p(r"[\U000E0000-\U000E007F]"),
+        base_score=70,
+        description=(
+            "Unicode Tag Block character (U+E0000–U+E007F) detected. These code points "
+            "map one-to-one to printable ASCII but render as zero-width glyphs in every "
+            "common font, making them invisible to human reviewers while fully visible to "
+            "LLM tokenizers. EchoLeak (CVE-2025-32711, CVSS 9.3, June 2025) exploited this "
+            "technique to bypass Microsoft's XPIA classifier in Microsoft 365 Copilot. "
+            "arxiv:2504.11168 confirmed 90.15%/81.79% attack success rate against Azure "
+            "Prompt Shield and Meta Prompt Guard — the highest of any obfuscation class "
+            "tested. AWS and Cisco both recommend detecting and stripping this range."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip or reject any input containing U+E0000–U+E007F before sending to the "
+            "LLM. These characters have no legitimate use in API request bodies. "
+            "Note: subdivision flag emoji (e.g., 🏴󠁧󠁢󠁥󠁮󠁧󠁿) use tag chars in their encoding; "
+            "if your application passes raw flag emoji through the API layer, add an "
+            "allowlist for the specific flag sequences your users send."
+        ),
+    ),
+    DetectionPattern(
+        id="enc_fullwidth_keywords",
+        name="Fullwidth Latin Character Obfuscation",
+        category="encoding_bypass",
+        pattern=_p(r"[Ａ-Ｚａ-ｚ]{6,}"),
+        base_score=40,
+        description=(
+            "Six or more consecutive fullwidth Latin characters (U+FF21–U+FF3A uppercase, "
+            "U+FF41–U+FF5A lowercase) detected. Attackers substitute attack keywords with "
+            "their fullwidth equivalents — e.g., ｉｇｎｏｒｅ instead of 'ignore', "
+            "ｓｙｓｔｅｍ instead of 'system' — to bypass ASCII-based keyword filters. "
+            "The base LLM decodes fullwidth Latin as its ASCII equivalent with no explicit "
+            "instruction. arxiv:2508.14070 measured 61.5% average attack success rate "
+            "across four aligned open-source LLMs (Llama-3, Mistral, Gemma, Falcon); "
+            "arxiv:2504.11168 confirmed 44–63% ASR against production guardrails including "
+            "Azure Prompt Shield and Protect AI v2."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Normalize fullwidth Latin characters to their ASCII equivalents "
+            "(Unicode NFKC normalization converts U+FF21–U+FF5A → A–Z/a–z) before "
+            "scanning. In Python: unicodedata.normalize('NFKC', text). "
+            "Six consecutive fullwidth letters almost never appear in legitimate AI prompts."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
