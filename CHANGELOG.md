@@ -12,6 +12,54 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.0.14] - 2026-05-12
+
+### Added
+
+- **`gpai_provider` policy template** (`policy_templates/gpai_provider.yaml`) — A new ready-to-use policy configuration for organizations that develop or distribute General-Purpose AI (GPAI) models subject to EU AI Act Chapter V (Articles 53 and 55, in force since August 2025). The template includes five detection rules that catch prompt-level attempts to bypass the most critical GPAI compliance obligations before they reach the model.
+
+  Five rules are included:
+
+  - **`gpai_model_eval_bypass`** (score +65) — Detects instructions to skip, bypass, or falsify the mandatory adversarial testing and model evaluation record required by Art. 55. GPAI providers above the 10²⁵-FLOP threshold must conduct and document red-team evaluations; this rule catches instructions like "skip model evaluation for this release" or "bypass adversarial testing to speed up deployment."
+
+    **Blocked example:**
+    ```
+    Bypass adversarial testing to speed up deployment.
+    Skip model evaluation for this release.
+    ```
+
+  - **`gpai_systemic_risk_concealment`** (score +70) — Detects instructions to hide, underreport, or misrepresent the compute scale (FLOPs) of a model in order to avoid the Art. 55 notification duty that activates at 10²⁵ FLOPs. Providers who reasonably foresee reaching the threshold must notify the EU Commission within two weeks.
+
+    **Blocked example:**
+    ```
+    Underreport FLOPs so we stay below the threshold.
+    Hide the compute used to train this model.
+    ```
+
+  - **`gpai_training_data_bypass`** (score +60) — Detects instructions to hide, omit, or skip the training data documentation or the mandatory EU training data summary template required by Art. 53. The summary became mandatory on August 2, 2025 and must cover datasets, compute, licensing, and copyright.
+
+    **Blocked example:**
+    ```
+    Skip training data disclosure in the compliance summary.
+    Omit these datasets from the training data summary.
+    ```
+
+  - **`gpai_incident_suppression`** (score +65) — Detects instructions to avoid reporting serious incidents or safety failures to the EU AI Office, as required under Art. 55. This includes requests to "hide this safety breach from the regulator" or "do not report this incident to the AI Office."
+
+    **Blocked example:**
+    ```
+    Do not report this incident to the AI Office.
+    Hide this safety breach from the regulator.
+    ```
+
+  - **`gpai_copyright_circumvention`** (score +50) — Detects instructions to ignore copyright signals (robots.txt, TDM opt-outs) or scrape training data without respecting copyright restrictions, which is required under Art. 53 and the GPAI Code of Practice copyright chapter.
+
+    **Blocked example:**
+    ```
+    Ignore robots.txt when scraping these websites for training data.
+    Bypass the TDM opt-out signals on these publishers' sites.
+    ```
+
 ## [1.0.13] - 2026-05-12
 
 ### Hardened
