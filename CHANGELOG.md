@@ -12,6 +12,20 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Added
+
+- **OpenSSF Best Practices Silver tier preparation** — Documents and CI controls added to satisfy ~95% of Silver criteria, leaving only `bus_factor` (single maintainer) and `test_statement_coverage80` (69% → 80% ratchet) as open gaps.
+
+  Specifically:
+
+  - **`.github/workflows/dco.yml`** — Enforces Developer Certificate of Origin `Signed-off-by:` trailer on every PR commit via `tim-actions/dco` (satisfies Silver `dco`).
+  - **`docs/assurance_case.md`** — Threat model with adversary model (A1–A7), trust boundaries (T1–T3), top-10 threats with mitigation mapping, secure-design principle realization, operating assumptions, and review cadence (satisfies Silver `assurance_case` and `implement_secure_design`).
+  - **`docs/access_continuity.md`** — Inventory of every release-path credential (GitHub, PyPI, GHCR, Sigstore keyless, security@ mailbox, domain registrar), 2FA/recovery practices, bus-factor mitigation plan, and disaster-scenario response (satisfies Silver `access_continuity`).
+  - **`docs/silver-justifications.html`** — Single-file HTML reference with copy-paste-ready justification text for every Silver criterion, for direct use against the BadgeApp form at <https://www.bestpractices.dev/projects/12808/silver>.
+  - **`SECURITY.md` SLA table** — Tightened from "90-day grace" to an explicit SLA: ≤72 h acknowledgment, ≤7 d assessment, ≤60 d fix (high/critical) / ≤90 d (medium/low), ≤90 d public disclosure.
+  - **`release.yml` Sigstore attestation** — `actions/attest-build-provenance@v2` now signs every wheel and sdist with keyless OIDC; attestations are queryable at github.com/killertcell428/aigis/attestations (satisfies Silver `signed_releases`).
+  - **`CONTRIBUTING.md` DCO section** — How-to documentation for `git commit -s` and recovery from missing sign-offs.
+  - **`docs/openssf-best-practices.md`** — Self-assessment refreshed with summary table and updated action-item list reflecting the 2026-05-12 changes.
 ### Hardened
 
 - **`afe_sensitive_file_read`** (score 70, input filter) — Detects prompts or tool responses that reference sensitive Linux system file paths that an AI agent should never read: `/proc/self/environ` (the primary target for leaking API keys and cloud credentials from a running process), `/proc/<pid>/environ`, `/proc/self/cmdline`, `/etc/shadow`, `/etc/sudoers`, and SSH host private-key paths. Two real CVEs exploited exactly this pattern: Chainlit CVE-2026-22218 (CVSS 7.1, January 2026) let an attacker read `/proc/self/environ` via a malicious element payload to steal API keys; LangChain CVE-2026-34070 (CVSS 7.5, March 2026) let an attacker supply a crafted path to `load_prompt()` to reach the same files. The existing container-escape pattern already catches `/proc/self/exe|root|ns`; this rule closes the credential-theft gap.

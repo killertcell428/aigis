@@ -34,13 +34,20 @@ PGP key: Available upon request.
 
 ## Response Process
 
-1. **Acknowledgment** — We will confirm receipt within 72 hours.
-2. **Assessment** — We will evaluate the impact and severity within 7 days.
-3. **Fix** — We will develop and test a patch.
-4. **Disclosure** — We will coordinate the release date with the reporter and publish a GitHub Security Advisory.
-5. **Credit** — With the reporter's permission, we will credit them in the advisory and CHANGELOG.
+We follow a [coordinated vulnerability disclosure](https://en.wikipedia.org/wiki/Responsible_disclosure) policy with the following service-level targets:
 
-We follow a [responsible disclosure](https://en.wikipedia.org/wiki/Responsible_disclosure) policy. We ask for a reasonable grace period (typically 90 days) before public disclosure.
+| Stage | Target | Notes |
+| --- | --- | --- |
+| **Acknowledgment** | ≤ 72 hours | Confirmation of receipt to the reporter |
+| **Initial assessment** | ≤ 7 days | Impact, severity (CVSS v3.1), affected versions |
+| **Fix availability** | ≤ 60 days (high/critical) <br> ≤ 90 days (medium/low) | Patched release published to PyPI + GHCR |
+| **Public disclosure** | ≤ 90 days after report | GitHub Security Advisory + CVE if applicable |
+| **Credit** | At advisory publication | With reporter's permission, in advisory + CHANGELOG |
+
+If a fix cannot land within the target window, we will inform the
+reporter and agree on an extension before disclosure. If an active
+exploit is observed in the wild, we may shorten the timeline and
+publish an advisory immediately alongside the patched release.
 
 ## Scope
 

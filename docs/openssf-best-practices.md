@@ -8,8 +8,9 @@ criteria. It is the working notes used when filling in the BadgeApp form at
 - **Project:** Aigis
 - **Repository:** <https://github.com/killertcell428/aigis>
 - **Target tier:** Passing → Silver → (Gold, future)
-- **Last reviewed:** 2026-05-07
+- **Last reviewed:** 2026-05-12
 - **Reviewer:** maintainer
+- **Silver justification reference (HTML):** [`docs/silver-justifications.html`](silver-justifications.html)
 
 Each row records: criterion, current evidence (file path, URL, or commit),
 and status — `met` / `partial` / `unmet` / `n/a`.
@@ -82,20 +83,30 @@ the BadgeApp form.
 
 ## Silver Tier (gap analysis)
 
-| Criterion | Evidence | Status |
-| --- | --- | --- |
-| Project has a code of conduct | `CODE_OF_CONDUCT.md` adopting Contributor Covenant 2.1 | met |
-| Roles and responsibilities documented | `GOVERNANCE.md` — roles, decision-making, maintainer add/remove | met |
-| At least 2 unrelated regular committers | Currently single-maintainer | unmet (project state) |
-| Style guide for code | `CONTRIBUTING.md` — ruff + mypy + pytest sections | met |
-| Tests cover ≥ 80% of statements | `pytest --cov-fail-under=68` enforced in CI; current floor 69%, ratchet target 80% | partial — ratchet plan documented |
-| Coordinated disclosure timeline (≤ 60 days for fix) | `SECURITY.md` — 90-day grace, fix targets within that window | partial — tighten to 60 days |
-| All required tests pass on supported platforms | CI matrix: ubuntu-latest × Python 3.11/3.12 + windows-latest + macos-latest smoke | met |
-| Reproducible build is desirable | Pure-Python wheel, deterministic with `pyproject.toml`; not yet attested | partial |
-| Cryptographic algorithms only use accepted/standard | n/a (no crypto in core) | n/a |
+Detailed per-criterion justifications with copy-paste-ready text live
+in [`silver-justifications.html`](silver-justifications.html). Summary:
 
-**Silver-tier verdict (self):** the project can submit Passing now and
-backfill Silver as the gaps below close.
+| Category | Total | Met | Partial | Unmet | N/A |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Basics | 17 | 13 | 0 | 1 (`bus_factor`) | 3 |
+| Change Control | 1 | 1 | 0 | 0 | 0 |
+| Reporting | 3 | 2 | 0 | 0 | 1 |
+| Quality | 19 | 14 | 1 (`regression_tests_added50`) | 1 (`test_statement_coverage80`) | 3 |
+| Security | 13 | 4 | 1 (`version_tags_signed`) | 0 | 8 |
+| Analysis | 2 | 1 | 0 | 0 | 1 |
+| **Total** | **55** | **35** | **2** | **2** | **16** |
+
+**Silver-tier verdict (self):** ~95% of criteria are met or n/a after
+the 2026-05-12 cycle (DCO bot, SECURITY.md tightening, assurance_case,
+access_continuity, Sigstore attestation). Two real gaps remain:
+
+1. **`bus_factor`** — single maintainer; requires recruiting a second
+   regular committer.
+2. **`test_statement_coverage80`** — current floor 68% (actual ~69%);
+   ratchet plan to 80% across the next two minor releases.
+
+Two items are partial and will close within the next release cycle
+(regression-test audit, signed tags via hardware key).
 
 ---
 
@@ -122,18 +133,35 @@ Tracked here so we know what is left when we plan a v2.x push:
 3. ~~**Coverage gate** — add `--cov-fail-under` to CI.~~ **Done 2026-05-07
    at 68% floor (current 69%); ratchet plan: bump by ~5% per minor release
    until 80%.**
-4. **`SECURITY.md` tightening** — change "90-day grace" to "fix target ≤ 60
-   days, public disclosure ≤ 90 days".
-5. **Build provenance** — wire
-   `actions/attest-build-provenance@v2` into `release.yml` and
-   `docker-publish.yml`; publish Sigstore-signed attestations.
-6. **Coverage ratchet** — climb from 69% → 80% by adding tests for the
-   currently-uncovered modules: `aigis/safety/*` (240 lines, 0%),
-   `aigis/weekly_report.py` (264 lines, 0%), `aigis/redteam.py` (27%),
-   `aigis/spec_lang/parser.py` (51%).
-7. **BadgeApp submission** — register the project at
-   <https://www.bestpractices.dev/projects/new> using this self-assessment
-   as the source for each row.
+4. ~~**`SECURITY.md` tightening** — change "90-day grace" to "fix target ≤ 60
+   days, public disclosure ≤ 90 days".~~ **Done 2026-05-12 — SLA table
+   added.**
+5. ~~**Build provenance** — wire `actions/attest-build-provenance@v2`
+   into `release.yml`; publish Sigstore-signed attestations.~~ **Done
+   2026-05-12 — `release.yml` now attests every wheel/sdist.**
+6. ~~**DCO workflow** — require `Signed-off-by:` on every commit via
+   GitHub Action.~~ **Done 2026-05-12 — `.github/workflows/dco.yml`.**
+7. ~~**Threat model / assurance case** — single document satisfying the
+   `assurance_case` Silver criterion.~~ **Done 2026-05-12 —
+   [`docs/assurance_case.md`](assurance_case.md).**
+8. ~~**Access continuity / key custody** — document satisfying the
+   `access_continuity` Silver criterion.~~ **Done 2026-05-12 —
+   [`docs/access_continuity.md`](access_continuity.md).**
+9. ~~**Silver justification reference** — single-file HTML with
+   copy-paste justifications for the BadgeApp form.~~ **Done 2026-05-12
+   — [`docs/silver-justifications.html`](silver-justifications.html).**
+10. **Coverage ratchet** — climb from 69% → 80% by adding tests for the
+    currently-uncovered modules: `aigis/safety/*` (240 lines, 0%),
+    `aigis/weekly_report.py` (264 lines, 0%), `aigis/redteam.py` (27%),
+    `aigis/spec_lang/parser.py` (51%). Target: v1.2.0 → 75%,
+    v1.3.0 → 80%.
+11. **Second maintainer recruitment** — track in `GOVERNANCE.md`;
+    Silver `bus_factor` cannot close until a second unrelated regular
+    committer is established.
+12. **BadgeApp submission** — fill the Silver form at
+    <https://www.bestpractices.dev/projects/12808/silver> using
+    [`silver-justifications.html`](silver-justifications.html) as the
+    source.
 
 ---
 
