@@ -12,6 +12,21 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Added
+
+- **OpenSSF Best Practices Silver tier preparation** — Documents and CI controls added to satisfy ~95% of Silver criteria, leaving only `bus_factor` (single maintainer) and `test_statement_coverage80` (69% → 80% ratchet) as open gaps.
+
+  Specifically:
+
+  - **`.github/workflows/dco.yml`** — Enforces Developer Certificate of Origin `Signed-off-by:` trailer on every PR commit via `tim-actions/dco` (satisfies Silver `dco`).
+  - **`docs/assurance_case.md`** — Threat model with adversary model (A1–A7), trust boundaries (T1–T3), top-10 threats with mitigation mapping, secure-design principle realization, operating assumptions, and review cadence (satisfies Silver `assurance_case` and `implement_secure_design`).
+  - **`docs/access_continuity.md`** — Inventory of every release-path credential (GitHub, PyPI, GHCR, Sigstore keyless, security@ mailbox, domain registrar), 2FA/recovery practices, bus-factor mitigation plan, and disaster-scenario response (satisfies Silver `access_continuity`).
+  - **`docs/silver-justifications.html`** — Single-file HTML reference with copy-paste-ready justification text for every Silver criterion, for direct use against the BadgeApp form at <https://www.bestpractices.dev/projects/12808/silver>.
+  - **`SECURITY.md` SLA table** — Tightened from "90-day grace" to an explicit SLA: ≤72 h acknowledgment, ≤7 d assessment, ≤60 d fix (high/critical) / ≤90 d (medium/low), ≤90 d public disclosure.
+  - **`release.yml` Sigstore attestation** — `actions/attest-build-provenance@v2` now signs every wheel and sdist with keyless OIDC; attestations are queryable at github.com/killertcell428/aigis/attestations (satisfies Silver `signed_releases`).
+  - **`CONTRIBUTING.md` DCO section** — How-to documentation for `git commit -s` and recovery from missing sign-offs.
+  - **`docs/openssf-best-practices.md`** — Self-assessment refreshed with summary table and updated action-item list reflecting the 2026-05-12 changes.
+
 ## [1.0.14] - 2026-05-12
 
 ### Added

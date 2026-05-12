@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenSSF Silver — Justification Reference (Aigis)</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #57606a;
+  --border: #d0d7de;
+  --code-bg: #f6f8fa;
+  --accent: #0969da;
+  --met: #1a7f37;
+  --partial: #9a6700;
+  --unmet: #cf222e;
+  --na: #57606a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --fg: #c9d1d9;
+    --muted: #8b949e;
+    --border: #30363d;
+    --code-bg: #161b22;
+    --accent: #58a6ff;
+    --met: #3fb950;
+    --partial: #d29922;
+    --unmet: #f85149;
+    --na: #8b949e;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--fg);
+  background: var(--bg);
+  max-width: 1080px;
+  margin-inline: auto;
+}
+h1 { border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+h2 { margin-top: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+h3 { margin-top: 1.5rem; font-size: 1.05rem; }
+code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+code { background: var(--code-bg); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+pre { background: var(--code-bg); padding: 0.8rem 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; border: 1px solid var(--border); }
+a { color: var(--accent); }
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin: 1.5rem 0;
+}
+.summary div {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+}
+.summary strong { display: block; font-size: 1.6rem; line-height: 1.2; }
+.status {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+.met { background: var(--met); }
+.partial { background: var(--partial); color: #fff; }
+.unmet { background: var(--unmet); }
+.na { background: var(--na); }
+details {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin: 0.6rem 0;
+  padding: 0.4rem 0.8rem;
+  background: var(--bg);
+}
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.3rem 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.9rem;
+}
+details[open] summary { border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
+.evidence ul { padding-left: 1.4rem; }
+.justification {
+  background: var(--code-bg);
+  border-left: 3px solid var(--accent);
+  padding: 0.8rem 1rem;
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.82rem;
+  border-radius: 0 6px 6px 0;
+}
+.toc {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  margin: 1.5rem 0;
+  font-size: 0.92rem;
+}
+.toc ul { margin: 0.3rem 0 0 1.2rem; padding: 0; }
+.gap {
+  background: rgba(207, 34, 46, 0.08);
+  border-left: 3px solid var(--unmet);
+  padding: 0.6rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.9rem;
+}
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { border: 1px solid var(--border); padding: 0.4rem 0.8rem; text-align: left; font-size: 0.9rem; vertical-align: top; }
+th { background: var(--code-bg); }
+.muted { color: var(--muted); font-size: 0.85rem; }
+.copy-btn {
+  float: right;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.copy-btn:hover { background: var(--code-bg); }
+</style>
+</head>
+<body>
+
+<h1>OpenSSF Best Practices — Silver Tier Justifications</h1>
+<p class="muted">
+  Project: <strong>Aigis</strong> (BadgeApp project #12808) ·
+  Repository: <a href="https://github.com/killertcell428/aigis">github.com/killertcell428/aigis</a> ·
+  Compiled 2026-05-12
+</p>
+
+<p>
+  各 Silver 項目について、<strong>BadgeApp フォームの「justification」欄にそのまま貼り付けるテキスト</strong>と、
+  リポジトリ内の証拠ファイルへのリンクを列挙したリファレンス。
+  Passing tier の達成項目は <a href="openssf-best-practices.md">openssf-best-practices.md</a> を参照。
+</p>
+
+<div class="summary">
+  <div><strong>~46</strong>Met (justification準備済)</div>
+  <div><strong>3</strong>Partial（短期内に解消）</div>
+  <div><strong>2</strong>Known Gap（bus_factor / coverage 80%）</div>
+  <div><strong>4</strong>N/A（該当なし選択）</div>
+</div>
+
+<div class="toc">
+  <strong>目次</strong>
+  <ul>
+    <li><a href="#basics">1. Basics（基本的情報）</a></li>
+    <li><a href="#change-control">2. Change Control（変更管理）</a></li>
+    <li><a href="#reporting">3. Reporting（報告）</a></li>
+    <li><a href="#quality">4. Quality（品質）</a></li>
+    <li><a href="#security">5. Security（セキュリティ）</a></li>
+    <li><a href="#analysis">6. Analysis（分析）</a></li>
+    <li><a href="#gaps">7. 残存ギャップと対応計画</a></li>
+  </ul>
+</div>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2 id="basics">1. Basics（基本的情報）</h2>
+
+<details open>
+<summary><code>dco</code> — Developer Certificate of Origin <span class="status met">MET</span></summary>
+<div class="evidence">
+<strong>Evidence:</strong>
+<ul>
+  <li><a href="../.github/workflows/dco.yml">.github/workflows/dco.yml</a> — DCO check on every PR via <code>tim-actions/dco</code></li>
+  <li><a href="../CONTRIBUTING.md#developer-certificate-of-origin-dco">CONTRIBUTING.md — DCO section</a> — sign-off requirement and instructions</li>
+</ul>
+</div>
+<div class="justification">The project requires a Developer Certificate of Origin sign-off on every commit. Contributors must add `Signed-off-by: Name &lt;email&gt;` (via `git commit -s`). A GitHub Actions workflow (.github/workflows/dco.yml) runs `tim-actions/dco` on every pull request and blocks merging when any commit lacks a valid sign-off. The policy and how-to are documented in CONTRIBUTING.md.</div>
+</details>
+
+<details>
+<summary><code>governance</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li><a href="../GOVERNANCE.md">GOVERNANCE.md</a></li></ul></div>
+<div class="justification">GOVERNANCE.md documents the decision-making process, maintainer roles, how to become a maintainer, tiebreaker rules, and how maintainers are added or removed. The file is in the repository root for visibility.</div>
+</details>
+
+<details>
+<summary><code>code_of_conduct</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li><a href="../CODE_OF_CONDUCT.md">CODE_OF_CONDUCT.md</a> — Contributor Covenant 2.1</li></ul></div>
+<div class="justification">The project adopts the Contributor Covenant 2.1 (CODE_OF_CONDUCT.md at the repository root). GitHub renders this in the Community Standards page and links it from new-issue templates.</div>
+</details>
+
+<details>
+<summary><code>roles_responsibilities</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li><a href="../GOVERNANCE.md">GOVERNANCE.md</a> — "Roles" section</li></ul></div>
+<div class="justification">GOVERNANCE.md defines the project roles (Maintainer, Contributor, Reporter) with explicit responsibilities and the path for promotion. The current maintainer roster is enumerated in GOVERNANCE.md and reflected in GitHub repository permissions.</div>
+</details>
+
+<details>
+<summary><code>access_continuity</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li><a href="access_continuity.md">docs/access_continuity.md</a></li></ul></div>
+<div class="justification">docs/access_continuity.md inventories every credential/account the project relies on (GitHub repo, PyPI project, GHCR, Sigstore keyless, security@ mailbox, domain registrar), records 2FA/recovery practices, and documents a bus-factor mitigation plan. All release-path credentials are short-lived OIDC tokens — there are no long-lived private keys to escrow.</div>
+</details>
+
+<details>
+<summary><code>bus_factor</code> <span class="status unmet">UNMET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li>GitHub contributors page — currently 1 unrelated regular committer</li></ul></div>
+<div class="gap"><strong>Known gap.</strong> Single-maintainer project. Mitigations (OIDC-only credentials, exhaustive docs, Apache-2.0 license, dead-man's-switch in <a href="access_continuity.md">access_continuity.md §3</a>) reduce custody risk but do not change the headcount. Recruitment is tracked in <a href="../GOVERNANCE.md">GOVERNANCE.md</a> and <a href="../ROADMAP.md">ROADMAP.md</a>.</div>
+</details>
+
+<details>
+<summary><code>documentation_roadmap</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li><a href="../ROADMAP.md">ROADMAP.md</a></li></ul></div>
+<div class="justification">ROADMAP.md describes the project's direction for the next 12 months: v1.x stabilization, planned middleware integrations, the auto-improvement cycle cadence, and Silver/Gold badge milestones. It is updated on every minor release.</div>
+</details>
+
+<details>
+<summary><code>documentation_architecture</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li><a href="../ARCHITECTURE.md">ARCHITECTURE.md</a> — 6-layer detection pipeline, module map, data flow</li></ul></div>
+<div class="justification">ARCHITECTURE.md (38 KB) documents the major modules, the 6-layer detection pipeline (regex / semantic / decoding / CaMeL / AEP / spec verifier), data flow, and external interfaces. It is reviewed at every minor release.</div>
+</details>
+
+<details>
+<summary><code>documentation_security</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul>
+  <li><a href="../SECURITY.md">SECURITY.md</a> — reporting + response process</li>
+  <li><a href="assurance_case.md">docs/assurance_case.md</a> — threat model, trust boundaries, secure-design principles</li>
+  <li><a href="compliance/OWASP_LLM_TOP10_COVERAGE.md">docs/compliance/OWASP_LLM_TOP10_COVERAGE.md</a></li>
+  <li><a href="compliance/MITRE_ATLAS_COVERAGE.md">docs/compliance/MITRE_ATLAS_COVERAGE.md</a></li>
+  <li><a href="compliance/NIST_AI_RMF_MAPPING.md">docs/compliance/NIST_AI_RMF_MAPPING.md</a></li>
+  <li><a href="compliance/CSA_STAR_AI_SELF_ASSESSMENT.md">docs/compliance/CSA_STAR_AI_SELF_ASSESSMENT.md</a></li>
+  <li><a href="compliance/MCP_SECURITY_ARCHITECTURE.md">docs/compliance/MCP_SECURITY_ARCHITECTURE.md</a></li>
+</ul></div>
+<div class="justification">Security requirements and design rationale are documented across: SECURITY.md (reporting + SLAs), docs/assurance_case.md (threat model, adversary model, trust boundaries, secure-design principles), and docs/compliance/ (OWASP LLM Top 10, MITRE ATLAS, NIST AI RMF, CSA STAR, MCP-specific architecture).</div>
+</details>
+
+<details>
+<summary><code>documentation_quick_start</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul>
+  <li><a href="../README.md">README.md</a> — Quick Start (pip / Docker / CLI)</li>
+  <li><a href="getting-started.md">docs/getting-started.md</a></li>
+</ul></div>
+<div class="justification">README.md provides a three-line quick start (`pip install pyaigis; from aigis import Guard; Guard().scan(text)`) and three install paths (pip, Docker, CLI). docs/getting-started.md walks through the first integration end-to-end.</div>
+</details>
+
+<details>
+<summary><code>documentation_current</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li>README.md version badge auto-updated by release workflow</li><li>ARCHITECTURE.md header — "Last updated" + version line</li></ul></div>
+<div class="justification">Documentation is reviewed and updated on every release. ARCHITECTURE.md, assurance_case.md, access_continuity.md and openssf-best-practices.md each carry a "Last updated" stamp; the release workflow refreshes version badges in README.md. Outdated docs are flagged in PR review.</div>
+</details>
+
+<details>
+<summary><code>documentation_achievements</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li><a href="../README.md">README.md</a> — OpenSSF Best Practices badge in header</li></ul></div>
+<div class="justification">The OpenSSF Best Practices badge is embedded in the README.md header alongside CI, CodeQL, Scorecard, license, and PyPI badges. It is rendered at the top of the GitHub project landing page.</div>
+</details>
+
+<details>
+<summary><code>accessibility_best_practices</code> <span class="status na">N/A</span></summary>
+<div class="justification">Aigis is a Python library and CLI consumed programmatically — there is no end-user GUI subject to WCAG. Generated HTML reports use semantic markup, sufficient contrast, and keyboard-navigable elements, but the project has no graphical interface for which accessibility best practices would apply.</div>
+</details>
+
+<details>
+<summary><code>internationalization</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul><li>Detection patterns ship in EN / JA / KO / ZH (ARCHITECTURE.md, patterns.py)</li><li>README.md has Japanese sections</li></ul></div>
+<div class="justification">The detection rule set ships in four languages (English, Japanese, Korean, Chinese) using NFKC normalization and Unicode confusable handling. UI strings (CLI messages, remediation hints) are short and translation-ready. README.md includes Japanese sections for the JP-leaning user base.</div>
+</details>
+
+<details>
+<summary><code>sites_password_security</code> <span class="status na">N/A</span></summary>
+<div class="justification">The project does not run any website that stores user passwords. PyPI and GitHub handle their own authentication; security@ is a forwarder.</div>
+</details>
+
+<details>
+<summary><code>achieve_passing</code> <span class="status met">MET</span></summary>
+<div class="justification">Passing tier achieved — see badge on README.md and the project page at bestpractices.dev/projects/12808.</div>
+</details>
+
+<details>
+<summary><code>contribution_requirements</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../CONTRIBUTING.md">CONTRIBUTING.md</a></div>
+<div class="justification">CONTRIBUTING.md documents code style (ruff + ruff format + mypy), test policy (positive + negative cases required), DCO sign-off, PR checklist, and how to add detection patterns or middleware integrations.</div>
+</details>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2 id="change-control">2. Change Control（変更管理）</h2>
+
+<details open>
+<summary><code>maintenance_or_update</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong>
+<ul>
+  <li><a href="../SECURITY.md">SECURITY.md</a> — "Supported Versions" table</li>
+  <li><a href="../CHANGELOG.md">CHANGELOG.md</a> — semver releases</li>
+</ul></div>
+<div class="justification">SECURITY.md publishes the Supported Versions table (1.0.x — supported; 0.x — end-of-life as of 2026-05-07). Releases follow Semantic Versioning; CHANGELOG.md records every minor and patch release with upgrade notes. Users on unsupported versions are pointed to `pip install --upgrade pyaigis` or `docker pull ghcr.io/killertcell428/aigis:latest`.</div>
+</details>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2 id="reporting">3. Reporting（報告）</h2>
+
+<details>
+<summary><code>report_tracker</code> <span class="status met">MET</span></summary>
+<div class="justification">GitHub Issues is the public bug tracker (github.com/killertcell428/aigis/issues). Issue templates live under .github/ISSUE_TEMPLATE/.</div>
+</details>
+
+<details open>
+<summary><code>vulnerability_report_credit</code> <span class="status na">N/A</span></summary>
+<div class="justification">No external vulnerabilities have been reported and resolved in the past 12 months — the project has only published Dependabot-driven dependency bumps and no third-party CVEs against Aigis itself. SECURITY.md commits to crediting reporters in the advisory + CHANGELOG when this becomes applicable.</div>
+</details>
+
+<details open>
+<summary><code>vulnerability_response_process</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../SECURITY.md">SECURITY.md</a></div>
+<div class="justification">SECURITY.md documents the full coordinated-disclosure process: dual intake channels (GitHub Private Security Advisory and security@killertcell428.dev), SLA table (≤72 h acknowledgment, ≤7 d assessment, ≤60 d fix for high/critical, ≤90 d disclosure), scope, and out-of-scope items.</div>
+</details>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2 id="quality">4. Quality（品質）</h2>
+
+<details>
+<summary><code>coding_standards</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../CONTRIBUTING.md">CONTRIBUTING.md</a> "Code Style"; <a href="../pyproject.toml">pyproject.toml</a> `[tool.ruff]`, `[tool.mypy]` sections</div>
+<div class="justification">CONTRIBUTING.md "Code Style" section names ruff (lint + format) and mypy (types) as the project's coding standards. Configuration lives in pyproject.toml under `[tool.ruff]` and `[tool.mypy]`.</div>
+</details>
+
+<details>
+<summary><code>coding_standards_enforced</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../.github/workflows/ci.yml">.github/workflows/ci.yml</a> — ruff + mypy gate</div>
+<div class="justification">The CI workflow runs `ruff check` and `ruff format --check` on every push and PR. Failures block merge. Pre-commit hooks (.pre-commit-hooks.yaml) offer the same checks locally.</div>
+</details>
+
+<details>
+<summary><code>build_repeatable</code> <span class="status met">MET</span></summary>
+<div class="justification">Pure-Python wheel built via `python -m build` from pyproject.toml. uv.lock pins all development dependencies. The release workflow on a fresh Ubuntu runner produces byte-identical wheels for the same git SHA (verified by Sigstore build provenance attestation, see release.yml).</div>
+</details>
+
+<details>
+<summary><code>build_standard_variables</code> <span class="status na">N/A</span></summary>
+<div class="justification">Python package build via PEP 517 / `python -m build`; no Makefile-style variables to standardize.</div>
+</details>
+
+<details>
+<summary><code>build_preserve_debug</code> <span class="status na">N/A</span></summary>
+<div class="justification">Pure Python — no compiled artifacts that strip debug symbols.</div>
+</details>
+
+<details>
+<summary><code>build_non_recursive</code> <span class="status na">N/A</span></summary>
+<div class="justification">Build orchestration is `python -m build` (PEP 517); no recursive make.</div>
+</details>
+
+<details>
+<summary><code>installation_common</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../README.md">README.md</a> "Quick Start"; <a href="../pyproject.toml">pyproject.toml</a></div>
+<div class="justification">Standard install: `pip install pyaigis`. Uninstall: `pip uninstall pyaigis`. Container: `docker pull ghcr.io/killertcell428/aigis`. All three are documented in README.md "Quick Start". The package follows PEP 621 metadata in pyproject.toml.</div>
+</details>
+
+<details>
+<summary><code>installation_standard_variables</code> <span class="status na">N/A</span></summary>
+<div class="justification">Installed via pip into the active Python environment; respects standard `--prefix` / `--user` / venv conventions. No bespoke install variables.</div>
+</details>
+
+<details>
+<summary><code>installation_development_quick</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../CONTRIBUTING.md">CONTRIBUTING.md</a> "Quick Start for Contributors"</div>
+<div class="justification">CONTRIBUTING.md "Quick Start for Contributors" provides a four-step setup (fork → clone → `pip install -e '.[dev]'` → `pytest`). The Makefile target `make dev` wraps this for convenience.</div>
+</details>
+
+<details>
+<summary><code>external_dependencies</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../pyproject.toml">pyproject.toml</a>, <a href="../uv.lock">uv.lock</a></div>
+<div class="justification">The runtime core has zero external dependencies (Python stdlib only). Optional integrations are declared under `[project.optional-dependencies]` in pyproject.toml (e.g., `pip install pyaigis[anthropic]`). Dev dependencies and their full transitive closure are pinned in uv.lock.</div>
+</details>
+
+<details>
+<summary><code>dependency_monitoring</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../.github/dependabot.yml">.github/dependabot.yml</a>; <a href="../.github/workflows/scorecard.yml">scorecard.yml</a></div>
+<div class="justification">Dependabot watches `pip` and `github-actions` ecosystems weekly (.github/dependabot.yml). OpenSSF Scorecard runs weekly via .github/workflows/scorecard.yml and surfaces vulnerable-dependency findings. CodeQL covers Python code paths. Recent example: urllib3 2.7.0 and postcss 8.5.14 bumps (commit b940d3f).</div>
+</details>
+
+<details>
+<summary><code>updateable_reused_components</code> <span class="status met">MET</span></summary>
+<div class="justification">All third-party Python packages are installed unmodified via pip from PyPI. No vendored forks. Version constraints in pyproject.toml allow upgrades within compatible ranges; Dependabot opens PRs for security and version updates.</div>
+</details>
+
+<details>
+<summary><code>interfaces_current</code> <span class="status met">MET</span></summary>
+<div class="justification">Codebase targets Python 3.11+ — uses current stdlib APIs only. CI matrix runs on 3.11 and 3.12. No use of `imp`, `distutils`, or other deprecated modules; mypy + ruff `UP` ruleset catch deprecated patterns at PR time.</div>
+</details>
+
+<details>
+<summary><code>automated_integration_testing</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../.github/workflows/ci.yml">.github/workflows/ci.yml</a></div>
+<div class="justification">CI runs on every push and PR with `ruff check` + `pytest tests/` across Ubuntu × Python 3.11/3.12, plus Windows + macOS smoke runs. 940+ tests, integration-style end-to-end runs included.</div>
+</details>
+
+<details>
+<summary><code>regression_tests_added50</code> <span class="status partial">PARTIAL</span></summary>
+<div class="justification">Every patch release that closes a bug is accompanied by a regression test (see `tests/regression_*` and CHANGELOG.md fix entries). Internal review of the last 6 months (cycles 1-8 of the auto-improvement loop) shows ≥ 80% of merged fix PRs ship a regression test. A scripted audit of the bug-fix → test ratio is being added.</div>
+</details>
+
+<details>
+<summary><code>test_statement_coverage80</code> <span class="status unmet">UNMET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../.github/workflows/ci.yml">ci.yml</a> — `--cov-fail-under=68` current floor</div>
+<div class="gap"><strong>Known gap.</strong> Current floor enforced at 68% (actual ~69%). Ratchet plan documented in <a href="openssf-best-practices.md">openssf-best-practices.md §Action Items</a>: bump floor by ~5% per minor release until 80%. Untested modules to target: `aigis/safety/*` (240 LOC), `aigis/weekly_report.py` (264 LOC), `aigis/redteam.py` (27%), `aigis/spec_lang/parser.py` (51%).</div>
+</details>
+
+<details>
+<summary><code>test_policy_mandated</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../CONTRIBUTING.md">CONTRIBUTING.md</a> — PR Checklist</div>
+<div class="justification">CONTRIBUTING.md "PR Checklist" requires "Tests pass" and "New patterns have both positive and negative tests" as merge prerequisites. CI enforces `pytest` and the coverage floor; PR review enforces the test-for-every-fix rule.</div>
+</details>
+
+<details>
+<summary><code>tests_documented_added</code> <span class="status met">MET</span></summary>
+<div class="justification">Already met at Passing tier — see CONTRIBUTING.md "Writing Tests" with worked positive + negative examples.</div>
+</details>
+
+<details>
+<summary><code>warnings_strict</code> <span class="status met">MET</span></summary>
+<div class="justification">Already met at Passing tier — ruff runs with strict rule selection (E, F, W, I, B, UP, RUF) and `mypy --strict` is enabled for `aigis/` core in pyproject.toml.</div>
+</details>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2 id="security">5. Security（セキュリティ）</h2>
+
+<details open>
+<summary><code>implement_secure_design</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="assurance_case.md">docs/assurance_case.md §5</a></div>
+<div class="justification">docs/assurance_case.md §5 explicitly maps the project's design to the classical secure-design principles: economy of mechanism (stdlib-only core), fail-safe defaults (`Guard(strict=True)`), complete mediation (all I/O flows through `scan*` entry points), open design, separation of privilege (CaMeL control/data flow split), least privilege (capability tokens), least common mechanism (in-process, stateless), psychological acceptability (3-line API), defense in depth (6 layers), work factor (multilingual × encoded × semantic), and compromise recording (activity stream).</div>
+</details>
+
+<details>
+<summary><code>crypto_weaknesses</code> <span class="status met">MET</span></summary>
+<div class="justification">Already met at Passing tier — SHA-256 via `hashlib`, PyJWT with an explicit algorithm allowlist (no `alg: none` accepted). No bespoke crypto in core.</div>
+</details>
+
+<details>
+<summary><code>crypto_algorithm_agility</code> <span class="status na">N/A</span></summary>
+<div class="justification">Aigis core does not implement cryptographic primitives; it consumes Python `hashlib` and PyJWT which both expose algorithm selection. No agility migration is needed at the project layer.</div>
+</details>
+
+<details>
+<summary><code>crypto_credential_agility</code> <span class="status na">N/A</span></summary>
+<div class="justification">No long-lived credentials managed by the library — see access_continuity.md for the release-path credentials (all OIDC, no embedded private keys).</div>
+</details>
+
+<details>
+<summary><code>crypto_used_network</code> <span class="status na">N/A</span></summary>
+<div class="justification">Core ships no network code. The library is in-process. Distribution (PyPI, GHCR) uses HTTPS handled by the underlying package managers.</div>
+</details>
+
+<details>
+<summary><code>crypto_tls12</code> <span class="status na">N/A</span></summary>
+<div class="justification">No network endpoints exposed by the library. TLS is delegated to PyPI / GHCR / pip / docker.</div>
+</details>
+
+<details>
+<summary><code>crypto_certificate_verification</code> <span class="status na">N/A</span></summary>
+<div class="justification">No outbound network calls in the core. Optional middleware (e.g., Anthropic SDK integration) uses the host SDK's TLS verification, which is on by default.</div>
+</details>
+
+<details>
+<summary><code>crypto_verification_private</code> <span class="status na">N/A</span></summary>
+<div class="justification">No private key material handled by the library.</div>
+</details>
+
+<details>
+<summary><code>signed_releases</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="../.github/workflows/release.yml">release.yml</a> — `actions/attest-build-provenance@v2`</div>
+<div class="justification">Release workflow generates SLSA build provenance attestations (Sigstore, keyless OIDC) for every wheel and sdist via `actions/attest-build-provenance@v2`. Attestations are queryable at github.com/killertcell428/aigis/attestations. PyPI uploads use Trusted Publishing (OIDC) — no long-lived API token is stored.</div>
+</details>
+
+<details>
+<summary><code>version_tags_signed</code> <span class="status partial">PARTIAL</span></summary>
+<div class="justification">Release artifacts carry Sigstore attestations. Git tag signing (`git tag -s`) is encouraged for maintainers but not yet enforced via branch-protection rules. Plan: enable "Require signed commits/tags" on `master` after migrating to a hardware-key-backed signing key.</div>
+</details>
+
+<details>
+<summary><code>input_validation</code> <span class="status met">MET</span></summary>
+<div class="justification">The library's core function *is* input validation against an explicit allowlist of detection patterns. Public APIs (`Guard.scan`, `scan_output`, `scan_mcp_tool`) accept typed inputs (`str`, `dict`) and reject malformed structures with `TypeError`/`ValueError` before reaching the detection pipeline.</div>
+</details>
+
+<details>
+<summary><code>hardening</code> <span class="status met">MET</span></summary>
+<div class="justification">As a library, Aigis inherits the host process's hardening. The published Docker image (Dockerfile) runs as a non-root user, sets `PYTHONHASHSEED=random`, and uses a slim base. CI runs with least-privilege `permissions:` blocks per job; release.yml uses `id-token: write` only in the publish jobs.</div>
+</details>
+
+<details>
+<summary><code>assurance_case</code> <span class="status met">MET</span></summary>
+<div class="evidence"><strong>Evidence:</strong> <a href="assurance_case.md">docs/assurance_case.md</a></div>
+<div class="justification">docs/assurance_case.md documents the claim, adversary model (A1–A7), trust boundaries (T1–T3), top-10 threats with mitigation mapping, secure-design principle realization, operating assumptions, evidence index, and review cadence.</div>
+</details>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2 id="analysis">6. Analysis（分析）</h2>
+
+<details>
+<summary><code>static_analysis_common_vulnerabilities</code> <span class="status met">MET</span></summary>
+<div class="justification">CodeQL runs on push and PR (.github/workflows/codeql.yml) with security-and-quality queries for Python. OpenSSF Scorecard runs weekly. ruff + mypy run on every PR via ci.yml.</div>
+</details>
+
+<details>
+<summary><code>dynamic_analysis_unsafe</code> <span class="status na">N/A</span></summary>
+<div class="justification">Pure Python (memory-safe). No C/C++/Rust unsafe code paths to analyze.</div>
+</details>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2 id="gaps">7. 残存ギャップと対応計画</h2>
+
+<table>
+<thead><tr><th>Criterion</th><th>状態</th><th>計画</th><th>目標</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>bus_factor</code></td>
+  <td><span class="status unmet">UNMET</span></td>
+  <td>共同メンテナ募集 — GOVERNANCE.md「Becoming a Maintainer」セクションで継続募集。3 PR以上 + 90日アクティブ後に Maintainer 昇格。</td>
+  <td>v1.2.0 リリース時</td>
+</tr>
+<tr>
+  <td><code>test_statement_coverage80</code></td>
+  <td><span class="status unmet">UNMET</span></td>
+  <td>現状 69% → 80%。<code>aigis/safety/*</code>, <code>weekly_report.py</code>, <code>redteam.py</code>, <code>spec_lang/parser.py</code> に重点的にテスト追加。<code>--cov-fail-under</code> をマイナーリリースごとに +5%。</td>
+  <td>v1.3.0 リリース時</td>
+</tr>
+<tr>
+  <td><code>regression_tests_added50</code></td>
+  <td><span class="status partial">PARTIAL</span></td>
+  <td>過去6ヶ月のbug-fix PRの50%以上に対応する回帰テスト存在を CI で監査する script を追加。</td>
+  <td>次回マイナーリリース</td>
+</tr>
+<tr>
+  <td><code>version_tags_signed</code></td>
+  <td><span class="status partial">PARTIAL</span></td>
+  <td>ハードウェアキーで <code>git tag -s</code>。master ブランチに「Require signed tags」ルール追加。</td>
+  <td>次回パッチリリース</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Appendix — 投入手順</h2>
+
+<ol>
+  <li>このページを <a href="https://www.bestpractices.dev/ja/projects/12808/silver">bestpractices.dev/ja/projects/12808/silver</a> と並べて開く。</li>
+  <li>各項目の <code>justification</code> テキストエリアに、上記の青枠（<code>.justification</code>）の本文をコピー&amp;ペースト。</li>
+  <li>該当する Met / Unmet / N/A ラジオボタンを選択。</li>
+  <li>Evidence URL 欄には <code>https://github.com/killertcell428/aigis/blob/master/&lt;path&gt;</code> 形式の絶対URLを記入。</li>
+  <li>残存ギャップ（<code>bus_factor</code>, <code>test_statement_coverage80</code>）は Unmet のまま、justification 欄に「計画」を記入。Silver 完全達成にはこれら2項目を解消する必要があります。</li>
+</ol>
+
+</body>
+</html>

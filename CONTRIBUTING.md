@@ -277,6 +277,43 @@ Ensure that coverage does not decrease before merging a PR.
 
 ---
 
+## Developer Certificate of Origin (DCO)
+
+All contributions to this project must be signed off with the
+[Developer Certificate of Origin](https://developercertificate.org/)
+to certify that you wrote (or have the right to submit) the patch.
+
+### How to sign off
+
+Add `Signed-off-by: Your Name <your-email@example.com>` to every commit
+message. Git can append it automatically:
+
+```bash
+git commit -s -m "feat: add new detection pattern"
+```
+
+This produces a trailer like:
+
+```
+feat: add new detection pattern
+
+Signed-off-by: Jane Doe <jane@example.com>
+```
+
+The sign-off email must match the email on your commits. A GitHub
+Action runs on every PR to verify that all commits carry a valid
+`Signed-off-by:` line; PRs without it cannot be merged.
+
+If you forgot to sign off a commit, amend with:
+
+```bash
+git commit --amend --signoff      # last commit
+git rebase --signoff main         # all commits on the branch
+git push --force-with-lease
+```
+
+---
+
 ## Reporting Security Vulnerabilities
 
 For security vulnerabilities, please **do not** create a public GitHub issue. Instead, refer to the repository's contact information and report directly to the maintainers via email.

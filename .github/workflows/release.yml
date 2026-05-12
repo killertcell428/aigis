@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write   # for Sigstore keyless signing of build provenance
+      attestations: write
     outputs:
       version: ${{ steps.version.outputs.version }}
       prev-tag: ${{ steps.prev-tag.outputs.tag }}
@@ -51,6 +53,11 @@ jobs:
 
       - name: Build wheel + sdist
         run: python -m build
+
+      - name: Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: "dist/*"
 
       - name: Upload distributions
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
