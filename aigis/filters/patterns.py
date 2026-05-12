@@ -2881,6 +2881,36 @@ SANDBOX_ESCAPE_PATTERNS: list[DetectionPattern] = [
             "If eval is unavoidable, use ast.literal_eval() and restrict allowed AST node types."
         ),
     ),
+    # --- CVE-2026-22218 / CVE-2026-34070: AI framework sensitive file-read targets ---
+    # Chainlit CVE-2026-22218 (CVSS 7.1): arbitrary file-read via custom element payload;
+    # /proc/self/environ was the primary target for leaking API keys and cloud credentials.
+    # LangChain CVE-2026-34070 (CVSS 7.5): load_prompt() path traversal reaches the same files.
+    # The existing se_container_escape covers /proc/self/(exe|root|ns) but not /environ.
+    DetectionPattern(
+        id="afe_sensitive_file_read",
+        name="Sensitive System File Read (Proc/Etc Credential Paths)",
+        category="sandbox_escape",
+        pattern=_p(
+            r"/proc/(?:self|\d+)/(?:environ\b|cmdline\b|fd/\d)"
+            r"|/etc/(?:shadow\b|sudoers\b|master\.passwd\b)"
+            r"|/etc/ssh/ssh_host_(?:rsa|ecdsa|ed25519)_key\b"
+        ),
+        base_score=70,
+        description=(
+            "Reference to a sensitive Linux system file that AI agents should never read. "
+            "/proc/self/environ is the primary target for leaking API keys, cloud credentials, "
+            "and database connection strings from the running process's environment variables. "
+            "Exploited in Chainlit CVE-2026-22218 (CVSS 7.1, Jan 2026) via arbitrary file-read "
+            "and in LangChain CVE-2026-34070 (CVSS 7.5, Mar 2026) via load_prompt() path traversal. "
+            "/etc/shadow, /etc/sudoers, and SSH host private-key paths are privilege-escalation targets."
+        ),
+        owasp_ref="CWE-22: Path Traversal / CWE-538: Sensitive Information in External Storage",
+        remediation_hint=(
+            "Restrict file-read operations to an explicit allowlist of safe paths. "
+            "Upgrade Chainlit to >=2.9.4 and langchain-core to >=1.2.22 for the respective CVE patches. "
+            "Treat any reference to /proc/self/environ as a credential-theft signal."
+        ),
+    ),
 ]
 
 AUTONOMOUS_EXPLOIT_PATTERNS: list[DetectionPattern] = [
@@ -3505,6 +3535,38 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
             "Upgrade to langchain-core >= 1.2.5 (or >= 0.3.81 on the 0.3.x branch). "
             "Treat any JSON containing the 'lc':'1' type marker from an untrusted source as "
             "a deserialization attack signal."
+        ),
+    ),
+    # --- CVE-2026-34070: LangChain Core load_prompt() path traversal ---
+    # load_prompt() and load_prompt_from_config() accept user-controlled paths without
+    # sanitizing ../ sequences or absolute paths to sensitive directories.
+    # An attacker plants a crafted path in retrieved content; the agent calls
+    # load_prompt('../../../etc/shadow'), reading arbitrary files on the host.
+    # Fixed in langchain-core >=1.2.22; legacy load_prompt is deprecated.
+    DetectionPattern(
+        id="sc_langchain_load_prompt_path",
+        name="LangChain load_prompt Path Traversal (CVE-2026-34070)",
+        category="supply_chain",
+        pattern=_p(
+            r"load_prompt(?:_from_config)?\s*\(\s*['\"][^'\"]{0,200}"
+            r"(?:\.\./|\.\.\\|/proc/|/etc/|/var/run/|~[/\\])"
+        ),
+        base_score=70,
+        description=(
+            "load_prompt() or load_prompt_from_config() called with a path containing traversal "
+            "sequences or absolute paths to sensitive system directories. "
+            "CVE-2026-34070 (CVSS 7.5): LangChain Core legacy prompt-loading functions accept "
+            "file paths from deserialized configuration dictionaries without sanitizing path "
+            "components. An attacker inserts a crafted path via indirect prompt injection (e.g. "
+            "in a retrieved document); the agent calls load_prompt('../../../etc/shadow') and "
+            "returns the file contents. Patched in langchain-core >=1.2.22."
+        ),
+        owasp_ref="CWE-22: Path Traversal / OWASP LLM03: Supply Chain",
+        remediation_hint=(
+            "Upgrade langchain-core to >=1.2.22. "
+            "Replace load_prompt()/load_prompt_from_config() with the safe langchain_core.load "
+            "serialization API (load/loads/dumpd/dumps). "
+            "Never pass agent-retrieved or user-controlled strings as file paths to load_prompt()."
         ),
     ),
     DetectionPattern(
