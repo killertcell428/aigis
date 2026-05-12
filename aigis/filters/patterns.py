@@ -3536,6 +3536,92 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
 ]
 
 # ---------------------------------------------------------------------------
+# Compliance & Regulatory Transparency Patterns
+# ---------------------------------------------------------------------------
+# Detects prompt-level instructions that would cause an AI system to violate
+# mandatory AI transparency and anti-abuse regulations:
+#   - EU AI Act Art. 52 (AI transparency obligations, enforceable 2026-08-02)
+#   - EU AI Act Art. 5(1)(c) (social scoring, prohibited since 2025-02-02)
+#   - US state chatbot disclosure laws (CA, WA, NE, OR — wave of 2026 laws)
+#   - CHATBOT Act (proposed federal, Mar 2026)
+#   - Expert studies on Art. 5 prohibitions published by EC, May 2026
+COMPLIANCE_TRANSPARENCY_PATTERNS: list[DetectionPattern] = [
+    # EU AI Act Art. 52 + US state chatbot disclosure laws:
+    # An AI system that is instructed to deny being AI or to claim to be human
+    # violates mandatory transparency obligations that apply across the EU and in
+    # a growing set of US states. This pattern catches system-prompt level
+    # instructions that would embed such denial into the AI's behavior.
+    DetectionPattern(
+        id="comp_ai_identity_denial",
+        name="AI Identity Denial Instruction (Transparency Violation)",
+        category="compliance_violation",
+        pattern=_p(
+            r"(deny\s+(being|that\s+you(\s+are)?)\s+(an?\s+)?(AI|artificial\s+intelligence|chatbot|language\s+model|bot)\b"
+            r"|(never|don'?t|do\s+not)\s+(admit|reveal|disclose)\s+(you\s+are|that\s+you\s+are)\s+(an?\s+)?(AI|chatbot|bot|artificial|robot)\b"
+            r"|pretend\s+(to\s+be|you\s+are)\s+(a\s+)?(real\s+)?(human|person)\b"
+            r"|tell\s+(users?|them|people|customers?|visitors?)\s+(you\s+are|that\s+you\s+are)\s+(a\s+)?(real\s+)?(human|person)\b"
+            r"|claim\s+to\s+be\s+(a\s+)?(real\s+)?(human|person)\b"
+            r"|you\s+are\s+(a\s+)?human[,.]?\s+not\s+(an?\s+)?(AI|bot|chatbot|artificial))"
+        ),
+        base_score=60,
+        description=(
+            "Instruction directing an AI system to deny being AI or to claim to be human. "
+            "Violates EU AI Act Art. 52 transparency obligations (enforceable 2026-08-02) "
+            "and a growing wave of US state chatbot disclosure laws (CA, WA 2026, NE SB 1580, "
+            "OR SB 1546) that require AI systems to clearly identify themselves as artificial "
+            "when a user might reasonably believe they are talking to a human. Maximum EU fine: "
+            "EUR 15M or 3% of global turnover."
+        ),
+        owasp_ref="EU AI Act Art. 52 / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "AI systems must identify themselves as artificial when interacting with humans "
+            "who could reasonably believe they are talking to a person (EU AI Act Art. 52, "
+            "in force 2026-08-02). Remove instructions that suppress AI identity disclosure. "
+            "US state laws (CA, WA, NE, OR) impose similar requirements; the federal CHATBOT "
+            "Act would extend these nationally."
+        ),
+    ),
+    # EU AI Act Art. 5(1)(c): social scoring by AI is a prohibited practice
+    # since 2025-02-02. Three expert studies commissioned by the EC and published
+    # in May 2026 clarified that the prohibition covers any AI system that
+    # evaluates or classifies people based on social behavior or personality traits
+    # where the resulting score leads to disproportionate or context-unrelated harm.
+    # Maximum fine: EUR 35M or 7% of global turnover (highest tier).
+    DetectionPattern(
+        id="comp_social_scoring_request",
+        name="Social Scoring System Request (Prohibited AI Practice)",
+        category="compliance_violation",
+        pattern=_p(
+            r"(social\s+credit(?:\s+scoring)?\s+(system|algorithm|engine|model|app|platform)\b"
+            r"|social\s+(scoring|score|ranking)\s+(system|algorithm|engine|model|app|platform)\b"
+            r"|score\s+(citizen|user|individual|person)\w*\s+based\s+on\s+(their\s+)?(social|personal|behavioral)\s+(behavior|data|activity|history)"
+            r"|citizen\s+(trust|credibility|compliance|behavior)\s+(score|rating|rank)\b"
+            r"|(rate|rank|classify)\s+(people|individuals|citizens|persons)\s+(based\s+on|by)\s+(their\s+)?(social|personal)\s+(behavior|activity|data|history)"
+            r"|build\s+(a\s+)?social\s+credit(?:\s+scoring)?\s+(system|engine|model|app))"
+        ),
+        base_score=70,
+        description=(
+            "Request to build or deploy an AI-based social scoring system. This is a "
+            "prohibited AI practice under EU AI Act Art. 5(1)(c) since 2025-02-02: AI must "
+            "not evaluate or classify persons based on social behaviour or personality traits "
+            "in ways that cause disproportionate or context-unrelated harm. Three expert studies "
+            "published by the European Commission in May 2026 clarified scope, confirming that "
+            "employer behavior-scoring and citizen trustworthiness systems fall within the ban. "
+            "Maximum fine: EUR 35M or 7% of global annual turnover."
+        ),
+        owasp_ref="EU AI Act Art. 5(1)(c) / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "Building or deploying social scoring AI is a prohibited practice under EU AI Act "
+            "Art. 5(1)(c) (enforceable since 2025-02-02). Remove or redesign this feature. "
+            "The prohibition covers systems that rate individuals by social behaviour, browsing "
+            "history, or personality characteristics where the resulting score affects them in "
+            "unrelated contexts (e.g. creditworthiness decided by social media activity). "
+            "EC expert studies (May 2026) confirm employer and citizen scoring systems are in scope."
+        ),
+    ),
+]
+
+# ---------------------------------------------------------------------------
 # Combined pattern lists
 # ---------------------------------------------------------------------------
 ALL_INPUT_PATTERNS: list[DetectionPattern] = (
@@ -3570,6 +3656,7 @@ ALL_INPUT_PATTERNS: list[DetectionPattern] = (
     + COT_DECEPTION_PATTERNS
     + JUDGE_MANIPULATION_PATTERNS
     + SUPPLY_CHAIN_PATTERNS
+    + COMPLIANCE_TRANSPARENCY_PATTERNS
 )
 
 OUTPUT_PATTERNS: list[DetectionPattern] = [
