@@ -1,0 +1,90 @@
+# Aigis Policy — EU AI Act, General-Purpose AI (GPAI) Provider
+#
+# Use this for:
+#   - Organizations that develop and distribute foundation / GPAI models
+#     placed on the EU market or accessible to persons in the EU.
+#   - Both standard providers (Art. 53 obligations) and systemic-risk
+#     providers above the 10^25-FLOP threshold (Art. 55 obligations).
+#   - Internal "model-as-a-service" platforms that deploy GPAI for
+#     downstream products or API consumers within the EU.
+#
+# Regulatory context:
+#   - EU AI Act (Regulation (EU) 2024/1689), Chapter V — GPAI models.
+#   - GPAI Code of Practice, final version (AI Office, 2025-07-10):
+#     Chapters on Transparency, Copyright, and Safety & Security.
+#   - Art. 53 obligations (all GPAI providers, in force 2025-08-02):
+#     maintain technical documentation, publish training data summary,
+#     respect copyright / robots.txt, register with the AI Office.
+#   - Art. 55 obligations (systemic-risk providers ≥10^25 FLOPs,
+#     enforcement from 2026-08-02): conduct adversarial testing, document
+#     and report serious incidents to the AI Office, implement cybersecurity
+#     measures, assess and mitigate systemic risks at EU level.
+#   - Fines: up to EUR 15M or 3% of global turnover for GPAI violations.
+#
+# Threat model:
+#   - Model evaluation bypass: instructions to skip or falsify the mandatory
+#     adversarial-testing and model-evaluation record (Art. 55).
+#   - Systemic-risk concealment: requests to misrepresent compute scale or
+#     capability scope to avoid Art. 55 / 10^25-FLOPs notification duty.
+#   - Training-data documentation bypass: instructions to hide, omit, or
+#     falsify entries in the training data summary template (Art. 53).
+#   - Incident reporting suppression: attempts to prevent or delay mandatory
+#     reporting of serious incidents to the AI Office (Art. 55).
+#   - Copyright circumvention: instructions to ignore copyright signals such
+#     as robots.txt or TDM opt-outs in training data collection (Art. 53).
+#
+name: gpai_provider
+auto_block_threshold: 55   # strict — regulatory reporting obligations require integrity
+auto_allow_threshold: 20
+
+custom_rules:
+  # Art. 55 — model evaluation / adversarial testing bypass
+  - id: gpai_model_eval_bypass
+    name: Model Evaluation / Adversarial Testing Bypass (Art. 55)
+    pattern: "(skip\\s+(model\\s+)?(evaluation|adversarial\\s+testing|red[- ]?team|safety\\s+eval)|
+              bypass\\s+(adversarial|model)\\s+(test|eval)|
+              omit\\s+(adversarial|safety)\\s+(test|eval)|
+              do\\s+not\\s+(conduct|run|document)\\s+(adversarial|model)\\s+(test|eval)|
+              falsif(y|ied)\\s+(model\\s+)?(test|evaluation|red[- ]?team))"
+    score_delta: 65
+    enabled: true
+
+  # Art. 55 — systemic-risk threshold concealment (10^25 FLOPs notification duty)
+  - id: gpai_systemic_risk_concealment
+    name: Systemic Risk Threshold Concealment (Art. 55)
+    pattern: "(hide\\s+(the\\s+)?(compute|flops?|training\\s+compute|model\\s+scale)|
+              conceal\\s+(compute|flops?|training\\s+(cost|compute|scale))|
+              underreport\\s+(flops?|compute|training\\s+compute)|
+              misrepresent\\s+(model\\s+)?(size|scale|compute|capabilities)|
+              do\\s+not\\s+report\\s+.{0,20}(10\\^?25|flops?|compute\\s+threshold))"
+    score_delta: 70
+    enabled: true
+
+  # Art. 53 — training data documentation / summary bypass
+  - id: gpai_training_data_bypass
+    name: Training Data Documentation Bypass (Art. 53)
+    pattern: "(hide\\s+(training\\s+)?(data\\s+sources?|dataset|training\\s+data)|
+              omit\\s+(from\\s+)?(training\\s+data\\s+summary|data\\s+documentation)|
+              skip\\s+(training\\s+data\\s+)?(disclosure|documentation|summary|template)|
+              do\\s+not\\s+(disclose|document|include)\\s+.{0,20}training\\s+data)"
+    score_delta: 60
+    enabled: true
+
+  # Art. 55 — serious incident reporting suppression
+  - id: gpai_incident_suppression
+    name: Serious Incident Reporting Suppression (Art. 55)
+    pattern: "(do\\s+not\\s+report\\s+.{0,30}(ai\\s+office|incident|failure|safety\\s+issue)|
+              hide\\s+.{0,30}(incident|failure|safety\\s+breach)\\s+from|
+              conceal\\s+.{0,30}(from|to)\\s+.{0,20}(ai\\s+office|regulator|authority)|
+              suppress\\s+.{0,20}(incident|safety\\s+(report|issue|failure)))"
+    score_delta: 65
+    enabled: true
+
+  # Art. 53 — copyright / TDM opt-out circumvention in training data collection
+  - id: gpai_copyright_circumvention
+    name: Training Data Copyright Circumvention (Art. 53)
+    pattern: "(ignore\\s+robots\\.txt|bypass\\s+(tdm|text\\s+and\\s+data\\s+mining|copyright)\\s+(opt[- ]?out|signal|restriction)|
+              scrape\\s+.{0,30}(despite|ignoring|without\\s+checking)\\s+(copyright|tdm|opt[- ]?out|robots\\.txt)|
+              disable\\s+(tdm\\s+opt[- ]?out|copyright\\s+check)\\s+(during|for)\\s+training)"
+    score_delta: 50
+    enabled: true
