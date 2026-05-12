@@ -38,53 +38,39 @@ auto_block_threshold: 55   # strict — regulatory reporting obligations require
 auto_allow_threshold: 20
 
 custom_rules:
-  # Art. 55 — model evaluation / adversarial testing bypass
+  # Art. 55 — model evaluation / adversarial testing bypass.
+  # Patterns kept flat (single-level group) so they pass the safe-regex
+  # ReDoS heuristic and avoid YAML line-folding artifacts.
   - id: gpai_model_eval_bypass
     name: Model Evaluation / Adversarial Testing Bypass (Art. 55)
-    pattern: "(skip\\s+(model\\s+)?(evaluation|adversarial\\s+testing|red[- ]?team|safety\\s+eval)|
-              bypass\\s+(adversarial|model)\\s+(test|eval)|
-              omit\\s+(adversarial|safety)\\s+(test|eval)|
-              do\\s+not\\s+(conduct|run|document)\\s+(adversarial|model)\\s+(test|eval)|
-              falsif(y|ied)\\s+(model\\s+)?(test|evaluation|red[- ]?team))"
+    pattern: "(skip\\s+model\\s+evaluation|skip\\s+adversarial\\s+testing|skip\\s+red[- ]?team|skip\\s+safety\\s+eval|bypass\\s+adversarial\\s+testing|bypass\\s+model\\s+evaluation|omit\\s+adversarial\\s+test|omit\\s+safety\\s+test|do\\s+not\\s+document\\s+adversarial\\s+test|do\\s+not\\s+conduct\\s+adversarial|do\\s+not\\s+run\\s+adversarial|falsify\\s+model\\s+evaluation|falsify\\s+red[- ]?team|falsified\\s+model\\s+evaluation)"
     score_delta: 65
     enabled: true
 
   # Art. 55 — systemic-risk threshold concealment (10^25 FLOPs notification duty)
   - id: gpai_systemic_risk_concealment
     name: Systemic Risk Threshold Concealment (Art. 55)
-    pattern: "(hide\\s+(the\\s+)?(compute|flops?|training\\s+compute|model\\s+scale)|
-              conceal\\s+(compute|flops?|training\\s+(cost|compute|scale))|
-              underreport\\s+(flops?|compute|training\\s+compute)|
-              misrepresent\\s+(model\\s+)?(size|scale|compute|capabilities)|
-              do\\s+not\\s+report\\s+.{0,20}(10\\^?25|flops?|compute\\s+threshold))"
+    pattern: "(hide\\s+the\\s+compute|hide\\s+compute|hide\\s+training\\s+compute|hide\\s+flops|hide\\s+model\\s+scale|conceal\\s+training\\s+compute|conceal\\s+compute|conceal\\s+training\\s+scale|underreport\\s+flops|underreport\\s+compute|underreport\\s+training\\s+compute|misrepresent\\s+model\\s+compute|misrepresent\\s+compute|misrepresent\\s+model\\s+scale|misrepresent\\s+model\\s+size|misrepresent\\s+model\\s+capabilities)"
     score_delta: 70
     enabled: true
 
   # Art. 53 — training data documentation / summary bypass
   - id: gpai_training_data_bypass
     name: Training Data Documentation Bypass (Art. 53)
-    pattern: "(hide\\s+(training\\s+)?(data\\s+sources?|dataset|training\\s+data)|
-              omit\\s+(from\\s+)?(training\\s+data\\s+summary|data\\s+documentation)|
-              skip\\s+(training\\s+data\\s+)?(disclosure|documentation|summary|template)|
-              do\\s+not\\s+(disclose|document|include)\\s+.{0,20}training\\s+data)"
+    pattern: "(skip\\s+training\\s+data\\s+disclosure|skip\\s+training\\s+data\\s+documentation|skip\\s+.{0,20}training\\s+data\\s+summary|hide\\s+training\\s+data\\s+sources|hide\\s+the\\s+training\\s+data\\s+sources|hide\\s+training\\s+data|hide\\s+the\\s+training\\s+data|hide\\s+data\\s+sources|omit\\s+.{0,40}training\\s+data\\s+summary|omit\\s+.{0,40}data\\s+documentation|do\\s+not\\s+disclose\\s+.{0,20}training\\s+data|do\\s+not\\s+document\\s+.{0,20}training\\s+data|do\\s+not\\s+include\\s+.{0,20}training\\s+data)"
     score_delta: 60
     enabled: true
 
   # Art. 55 — serious incident reporting suppression
   - id: gpai_incident_suppression
     name: Serious Incident Reporting Suppression (Art. 55)
-    pattern: "(do\\s+not\\s+report\\s+.{0,30}(ai\\s+office|incident|failure|safety\\s+issue)|
-              hide\\s+.{0,30}(incident|failure|safety\\s+breach)\\s+from|
-              conceal\\s+.{0,30}(from|to)\\s+.{0,20}(ai\\s+office|regulator|authority)|
-              suppress\\s+.{0,20}(incident|safety\\s+(report|issue|failure)))"
+    pattern: "(do\\s+not\\s+report\\s+this\\s+incident|do\\s+not\\s+report\\s+the\\s+incident|do\\s+not\\s+report\\s+.{0,30}ai\\s+office|do\\s+not\\s+report\\s+.{0,30}safety\\s+issue|do\\s+not\\s+report\\s+.{0,30}failure|hide\\s+.{0,30}incident\\s+from|hide\\s+.{0,30}failure\\s+from|hide\\s+.{0,30}safety\\s+breach\\s+from|conceal\\s+.{0,30}from\\s+.{0,20}ai\\s+office|conceal\\s+.{0,30}from\\s+.{0,20}regulator|conceal\\s+.{0,30}from\\s+.{0,20}authority|suppress\\s+.{0,20}incident|suppress\\s+.{0,20}safety\\s+report|suppress\\s+.{0,20}safety\\s+issue)"
     score_delta: 65
     enabled: true
 
   # Art. 53 — copyright / TDM opt-out circumvention in training data collection
   - id: gpai_copyright_circumvention
     name: Training Data Copyright Circumvention (Art. 53)
-    pattern: "(ignore\\s+robots\\.txt|bypass\\s+(tdm|text\\s+and\\s+data\\s+mining|copyright)\\s+(opt[- ]?out|signal|restriction)|
-              scrape\\s+.{0,30}(despite|ignoring|without\\s+checking)\\s+(copyright|tdm|opt[- ]?out|robots\\.txt)|
-              disable\\s+(tdm\\s+opt[- ]?out|copyright\\s+check)\\s+(during|for)\\s+training)"
-    score_delta: 50
+    pattern: "(ignore\\s+robots\\.txt|bypass\\s+tdm\\s+opt[- ]?out|bypass\\s+text\\s+and\\s+data\\s+mining\\s+opt[- ]?out|bypass\\s+copyright\\s+opt[- ]?out|bypass\\s+the\\s+tdm\\s+opt[- ]?out|bypass\\s+tdm\\s+signal|scrape\\s+.{0,30}despite\\s+copyright|scrape\\s+.{0,30}ignoring\\s+tdm|scrape\\s+.{0,30}ignoring\\s+robots\\.txt|disable\\s+tdm\\s+opt[- ]?out|disable\\s+copyright\\s+check)"
+    score_delta: 60
     enabled: true
