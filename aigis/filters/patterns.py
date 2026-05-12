@@ -1437,6 +1437,75 @@ INDIRECT_INJECTION_PATTERNS: list[DetectionPattern] = [
             "retrieved documents must never be permitted to alter the agent's objectives."
         ),
     ),
+    # --- Concealment-from-user instructions (arxiv:2604.27202, Apr 2026) ---
+    # ~4,000 of 15,300 validated IPI instances instruct the AI to hide the existence
+    # of the injected payload from the user.  Distinct from instruction-override patterns
+    # (pi_ignore_instructions) — the goal here is stealth, not overt control.
+    DetectionPattern(
+        id="ii_concealment_from_user",
+        name="Concealment-From-User Instruction",
+        category="indirect_injection",
+        pattern=_p(
+            # "do not tell/reveal [the user about] this instruction[/prompt/message]"
+            # Handles both word orders: verb→instruction→user and verb→user→instruction
+            r"(?:do\s+not|don'?t|never|must\s+not)\s+"
+            r"(?:tell|inform|mention|reveal|disclose|show|share|say|report)\s+"
+            r"(?:.{0,60})?"
+            r"(?:this|these)\s+(?:instruction|directive|prompt|message|request|command)"
+            r"|(?:keep|hide)\s+this\s+(?:instruction|prompt|message|command)\s+"
+            r"(?:hidden|secret|confidential)\s+from\s+the\s+(?:user|human|operator)"
+            r"|if\s+(?:the\s+)?(?:user|human)\s+asks?\s*,?\s+"
+            r"(?:deny|pretend|claim|say)\s+(?:you\s+(?:did\s+not|were\s+not|have\s+not)|that\s+you)"
+        ),
+        base_score=65,
+        description=(
+            "Retrieved content instructs the AI to conceal the existence of injected instructions "
+            "from the user. This 'data-protection prompt' class accounts for roughly 4,000 of "
+            "15,300 validated indirect prompt injection instances studied across 1.2 billion URLs "
+            "(arxiv:2604.27202, Apr 2026). Concealment instructions are a strong indicator that "
+            "the surrounding content is adversarial: legitimate documents never ask the AI to "
+            "hide what it has been told."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect)",
+        remediation_hint=(
+            "Any retrieved document instructing the AI to keep content secret from the user "
+            "should be treated as a confirmed injection attempt. Sandbox retrieved content and "
+            "log all concealment-pattern matches for human review."
+        ),
+    ),
+    # --- Financial transaction injection (Unit42 / Forcepoint X-Labs, Mar–Apr 2026) ---
+    # Real IPI payloads found embedded in live web pages instruct finance/shopping agents
+    # to execute payments or transfers without user confirmation.  Google documented this
+    # sub-category as the fastest-growing IPI variant in Q1 2026.
+    DetectionPattern(
+        id="ii_financial_transaction_injection",
+        name="Unauthorized Financial Transaction Injection",
+        category="indirect_injection",
+        pattern=_p(
+            r"(?:complete|execute|process|confirm|proceed\s+with|carry\s+out|make)\s+"
+            r"(?:\w+\s+)?(?:payment|transfer|transaction|purchase|wire|deposit)\s*"
+            r"(?:.{0,60})?"
+            r"(?:without\s+(?:asking|confirming\s+with|notifying)\s+the\s+user"
+            r"|immediately\b|right\s+away|do\s+not\s+(?:ask|confirm|prompt|wait))"
+            r"|(?:transfer|send|wire|pay)\s+\$?\d[\d,\.]*\s*"
+            r"(?:USD|EUR|GBP|USDT|BTC)?\s+(?:to|into)\s+(?:account|address|wallet|IBAN)"
+        ),
+        base_score=75,
+        description=(
+            "Retrieved web content instructs the agent to execute a financial transaction "
+            "immediately or without user confirmation. Unit 42 (Palo Alto) and Forcepoint X-Labs "
+            "documented real payloads embedded in product listing pages with specific transaction "
+            "amounts, recipient account numbers, and step-by-step payment instructions (Mar–Apr 2026). "
+            "Google Security reported this sub-category was the fastest-growing IPI variant in "
+            "Q1 2026, exploiting AI shopping, banking, and productivity agents."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect) / OWASP LLM06: Excessive Agency",
+        remediation_hint=(
+            "AI agents must never execute financial transactions based on instructions found "
+            "in retrieved external content. Require explicit user confirmation for all payment "
+            "operations and do not allow tool-call arguments to be sourced from untrusted documents."
+        ),
+    ),
 ]
 
 
