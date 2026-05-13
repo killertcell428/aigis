@@ -112,6 +112,86 @@ class TestPolicyEvaluation:
         assert decision2 == "allow"
 
 
+class TestRiskThresholdConditions:
+    """risk_above / risk_level conditions let Wall 1 detector signals
+    escalate to policy decisions even when no name-based rule matches.
+    """
+
+    def test_risk_above_blocks_critical(self):
+        # Critical risk on an otherwise-unmatched action should hit deny.
+        policy = _default_policy()
+        event = ActivityEvent(action="shell:exec", target="echo hello", risk_score=95)
+        decision, rule_id = evaluate(event, policy)
+        assert decision == "deny"
+        assert rule_id == "risk_threshold_critical"
+
+    def test_risk_above_reviews_medium(self):
+        # Medium-risk content (e.g. prompt-injection echo) should escalate
+        # to review without breaking the workflow.
+        policy = _default_policy()
+        event = ActivityEvent(action="shell:exec", target="echo 'Ignore previous'", risk_score=45)
+        decision, rule_id = evaluate(event, policy)
+        assert decision == "review"
+        assert rule_id == "risk_threshold_medium"
+
+    def test_risk_below_threshold_falls_through(self):
+        policy = _default_policy()
+        event = ActivityEvent(action="shell:exec", target="echo hi", risk_score=10)
+        decision, rule_id = evaluate(event, policy)
+        assert decision == "allow"
+        assert rule_id == "_default"
+
+    def test_named_rule_wins_over_risk_threshold(self):
+        # Name-based rules come first; risk fallback should not override them.
+        policy = _default_policy()
+        event = ActivityEvent(
+            action="shell:exec",
+            target="rm -rf / --no-preserve-root",
+            risk_score=100,
+        )
+        decision, rule_id = evaluate(event, policy)
+        assert decision == "deny"
+        assert rule_id == "dangerous_commands"
+
+    def test_risk_level_condition(self):
+        # A custom rule using risk_level instead of risk_above.
+        policy = Policy(
+            name="risk-level test",
+            rules=[
+                PolicyRule(
+                    id="block_high",
+                    action="*",
+                    target="*",
+                    decision="deny",
+                    conditions={"risk_level": "high"},
+                ),
+            ],
+            default_decision="allow",
+        )
+        event_high = ActivityEvent(action="shell:exec", target="foo", risk_level="high")
+        assert evaluate(event_high, policy)[0] == "deny"
+
+        event_low = ActivityEvent(action="shell:exec", target="foo", risk_level="low")
+        assert evaluate(event_low, policy)[0] == "allow"
+
+        event_crit = ActivityEvent(action="shell:exec", target="foo", risk_level="critical")
+        # critical > high, so the rule still fires.
+        assert evaluate(event_crit, policy)[0] == "deny"
+
+    def test_risk_above_persists_through_save_load(self):
+        # The simple YAML parser must round-trip integer conditions.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "p.yaml")
+            policy = _default_policy()
+            save_policy(policy, path)
+            loaded = load_policy(path)
+
+        event = ActivityEvent(action="shell:exec", target="echo whatever", risk_score=95)
+        decision, rule_id = evaluate(event, loaded)
+        assert decision == "deny"
+        assert rule_id == "risk_threshold_critical"
+
+
 class TestPolicySaveLoad:
     def test_save_and_load(self):
         with tempfile.TemporaryDirectory() as tmpdir:
