@@ -4,6 +4,7 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-05-13T06-13 | 2 | data-exfiltration | [research](research/2026-05-13T06-13_2-data-exfiltration.md) | [changes](changes/2026-05-13T06-13_changes.md) | — | 3 |
 | 2026-05-13T03-02 | 1 | agent-tool-abuse | [research](research/2026-05-13T03-02_1-agent-tool-abuse.md) | [changes](changes/2026-05-13T03-02_changes.md) | v1.0.17 | 2 |
 | 2026-05-12T08-00 | 0 | prompt-injection | [research](research/2026-05-12T08-00_0-prompt-injection.md) | [changes](changes/2026-05-12T08-00_changes.md) | v1.0.15 | 1 |
 | 2026-05-12T07-00 | 9 | incident-postmortems | [research](research/2026-05-12T07-00_9-incident-postmortems.md) | [changes](changes/2026-05-12T07-00_changes.md) | — | 1 |
