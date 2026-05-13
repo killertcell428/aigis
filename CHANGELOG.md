@@ -12,6 +12,8 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.0.16] - 2026-05-13
+
 ### Fixed
 
 - **`ii_financial_transaction_injection`** (score 75, input filter) — Tightened
