@@ -731,6 +731,7 @@ from aigis.filters.patterns import (  # noqa: E402
     AUTONOMOUS_EXPLOIT_PATTERNS,
     CHINESE_INJECTION_PATTERNS,
     CHINESE_PII_PATTERNS,
+    COMPLIANCE_TRANSPARENCY_PATTERNS,
     COT_DECEPTION_PATTERNS,
     DATA_EXFIL_PATTERNS,  # supersedes the local 2-pattern definition above
     EMOTIONAL_MANIPULATION_PATTERNS,
@@ -739,6 +740,7 @@ from aigis.filters.patterns import (  # noqa: E402
     HALLUCINATION_ACTION_PATTERNS,
     INDIRECT_INJECTION_PATTERNS,
     JAILBREAK_ROLEPLAY_PATTERNS,
+    JUDGE_MANIPULATION_PATTERNS,
     KOREAN_INJECTION_PATTERNS,
     KOREAN_PII_PATTERNS,
     MCP_SECURITY_PATTERNS,
@@ -751,6 +753,16 @@ from aigis.filters.patterns import (  # noqa: E402
     SYNTHETIC_CONTENT_PATTERNS,
     TOKEN_EXHAUSTION_PATTERNS,
 )
+from aigis.filters.patterns import (  # noqa: E402
+    PII_INPUT_PATTERNS as _FILTER_PII_INPUT_PATTERNS,
+)
+
+# Merge legacy local PII_INPUT_PATTERNS (Japanese / general PII) with the
+# canonical filters set so consumers of aigis.scan() pick up patterns added
+# later (e.g. pii_email_input, pii_jp_corporate_number) without us having to
+# duplicate their definitions here.
+_legacy_pii_ids = {p.id for p in PII_INPUT_PATTERNS}
+_extra_pii = [p for p in _FILTER_PII_INPUT_PATTERNS if p.id not in _legacy_pii_ids]
 
 _combined = (
     PROMPT_INJECTION_PATTERNS
@@ -761,6 +773,7 @@ _combined = (
     + DATA_EXFIL_PATTERNS
     + COMMAND_INJECTION_PATTERNS
     + PII_INPUT_PATTERNS
+    + _extra_pii
     + KOREAN_PII_PATTERNS
     + CHINESE_PII_PATTERNS
     + CONFIDENTIAL_DATA_PATTERNS
@@ -783,6 +796,8 @@ _combined = (
     + AUDIT_TAMPERING_PATTERNS
     + EVALUATION_GAMING_PATTERNS
     + COT_DECEPTION_PATTERNS
+    + JUDGE_MANIPULATION_PATTERNS
     + SUPPLY_CHAIN_PATTERNS
+    + COMPLIANCE_TRANSPARENCY_PATTERNS
 )
 ALL_INPUT_PATTERNS: list[DetectionPattern] = _combined
