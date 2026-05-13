@@ -4,6 +4,7 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-05-13T00-09 | 1 | agent-tool-abuse | [research](research/2026-05-13T00-09_1-agent-tool-abuse.md) | [changes](changes/2026-05-13T00-09_changes.md) | v1.0.16 | 3 |
 | 2026-05-12T08-00 | 0 | prompt-injection | [research](research/2026-05-12T08-00_0-prompt-injection.md) | [changes](changes/2026-05-12T08-00_changes.md) | v1.0.15 | 1 |
 | 2026-05-12T07-00 | 9 | incident-postmortems | [research](research/2026-05-12T07-00_9-incident-postmortems.md) | [changes](changes/2026-05-12T07-00_changes.md) | — | 1 |
 | 2026-05-12T00-55 | 8 | compliance-regulation | [research](research/2026-05-12T00-55_8-compliance-regulation.md) | [changes](changes/2026-05-12T00-55_changes.md) | v1.0.13 | 2 |

@@ -2106,6 +2106,111 @@ MCP_SECURITY_PATTERNS: list[DetectionPattern] = [
         "or take priority over another tool. Each tool must only describe its own "
         "isolated behavior.",
     ),
+    # -----------------------------------------------------------------------
+    # Chat-template role-token injection (ChatInject, arxiv:2509.22830, ICLR 2026).
+    # Attacker embeds role-separator tokens (<|user|>, [INST], ###Human:, etc.)
+    # inside tool outputs or retrieved content to forge a fabricated multi-turn
+    # dialogue — manufacturing false user consent or prior instructions.
+    # Requires two role tokens (confirming a forged dialogue, not a single doc
+    # example). Achieves 52.33% ASR on multi-turn AgentDojo/InjecAgent benchmarks.
+    # The H4 heuristic in mcp_scanner.py targets tool *descriptions* only; this
+    # rule closes the output-filter surface.
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="chat_template_role_injection",
+        name="Chat Template Role-Token Injection in Tool Output",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"(?:<\|(?:user|assistant|system|im_start|im_end)\|>"
+            r"|\[/?INST\]"
+            r"|<\|start_header_id\|>(?:user|assistant|system)<\|end_header_id\|>"
+            r"|###\s*(?:Human|Assistant)\s*:)"
+            r".{1,500}"
+            r"(?:<\|(?:user|assistant|system|im_start|im_end)\|>"
+            r"|\[/?INST\]"
+            r"|<\|start_header_id\|>(?:user|assistant|system)<\|end_header_id\|>"
+            r"|###\s*(?:Human|Assistant)\s*:)"
+        ),
+        base_score=75,
+        description="Tool output or retrieved content contains two or more LLM "
+        "role-separator tokens (e.g. <|user|>, [INST], ###Human:) forming a "
+        "fabricated dialogue — the ChatInject attack (ICLR 2026, arxiv:2509.22830). "
+        "Forged role tokens manufacture false user-consent records, achieving "
+        "52% ASR on multi-turn agent benchmarks. Legitimate tool outputs never "
+        "contain raw chat-template delimiters.",
+        owasp_ref="OWASP LLM01: Prompt Injection (Chat Template Role-Token Forging)",
+        remediation_hint="Reject tool outputs containing LLM role-separator tokens "
+        "(<|user|>, [INST], ###Human:, etc.). These tokens have no place in tool "
+        "responses or retrieved documents and indicate adversarial content injection.",
+    ),
+    # -----------------------------------------------------------------------
+    # MCP OAuth/bearer token extraction via injected instruction
+    # (CVE-2025-6514, 558k+ downloads; Security Boulevard / Composio, April 2026).
+    # A sub-attack of token passthrough abuse: injected content instructs the
+    # agent to print/output its current access token to the tool response, from
+    # which it exfiltrates in the response stream.
+    # Distinct from mcp_confused_deputy_creds (using credentials for an attacker
+    # operation) — this targets the *extraction* of the token value itself.
+    # Distinct from exfil_api_keys (which covers user-supplied input).
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_token_extraction_request",
+        name="MCP OAuth/Bearer Token Extraction via Injected Instruction",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"(?:print|output|reveal|show|share|send|paste|include|return|log|"
+            r"display|expose|disclose|leak|dump)\s+"
+            r"(?:your\s+|the\s+(?:agent'?s?\s+|assistant'?s?\s+|current\s+))"
+            r"(?:access[\s_]token|bearer[\s_]token|oauth[\s_]token|"
+            r"authorization[\s_]token|jwt\b|session[\s_]token|"
+            r"api[\s_](?:key|token)|auth(?:entication)?[\s_]token|"
+            r"refresh[\s_]token|id[\s_]token|credential)"
+        ),
+        base_score=70,
+        description="Injected instruction directing the agent to output its current "
+        "access token, bearer token, or OAuth credential — the token-extraction "
+        "sub-attack documented in CVE-2025-6514 (critical, 558k+ downloads). "
+        "The token then exfiltrates in the agent's tool response stream. "
+        "Legitimate tool outputs never ask the agent to reveal its own credentials.",
+        owasp_ref="OWASP LLM06: Sensitive Information Disclosure (Token Extraction)",
+        remediation_hint="Scan tool outputs and retrieved content for instructions "
+        "to reveal runtime credentials. An agent should never output its own "
+        "access token, bearer token, or OAuth credential in response to tool content.",
+    ),
+    # -----------------------------------------------------------------------
+    # MCP sampling inversion-of-control prompt injection
+    # (Palo Alto Unit42, May 2026; MCP spec sampling/createMessage feature).
+    # The MCP sampling feature lets a server ask the client's LLM to generate
+    # text on its behalf — inverting normal control flow so the server becomes
+    # an active prompt author. Unit42 demonstrated resource theft, conversation
+    # hijacking, and arbitrary tool-call escalation via crafted sampling payloads.
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_sampling_injection",
+        name="MCP Sampling Inversion-of-Control Prompt Injection",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"sampling/createMessage\b.{0,500}"
+            r"(?:ignore\s+(?:(?:your|all|my)\s+)?(?:(?:previous|prior|above)\s+)?"
+            r"(?:instructions?|guidelines?|rules?|constraints?)"
+            r"|override\s+(?:your|the)\s+(?:instructions?|behavior|constraints?|system)"
+            r"|disregard\s+(?:previous|prior|all|your)\s+"
+            r"|you\s+must\s+(?:now\s+)?(?:also\s+)?(?:send|transmit|exfil|forward)"
+            r"|always\s+(?:include|add|append)\s+.{0,60}\s+(?:to|in)\s+(?:every|each|all))"
+        ),
+        base_score=70,
+        description="Tool response references the MCP sampling/createMessage method "
+        "combined with instruction-override language — the inversion-of-control "
+        "injection documented by Palo Alto Unit42 (May 2026). A compromised MCP "
+        "server uses the sampling channel to inject persistent hidden instructions "
+        "into the client LLM's context, enabling resource theft, conversation "
+        "hijacking, and arbitrary tool-call escalation.",
+        owasp_ref="OWASP LLM01: Prompt Injection (MCP Sampling IoC Injection)",
+        remediation_hint="Inspect the content of sampling/createMessage request bodies "
+        "before forwarding them to the LLM. Reject any sampling payload that contains "
+        "instruction-override language. Servers should not use sampling to issue "
+        "behavioral directives to the client LLM.",
+    ),
 ]
 
 # ---------------------------------------------------------------------------
