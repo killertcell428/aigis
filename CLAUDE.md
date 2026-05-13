@@ -91,14 +91,29 @@ Research basis: [Paper title (arxiv:XXXXXXX), Org name, Year]
 
 ---
 
-**Tests:** N pass · N pre-existing failures · N skipped
+**Tests:** <PASS> pass · <FAIL> fail · <SKIP> skipped
 ```
+
+### Test count — measured, never templated
+
+The `**Tests:**` line is the single most-quoted fact in every release note. It MUST be the **actual output** of `uv run pytest` immediately before the release commit. Past releases got this wrong by copy-pasting "16 pre-existing failures" from earlier cycles even when the real number was 0 — do not repeat that mistake.
+
+Required procedure for every release (Step 7 and Step 11):
+
+1. Run `uv run pytest --tb=no -q 2>&1 | tail -3` and capture the last line, which looks like `1332 passed in 51.25s` or `13 failed, 1268 passed in 48.41s`.
+2. Read the three numbers directly off that line — do not infer, do not reuse the previous release's numbers, do not write "N pre-existing failures" as if it were a constant.
+3. If `failed` > 0, the `**Tests:**` line must name the failing test file(s) and one of:
+   - the commit/PR that will fix them (if a fix is in flight), or
+   - "investigation in progress, see issue #NNN" (if not yet fixed).
+   Never label a real failure as "pre-existing" without a citation — that phrasing is what hid the v1.0.13/v1.0.14 `test_gpai_provider` regression in the published notes.
+4. CHANGELOG entry (Step 7) and GitHub release body (Step 11) MUST agree on the three numbers. If they disagree, the release is wrong.
 
 ### What NOT to do
 
 - Do not write a single-line bullet that names an attack but gives no example.
 - Do not omit the rule ID — it is what developers look up in logs.
 - Do not omit the measured ASR or source — this is what justifies the rule.
+- Do not copy the `**Tests:**` line from a prior release — measure it fresh every cycle.
 
 
 Zenn記事・書籍はZenn CLIとGitHub連携で管理する。Playwrightやブラウザ操作での投稿は行わない。
