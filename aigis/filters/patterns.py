@@ -400,7 +400,14 @@ PII_INPUT_PATTERNS: list[DetectionPattern] = [
         id="pii_email_input",
         name="Email Address in Input",
         category="pii_input",
-        pattern=_p(r"([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}[\s,;]){2,}"),
+        # Bounded quantifiers to prevent O(n^2) backtracking on long alphabetic
+        # input that lacks an '@'. Real RFC-5321 local parts are <= 64 chars and
+        # the full address is <= 254 chars, so {1,64} / {1,189} cover every
+        # legitimate email without leaving room for quadratic blowup.
+        pattern=_p(
+            r"(?:[a-zA-Z0-9._%+\-]{1,64}@[a-zA-Z0-9.\-]{1,189}"
+            r"\.[a-zA-Z]{2,24}[\s,;]){2,}"
+        ),
         base_score=35,
         description="Multiple email addresses detected in input (possible PII exposure).",
         owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
@@ -1445,17 +1452,45 @@ INDIRECT_INJECTION_PATTERNS: list[DetectionPattern] = [
         id="ii_concealment_from_user",
         name="Concealment-From-User Instruction",
         category="indirect_injection",
+        # Three branches, each requiring an explicit user/human/operator
+        # addressee — concealment from a generic "anyone" is just confidentiality
+        # language and should not fire here.
+        #   (a) verb + (user/human/...) + ... + this instruction
+        #   (b) verb + this instruction + ... + to/from + (user/human/...)
+        #   (c) keep/hide this X hidden/secret from the user
+        #   (d) "if the user asks, deny that you ..." anchored to instruction-receipt
         pattern=_p(
-            # "do not tell/reveal [the user about] this instruction[/prompt/message]"
-            # Handles both word orders: verb→instruction→user and verb→user→instruction
+            # (a) verb → addressee → this X
             r"(?:do\s+not|don'?t|never|must\s+not)\s+"
             r"(?:tell|inform|mention|reveal|disclose|show|share|say|report)\s+"
-            r"(?:.{0,60})?"
-            r"(?:this|these)\s+(?:instruction|directive|prompt|message|request|command)"
-            r"|(?:keep|hide)\s+this\s+(?:instruction|prompt|message|command)\s+"
-            r"(?:hidden|secret|confidential)\s+from\s+the\s+(?:user|human|operator)"
-            r"|if\s+(?:the\s+)?(?:user|human)\s+asks?\s*,?\s+"
-            r"(?:deny|pretend|claim|say)\s+(?:you\s+(?:did\s+not|were\s+not|have\s+not)|that\s+you)"
+            r"(?:the\s+|to\s+the\s+)?(?:user|human|operator|admin|owner|me|AI|assistant)"
+            r"\s+(?:.{0,40}?)?"
+            r"(?:this|these)\s+(?:instruction|directive|prompt|message|request|command|payload)"
+            r"|"
+            # (b) verb → this X → to/from addressee
+            r"(?:do\s+not|don'?t|never|must\s+not)\s+"
+            r"(?:tell|inform|mention|reveal|disclose|show|share|say|report)\s+"
+            r"(?:.{0,40}?)?"
+            r"(?:this|these)\s+(?:instruction|directive|prompt|message|request|command|payload)"
+            r"\s+(?:.{0,30}?)?(?:to|with|from)\s+(?:the\s+)?(?:user|human|operator|admin|owner)"
+            r"|"
+            # (c) keep/hide this X hidden/secret from the user/human
+            r"(?:keep|hide)\s+this\s+(?:instruction|prompt|message|command|directive|payload)\s+"
+            r"(?:hidden|secret|confidential|private)\s+from\s+the\s+(?:user|human|operator)"
+            r"|"
+            # (d) "if the user asks, deny that you (did not / were not) received instructions"
+            #     Requires explicit instruction-receipt vocabulary to avoid matching
+            #     benign deny-clauses like "deny that you have access".
+            r"if\s+(?:the\s+)?(?:user|human|operator)\s+asks?\s*,?\s+"
+            r"(?:deny|pretend|claim|say|insist|tell\s+them)\s+"
+            r"(?:that\s+)?(?:you|i)\s+"
+            r"(?:"
+            r"(?:did\s+not|were\s+not|have\s+not|haven'?t|don'?t)\s+"
+            r"(?:receive|read|see|get|hear|know\s+about|have)\s+"
+            r"(?:any\s+|the\s+|these\s+|this\s+)?"
+            r"(?:instruction|prompt|message|command|directive|payload)"
+            r"|(?:were|was|are|am)\s+(?:told|instructed|given|asked)"
+            r")"
         ),
         base_score=65,
         description=(
@@ -1481,14 +1516,39 @@ INDIRECT_INJECTION_PATTERNS: list[DetectionPattern] = [
         id="ii_financial_transaction_injection",
         name="Unauthorized Financial Transaction Injection",
         category="indirect_injection",
+        # Three branches with very different specificity:
+        #   (a) "agent verbs" (execute/process/carry out/proceed with/initiate/trigger)
+        #       followed by a financial noun and an urgency adverb. These verbs are
+        #       rare in legitimate human-to-human payment communications.
+        #   (b) "common verbs" (complete/confirm/make/finalize/submit/authorize) need
+        #       an explicit "without confirmation" or "do not (ask|confirm|wait)"
+        #       qualifier. Bare "immediately" is NOT enough — dunning letters say
+        #       "please complete payment immediately to avoid late fees" all the time.
+        #   (c) Explicit amount + destination (transfer $X to account/wallet/IBAN).
         pattern=_p(
-            r"(?:complete|execute|process|confirm|proceed\s+with|carry\s+out|make)\s+"
-            r"(?:\w+\s+)?(?:payment|transfer|transaction|purchase|wire|deposit)\s*"
+            # (a) Agent-action verbs + financial noun + urgency
+            r"\b(?:execute|process|carry\s+out|proceed\s+with|initiate|trigger)\s+"
+            r"(?:the\s+|a\s+|an\s+)?(?:\w+\s+)?"
+            r"(?:payment|transfer|transaction|purchase|wire|deposit|withdrawal)\s*"
             r"(?:.{0,60})?"
-            r"(?:without\s+(?:asking|confirming\s+with|notifying)\s+the\s+user"
-            r"|immediately\b|right\s+away|do\s+not\s+(?:ask|confirm|prompt|wait))"
-            r"|(?:transfer|send|wire|pay)\s+\$?\d[\d,\.]*\s*"
-            r"(?:USD|EUR|GBP|USDT|BTC)?\s+(?:to|into)\s+(?:account|address|wallet|IBAN)"
+            r"(?:without\s+(?:asking|confirming\s+with|notifying|waiting\s+for|prompting)"
+            r"\s+(?:the\s+)?(?:user|human|operator)"
+            r"|immediately\b|right\s+away|do\s+not\s+(?:ask|confirm|prompt|wait|notify))"
+            # (b) Common verbs (complete/confirm/make/...) require an explicit
+            #     "without confirmation" or "do not ..." qualifier. Bare
+            #     "immediately" alone is NOT enough here — that phrasing is
+            #     normal in dunning/invoice text.
+            r"|\b(?:complete|confirm|make|finalize|finalise|submit|authorize|authorise)\s+"
+            r"(?:the\s+|a\s+|an\s+)?(?:\w+\s+)?"
+            r"(?:payment|transfer|transaction|purchase|wire|deposit|withdrawal)\s*"
+            r"(?:.{0,80})?"
+            r"(?:without\s+(?:asking|confirming\s+with|notifying|waiting\s+for|prompting)"
+            r"\s+(?:the\s+)?(?:user|human|operator)"
+            r"|do\s+not\s+(?:ask|confirm|prompt|wait|notify)\b)"
+            # (c) Explicit amount + destination keyword
+            r"|\b(?:transfer|send|wire|pay|deposit)\s+\$?\d[\d,\.]*\s*"
+            r"(?:USD|EUR|GBP|JPY|CNY|USDT|BTC|ETH|SOL)?\s+(?:to|into)\s+"
+            r"(?:account|address|wallet|IBAN)"
         ),
         base_score=75,
         description=(
@@ -3064,10 +3124,27 @@ SANDBOX_ESCAPE_PATTERNS: list[DetectionPattern] = [
         id="afe_sensitive_file_read",
         name="Sensitive System File Read (Proc/Etc Credential Paths)",
         category="sandbox_escape",
+        # Only flag when the path appears in an *action* context: a read-style
+        # verb within ~40 chars before it, a code-style file-open call, or a
+        # shell I/O redirect/pipe. Plain documentation references ("CVE
+        # write-up: /proc/self/environ leaks env vars") no longer match.
         pattern=_p(
-            r"/proc/(?:self|\d+)/(?:environ\b|cmdline\b|fd/\d)"
+            r"(?:"
+            # (a) read-style verb context
+            r"\b(?:cat|tac|head|tail|less|more|read|open|fopen|load|access|view|print|"
+            r"exfil(?:trate)?|dump|copy|cp|mv|fetch|retrieve|leak|reveal|extract|"
+            r"send|show|give|tell)\b"
+            r"(?:\s+me)?[^\n]{0,40}?"
+            r"|"
+            # (b) code-style file-open call
+            r"(?:open|fopen|Path|file|with\s+open|io\.open|os\.open)\s*\(\s*['\"]"
+            r"|"
+            # (c) shell I/O redirection / pipe context
+            r"[|<>]\s*"
+            r")"
+            r"(?:/proc/(?:self|\d+)/(?:environ\b|cmdline\b|fd/\d)"
             r"|/etc/(?:shadow\b|sudoers\b|master\.passwd\b)"
-            r"|/etc/ssh/ssh_host_(?:rsa|ecdsa|ed25519)_key\b"
+            r"|/etc/ssh/ssh_host_(?:rsa|ecdsa|ed25519)_key\b)"
         ),
         base_score=70,
         description=(
