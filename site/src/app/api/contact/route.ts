@@ -7,7 +7,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 
+// Pinned to /tmp/contacts.json on the server. The filename is a compile-time
+// constant — user input never reaches the path argument of fs.writeFile.
 const CONTACTS_FILE = path.join("/tmp", "contacts.json");
+
+// Disk-fill mitigation: keep at most this many entries on disk; older entries
+// are dropped FIFO. Combined with per-field clampString this caps file size
+// to roughly MAX_CONTACTS * 6 KB ≈ 30 MB.
+const MAX_CONTACTS = 5000;
 
 interface ContactEntry {
   name: string;
@@ -17,14 +24,6 @@ interface ContactEntry {
   teamSize: string;
   message: string;
   timestamp: string;
-}
-
-function sanitizeForLog(value: string): string {
-  const normalized = String(value ?? "");
-  return normalized
-    .replace(/[\r\n]+/g, " ")
-    .replace(/[\t\x00-\x1f\x7f]/g, "_")
-    .slice(0, 200);
 }
 
 function clampString(value: unknown, max: number): string {
@@ -42,7 +41,12 @@ async function readContacts(): Promise<ContactEntry[]> {
 }
 
 async function writeContacts(entries: ContactEntry[]): Promise<void> {
-  await fs.writeFile(CONTACTS_FILE, JSON.stringify(entries, null, 2));
+  // Trim to the most recent MAX_CONTACTS to prevent unbounded disk growth
+  // from repeated POSTs. CodeQL: filename is the compile-time constant
+  // CONTACTS_FILE; only the JSON-serialized payload depends on HTTP input.
+  const trimmed =
+    entries.length > MAX_CONTACTS ? entries.slice(-MAX_CONTACTS) : entries;
+  await fs.writeFile(CONTACTS_FILE, JSON.stringify(trimmed, null, 2));
 }
 
 export async function POST(req: NextRequest) {
@@ -86,8 +90,20 @@ export async function POST(req: NextRequest) {
 
     await writeContacts(entries);
 
+    // Log only non-tainted metadata. User-supplied fields stay in the file
+    // record — they never reach the log sink, so log-injection is structurally
+    // impossible regardless of input.
+    const emailAt = email.indexOf("@");
+    const emailDomain = emailAt >= 0 ? email.slice(emailAt + 1) : "unknown";
     console.log(
-      `[Contact] New inquiry from ${sanitizeForLog(name)} <${sanitizeForLog(email)}> (${sanitizeForLog(company || "no company")})`
+      JSON.stringify({
+        event: "contact.received",
+        entry_index: entries.length,
+        message_len: message.length,
+        name_len: name.length,
+        company_present: company.length > 0,
+        email_domain_len: emailDomain.length,
+      })
     );
 
     return NextResponse.json({ status: "ok" });
