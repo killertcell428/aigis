@@ -4,6 +4,8 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-05-13T08-30 | 3 | jailbreak-extraction | [research](research/2026-05-13T08-30_3-jailbreak-extraction.md) | [changes](changes/2026-05-13T08-30_changes.md) | v1.0.19 | 1 |
+| 2026-05-13T07-30 | 2 | data-exfiltration | [research](research/2026-05-13T07-30_2-data-exfiltration.md) | [changes](changes/2026-05-13T07-30_changes.md) | — | 3 |
 | 2026-05-13T06-13 | 2 | data-exfiltration | [research](research/2026-05-13T06-13_2-data-exfiltration.md) | [changes](changes/2026-05-13T06-13_changes.md) | — | 3 |
 | 2026-05-13T03-02 | 1 | agent-tool-abuse | [research](research/2026-05-13T03-02_1-agent-tool-abuse.md) | [changes](changes/2026-05-13T03-02_changes.md) | v1.0.17 | 2 |
 | 2026-05-12T08-00 | 0 | prompt-injection | [research](research/2026-05-12T08-00_0-prompt-injection.md) | [changes](changes/2026-05-12T08-00_changes.md) | v1.0.15 | 1 |
