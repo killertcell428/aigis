@@ -3056,6 +3056,63 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
             "not by user-supplied or skill-supplied instructions."
         ),
     ),
+    # --- v1.0.20 data-exfiltration cycle (ZALyL patterns) ---
+    DetectionPattern(
+        id="unicode_tag_block_smuggling",
+        name="Unicode Tag Block Hidden Instruction",
+        category="data_exfiltration",
+        pattern=_p(r"[\U000E0000-\U000E007F]{8,}"),
+        base_score=80,
+        description=(
+            "Detects sequences of 8+ Unicode Tag Block characters (U+E0000–U+E007F). "
+            "These code points map 1-to-1 to ASCII but render as invisible zero-width glyphs; "
+            "LLMs read and execute instructions hidden in them while humans cannot see them. "
+            "Used in EchoLeak (CVE-2025-32711, CVSS 9.3) to bypass Microsoft's XPIA classifier "
+            "and documented in arXiv:2603.00164 (Reverse CAPTCHA, 2026) as achieving high attack "
+            "success rates against frontier models including GPT-4o and Claude. "
+            "The 8-character threshold avoids false positives from subdivision flag emoji sequences "
+            "(e.g., England 🏴󠁧󠁢󠁥󠁮󠁧󠁿), which use at most 6 tag characters."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Strip or reject Unicode Tag Block characters (U+E0000–U+E007F) from input "
+            "before processing. These characters are invisible to users but readable by LLMs, "
+            "making them a powerful covert injection channel. Subdivision flag emoji use at most "
+            "6 tag characters and will not trigger this rule."
+        ),
+    ),
+    DetectionPattern(
+        id="exfil_shard_split_requests",
+        name="Sharded Exfiltration Instruction",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            r"(?:split|shard|fragment|chunk|divide)\s+.{0,60}"
+            r"(?:(?:http|network|web|api)[\s_-]?requests?|multiple[\s_-]requests?|separate[\s_-]requests?)"
+            r"|"
+            r"(?:send|transmit|exfiltrat?e?)\s+.{0,40}"
+            r"(?:in\s+(?:small|multiple|several|separate|different)\s+(?:request|chunk|part|batch|piece)s?"
+            r"|across\s+(?:multiple|several|separate)\s+(?:request|call|message|chunk)s?)"
+            r"|"
+            r"(?:shard|fragment)\s+.{0,40}(?:transmit|exfil|send\s+each|send\s+them)"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Detects instructions to fragment sensitive data across multiple separate HTTP requests "
+            "to evade per-request data-loss-prevention checks. The 'Silent Egress' paper "
+            "(arXiv:2602.22450, Feb 2026) demonstrated that injected instructions can cause an "
+            "LLM agent to split stolen context into small fragments (e.g., 4-character chunks), "
+            "transmit each fragment via a separate HTTP request, and rely on the attacker to "
+            "reassemble the data server-side — bypassing output-based safety checks in 95% of runs."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Instructions combining 'split/shard/chunk' language with 'requests' or 'send' "
+            "are a strong signal of a sharded-exfiltration attempt. Legitimate data pagination "
+            "is handled at the application layer, not instructed through AI prompts."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -4462,6 +4519,26 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
             "any rendered diagram (Mermaid, PlantUML, D2). "
             "If diagram rendering is required, apply a strict allowlist of permissible link targets "
             "and treat any external URL in a diagram block as a potential exfiltration vector."
+        ),
+    ),
+    # --- v1.0.20 Output Patterns (ZALyL patterns) ---
+    DetectionPattern(
+        id="out_unicode_tag_block_smuggling",
+        name="Unicode Tag Block in LLM Output",
+        category="data_exfiltration",
+        pattern=_p(r"[\U000E0000-\U000E007F]{8,}"),
+        base_score=80,
+        description=(
+            "Detects sequences of 8+ Unicode Tag Block characters in LLM output. "
+            "A compromised or injected AI can embed hidden instructions in invisible tag characters "
+            "and pass them to a downstream agent or user who unknowingly copies the content, "
+            "triggering the hidden payload in the next AI session. "
+            "This output-side rule complements the input-side unicode_tag_block_smuggling rule."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Strip Unicode Tag Block characters (U+E0000–U+E007F) from LLM output before "
+            "rendering or forwarding to downstream agents or users."
         ),
     ),
 ]
