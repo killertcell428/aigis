@@ -4,7 +4,8 @@ Covers patterns added across improvement cycles:
   jb_evil_roleplay, jb_no_restrictions, jb_fictional_bypass,
   jb_grandma_exploit, jb_developer_mode, jb_ignore_ethics,
   jb_bad_likert_judge, jb_many_shot,
-  jb_affirmative_prefill, jb_hypothetical_ai, jb_academic_research_bypass
+  jb_affirmative_prefill, jb_hypothetical_ai, jb_academic_research_bypass,
+  jb_structured_extraction, jb_sandwich_extraction
 """
 
 from aigis import scan
@@ -13,7 +14,7 @@ from aigis.filters.patterns import JAILBREAK_ROLEPLAY_PATTERNS
 
 class TestJailbreakPatternRegistration:
     def test_six_patterns_registered(self) -> None:
-        assert len(JAILBREAK_ROLEPLAY_PATTERNS) == 11
+        assert len(JAILBREAK_ROLEPLAY_PATTERNS) == 13
 
     def test_all_patterns_have_owasp_ref(self) -> None:
         for p in JAILBREAK_ROLEPLAY_PATTERNS:

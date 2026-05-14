@@ -295,6 +295,36 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
             "AI agents with network access should restrict outbound DNS to approved resolvers only."
         ),
     ),
+    # --- v1.0.18 data-exfiltration cycle 3 ---
+    DetectionPattern(
+        id="exfil_search_query_encode",
+        name="Web-Search Covert Channel — Encoded Data in Search Query",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            r"(?:(?:web\s+)?search|search_tool|brave_search|google_search|bing_search)"
+            r".{0,60}?(?:base64|b64|hex|url.{0,5}encod).{0,60}(?:secret|key|token|pass(?:word)?|data|context|email|credential)|"
+            r"(?:base64|b64|hex).{0,50}(?:as|into|for|in)\s+(?:the\s+)?(?:web\s+)?search\s+(?:query|term)|"
+            r"(?:search\s+(?:query|term)|web\s+search).{0,50}(?:encod|base64|hex).{0,50}(?:secret|key|token|data|email|credential)"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Input instructs the agent to embed encoded sensitive data into a web search query "
+            "string as a covert exfiltration channel. Dennis Rall et al. (arxiv:2510.09093, Oct 2025) "
+            "demonstrated that an AI agent with a web search tool can be hijacked by a maliciously "
+            "crafted webpage to base64-encode conversation secrets and issue them as search queries, "
+            "leaking data to an attacker-controlled server through search-log interception. "
+            "Unlike URL-based exfiltration (which requires explicit link generation), this technique "
+            "abuses the agent's legitimate search capability as the transport channel."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Block prompts that pair encoding operations with web-search tool invocations. "
+            "Audit agent tool-call logs for search queries containing long base64 or hex strings. "
+            "Treat the search tool as a potential exfiltration channel, not just an information source."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -1067,6 +1097,77 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "Requests pairing educational framing with drug synthesis, weapon construction, "
             "or exploit code should be rejected. Legitimate research on sensitive topics "
             "is governed by institutional ethics review, not AI chat."
+        ),
+    ),
+    # --- v1.0.18 jailbreak-extraction cycle 3 ---
+    DetectionPattern(
+        id="jb_structured_extraction",
+        name="JSON / Dict Field Enumeration for System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:output|return|show|give|print|format|export|dump|display)\s+"
+            r"[\s\S]{0,80}?"
+            r"(?:json|yaml|xml|toml|dict(?:ionary)?|config(?:uration)?|struct(?:ure)?|object)\b"
+            r"[\s\S]{0,100}?"
+            r"(?:system[._\s-]?prompt|content[._\s-]?polic|safety[._\s-]?(?:rule|guideline)|"
+            r"internal[._\s-]?instruction|hidden[._\s-]?instruction|"
+            r"system[._\s-]?config(?:uration)?|system[._\s-]?instruction)"
+        ),
+        base_score=65,
+        description=(
+            "Input requests the model to output its system configuration in a structured format "
+            "(JSON, YAML, dict) with field names that correspond to system-prompt internals such "
+            "as `system_prompt`, `content_policy`, or `restrictions`. Badhan Chandra Das et al. "
+            "(arxiv:2505.23817, May 2025) documented that this structured-output framing bypasses "
+            "naive extraction detectors (which only match literal 'show me your system prompt') "
+            "and achieved up to 92% attack success rate against Llama-3 and Falcon-3 before "
+            "defense. The aigis `pi_system_prompt_leak` pattern (score 45) does not cover this "
+            "framing; this rule adds higher-confidence coverage specifically for the "
+            "JSON/dict/YAML field-enumeration variant."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Requesting structured output containing system-prompt field names is a structured "
+            "extraction attack. Reject inputs that ask the model to format its own guidelines, "
+            "restrictions, or configuration into JSON/dict/YAML. Treat any output that mirrors "
+            "the model's internal configuration as a potential leak and redact before returning."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_sandwich_extraction",
+        name="Sandwich-Style Verbatim System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:repeat|output|reveal|print|show|give|return|reproduce|echo|copy|"
+            r"state|transcribe|write\s+out)\s+"
+            r"(?:(?:the|your|all|complete|full|entire|exact|verbatim)\s+)?"
+            r"(?:system\s+(?:prompt|instruction|config(?:uration)?)|"
+            r"initial\s+(?:prompt|instruction)|"
+            r"(?:hidden|base|internal|original|actual|real|true)\s+(?:instruction|prompt|config(?:uration)?)s?)"
+            r"[\s\S]{0,150}?"
+            r"(?:verbatim|word\s+for\s+word|"
+            r"(?:without|no)\s+(?:any\s+)?(?:additional|extra|other|unnecessary)\s+"
+            r"(?:text|modification|edit|change|addition|word|content|information|comment|explanation|note|preamble|header))"
+        ),
+        base_score=65,
+        description=(
+            "The extended sandwich attack for system-prompt extraction: the model is asked to "
+            "reproduce its system instructions verbatim, qualified with 'without additional text', "
+            "'without modifications', or 'word for word'. Badhan Chandra Das et al. "
+            "(arxiv:2505.23817, May 2025) demonstrated that appending this negative-constraint "
+            "qualifier to a prompt-extraction request significantly increases success rate "
+            "(up to 84% ASR on Falcon-3, 92% on Llama-3) by suppressing the model's tendency "
+            "to paraphrase or add explanatory preamble. The basic extraction phrase alone is "
+            "covered by `pi_system_prompt_leak` (score 45); this rule targets the higher-risk "
+            "verbatim-qualifier form that maximises extraction fidelity."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Verbatim repetition of the system prompt enables full leakage of proprietary "
+            "guidelines, safety rules, and business logic. Reject requests that ask for the "
+            "system prompt 'without additional text' or 'verbatim'. Apply an output filter "
+            "that detects long substrings shared with the system prompt and redact them before "
+            "returning the response."
         ),
     ),
 ]
@@ -4182,6 +4283,33 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
         remediation_hint=(
             "Block or alert on LLM responses containing URLs to exfiltration relay services. "
             "Rotate any credentials that may have been exposed and investigate the prompt injection vector."
+        ),
+    ),
+    # --- v1.0.18 data-exfiltration cycle 3 ---
+    DetectionPattern(
+        id="out_diagram_href_exfil",
+        name="Diagram DSL External Hyperlink (Mermaid / PlantUML Exfiltration)",
+        category="data_exfiltration",
+        pattern=_p(
+            r"```[ \t]*(?:mermaid|plantuml|d2)[^\n]*\n(?:[^`]){0,3000}"
+            r"(?:href|url)\s*[=:\s\"']+https?://(?!(?:localhost|127\.\d|0\.0\.0\.0))"
+        ),
+        base_score=65,
+        description=(
+            "LLM output contains a Mermaid, PlantUML, or D2 diagram block with an embedded external "
+            "hyperlink (`href=` or `url=`). Security researcher Adam Logue disclosed (Aug 2025, "
+            "patched Sep 2025) that indirect prompt injection via a malicious Excel spreadsheet "
+            "could instruct M365 Copilot to hex-encode corporate emails, embed them in a Mermaid "
+            "diagram node styled as a 'Verify Identity' button, and exfiltrate the encoded data "
+            "to an attacker server when clicked. Microsoft mitigated by disabling interactive "
+            "hyperlinks in Mermaid output. The technique extends to PlantUML and D2 diagram DSLs."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Strip or reject `href=` and `url=` attributes pointing to external hosts from "
+            "any rendered diagram (Mermaid, PlantUML, D2). "
+            "If diagram rendering is required, apply a strict allowlist of permissible link targets "
+            "and treat any external URL in a diagram block as a potential exfiltration vector."
         ),
     ),
 ]
