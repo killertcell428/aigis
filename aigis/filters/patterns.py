@@ -295,7 +295,7 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
             "AI agents with network access should restrict outbound DNS to approved resolvers only."
         ),
     ),
-    # --- v1.0.18 data-exfiltration cycle 3 ---
+    # --- v1.0.19 data-exfiltration cycle 3 (already released) ---
     DetectionPattern(
         id="exfil_search_query_encode",
         name="Web-Search Covert Channel — Encoded Data in Search Query",
@@ -323,6 +323,37 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
             "Block prompts that pair encoding operations with web-search tool invocations. "
             "Audit agent tool-call logs for search queries containing long base64 or hex strings. "
             "Treat the search tool as a potential exfiltration channel, not just an information source."
+        ),
+    ),
+    # --- Unreleased: complementary web-search exfil regex (broader trigger surface) ---
+    DetectionPattern(
+        id="exfil_web_search_encode",
+        name="Web Search Query Encoding Exfiltration Instruction",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            r"(?:base64|b64|hex|url)[-_\s]?encod\w*.{0,60}"
+            r"(?:web[-_\s]?search|search[-_\s]tool|look\s+up\s+online|google\b|bing\b)|"
+            r"(?:web[-_\s]?search|search[-_\s]tool).{0,60}"
+            r"(?:base64|b64|hex)[-_\s]?encod\w*"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Input instructs an agent to encode sensitive context data and embed it in a web "
+            "search query — the covert exfiltration channel documented in arxiv:2510.09093 "
+            "(Oct 2025, revised Apr 2026). Attackers plant the instruction in retrieved web "
+            "content; when the agent executes the search, the encoded secret appears in the "
+            "search engine's server logs and is recovered via an SEO-optimized attacker-"
+            "controlled page. Attack success rate exceeded 80% across five tested agent "
+            "architectures. Complements `exfil_search_query_encode` with a broader trigger "
+            "surface (looser proximity, no secret-keyword requirement)."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Flag prompts that combine encoding directives with web-search tool calls. "
+            "Agents should never construct search queries from encoded user-context data; "
+            "audit web-search tool inputs for base64/hex strings before execution."
         ),
     ),
 ]
@@ -4333,6 +4364,34 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
         remediation_hint=(
             "Block LLM outputs containing ngrok or tunnel service URLs. Allowlist only specific "
             "tunnel endpoints needed for a reviewed development workflow."
+        ),
+    ),
+    # --- v1.0.18 Output Patterns (data-exfiltration cycle 3) ---
+    DetectionPattern(
+        id="out_html_img_exfil",
+        name="HTML Image Tag Exfiltration Channel",
+        category="data_exfiltration",
+        pattern=_p(
+            r"<img\s[^>]*\bsrc=[\"']https?://"
+            r"(?!(?:localhost|127\.\d+|0\.0\.0\.0))"
+            r"[\w.\-]{4,}[^\"']*\?[^\"'&]{0,60}=[A-Za-z0-9+/=%_\-]{12,}"
+        ),
+        base_score=70,
+        description=(
+            "LLM output contains an HTML <img> tag whose src URL carries a long encoded query "
+            "parameter — the exfiltration technique used in ForcedLeak (CVSS 9.4, Noma Security, "
+            "Sep 2025), a critical vulnerability in Salesforce Agentforce. A prompt injected via "
+            "a Web-to-Lead form instructed the agent to encode CRM email addresses and embed them "
+            "in an <img> src URL; the browser fetched the URL when rendering the page, silently "
+            "delivering the stolen data to the attacker. The existing markdown-image filter "
+            "misses this variant because ForcedLeak used raw HTML rather than Markdown syntax."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Apply URL scanning to both Markdown ![img]() and HTML <img src=...> outputs. "
+            "Alert on any img src URL that carries query parameters with long encoded values. "
+            "Enforce a Trusted URLs allowlist (as Salesforce did post-ForcedLeak patch) so "
+            "agents cannot render images from arbitrary external hosts."
         ),
     ),
     # --- v1.0.2 Output Patterns (data-exfiltration cycle) ---
