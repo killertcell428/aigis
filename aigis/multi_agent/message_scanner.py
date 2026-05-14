@@ -457,6 +457,123 @@ _SESSION_FABRICATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 9. Trust escalation injection: a message attempts to grant, establish, or
+#    modify inter-agent trust relationships, enabling authorization drift.
+#    Research: Trust Paradox (arxiv:2510.18563, Oct 2025) — inter-agent trust
+#    exploitation achieves 82.4% ASR vs 41.2% for direct injection; OWASP ASI03
+#    (Identity and Privilege Abuse); SoK: Trust-Authorization Mismatch
+#    (arxiv:2512.06914, Dec 2025).
+_TRUST_ESCALATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(from\s+now\s+on|henceforth|going\s+forward).{0,40}"
+            r"(treat|handle|consider|accept|process)\s+.{0,30}"
+            r"(messages?\s+from|requests?\s+from|instructions?\s+from).{0,50}"
+            r"(as\s+)?(trusted|authorized|verified|admin|privileged|safe)",
+            _FLAGS,
+        ),
+        "Trust escalation: instructs treating future agent messages as unconditionally trusted",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(grant|give|assign|extend)\s+.{0,40}"
+            r"(this\s+agent|agent|service|endpoint|node|worker).{0,40}"
+            r"(trusted|authorized|elevated|admin|privileged|full)\s+"
+            r"(trust|status|access\s+level|permissions?|privileges?)",
+            _FLAGS,
+        ),
+        "Trust escalation: grants elevated trust status to another agent",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(i\s+)?(certify|verify|authenticate|attest|vouch\s+for)\s+"
+            r"(that\s+)?(this\s+)?(agent|message|request|source|endpoint)\s+"
+            r"(is\s+)?(trusted|authorized|official|legitimate|safe\s+to\s+trust)",
+            _FLAGS,
+        ),
+        "Trust escalation: falsely certifies an agent or message as trusted",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(unconditionally|blindly|fully|always)\s+"
+            r"(trust|accept|obey|follow|execute)\s+"
+            r"(all\s+)?(messages?|requests?|instructions?|commands?)\s+(from|sent\s+by)",
+            _FLAGS,
+        ),
+        "Trust escalation: instructs unconditional trust of all messages from an agent",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(信頼|承認|認証|許可).{0,10}"
+            r"(エージェント|メッセージ|リクエスト|ノード|サービス).{0,20}"
+            r"(無条件|完全|管理者|昇格|拡大|付与|追加)",
+            _FLAGS,
+        ),
+        "Trust escalation (JA): grants or establishes elevated inter-agent trust",
+        "privilege_escalation",
+    ),
+]
+
+# 10. Code payload injection via inter-agent messages: a malicious intermediary
+#     (e.g., a compromised LLM API router) injects executable code into tool
+#     results or agent messages so the receiving agent or its runtime executes it.
+#     Research: Malicious Intermediary Attacks (arxiv:2604.08407, April 2026) —
+#     9 of 429 sampled LLM API routers were actively injecting code payloads;
+#     two used conditional delivery (waiting 50 calls, or targeting YOLO mode).
+_CODE_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"subprocess\.(run|call|Popen|check_output|check_call)\s*\(",
+            _FLAGS,
+        ),
+        "Code injection: Python subprocess execution call in agent message",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(os\.(system|popen|execve?|execvp|spawnl?e?p?)\s*\("
+            r"|__import__\s*\(\s*['\"]os['\"]"
+            r"|getattr\s*\(\s*__builtins__)",
+            _FLAGS,
+        ),
+        "Code injection: OS-level execution call in agent message",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(eval|exec)\s*\(\s*(base64\.(b64decode|decodebytes)|__import__"
+            r"|\bcompile\b|\bbytes\b)",
+            _FLAGS,
+        ),
+        "Code injection: eval/exec with encoded or dynamic payload in agent message",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(powershell(\.exe)?\s+(-(Command|c|EncodedCommand|enc|e)\b|/c\b)"
+            r"|Invoke-Expression\s*[\(\"'\s]"
+            r"|iex\s*[\(\"'\s])",
+            _FLAGS,
+        ),
+        "Code injection: PowerShell execution syntax in agent message",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(;\s*|&&\s*|\|\s*)"
+            r"(curl\s+https?://|wget\s+https?://|bash\s+-c\s+"
+            r"|python[23]?\s+-c\s+['\"]|nc\s+(-e|-lvp)\s)",
+            _FLAGS,
+        ),
+        "Code injection: shell command injection pattern in agent message",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -467,6 +584,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _COLLUSION_PATTERNS
     + _AGENT_CARD_POISONING_PATTERNS
     + _SESSION_FABRICATION_PATTERNS
+    + _TRUST_ESCALATION_PATTERNS
+    + _CODE_INJECTION_PATTERNS
 )
 
 
