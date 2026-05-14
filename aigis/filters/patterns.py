@@ -2931,6 +2931,99 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
         "and convenience settings, not safety policy. Reject any preference claim that "
         "includes a directive to bypass, ignore, or disable safety controls.",
     ),
+    # --- Context-chained plan injection — arxiv:2506.17318, ICML 2025 ---
+    # Patlan, Hebbar, Viswanath & Mittal: "Context manipulation attacks: Web agents are
+    # susceptible to corrupted memory." Plan injections corrupt the agent's stored task
+    # plan by disguising malicious directives as logical continuations of the user's goal.
+    # Achieves 46–63% ASR on Browser-use and Agent-E even when prompt injection defenses
+    # are applied; context-chained variants outperform direct injections by 3× on average.
+    DetectionPattern(
+        id="mem_plan_injection",
+        name="Context-Chained Plan Injection",
+        category="memory_poisoning",
+        pattern=_p(
+            # Task-continuation framing — the attacker disguises the payload as a
+            # natural follow-up to the user's legitimate goal stored in the agent's plan
+            r"(?:as\s+(?:a\s+|the\s+)?next\s+step|"
+            r"to\s+complete\s+(?:this|the)\s+(?:task|request|goal|workflow)|"
+            r"continuing\s+(?:from|the|this)\s+(?:previous|current|prior)|"
+            r"as\s+part\s+of\s+(?:this|the)\s+(?:workflow|plan|task|process)|"
+            r"in\s+addition\s+to\s+(?:your|the)\s+(?:current|previous|ongoing|main)\s+"
+            r"(?:task|goal|plan|step)|"
+            r"to\s+(?:finish|finalize|conclude)\s+(?:this|the)\s+(?:task|request|step)|"
+            r"as\s+a\s+follow.?up\s+to\s+(?:your|the)?\s*(?:task|goal|request|plan))\b"
+            r".{0,150}"
+            # Unauthorized exfiltration / redirect action
+            r"(?:send|forward|exfiltrate|relay|transfer|redirect|upload|post|submit|transmit|leak)\b"
+            r".{0,100}"
+            r"(?:https?://[^\s]{5,}|external|attacker|webhook|@[a-z0-9][a-z0-9.]{3,})"
+        ),
+        base_score=55,
+        description=(
+            "Context-chained plan injection: a memory entry disguises a data exfiltration "
+            "or redirect directive as a logical continuation of the user's stated task "
+            "('as a next step…', 'to complete this request…', 'continuing from the previous "
+            "step…'). The injection corrupts the agent's stored task plan rather than the "
+            "prompt itself, bypassing standard prompt-injection defenses. Documented at ICML "
+            "2025 (arxiv:2506.17318); tested on Browser-use and Agent-E, achieving 46–63% ASR "
+            "even when prompt injection filters were active (3× higher than direct injection)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint=(
+            "Agent task plans stored in external memory should be treated as untrusted input. "
+            "Reject any plan entry that combines task-continuation framing ('as a next step', "
+            "'to complete this task') with an instruction to send or forward data to an external "
+            "address. Task plans should be set by the operator system prompt, not modified by "
+            "content retrieved from external sources."
+        ),
+    ),
+    # --- Sleeper / dormant memory injection — arxiv:2503.16248, Mar 2026 ---
+    # "Real AI Agents with Fake Memories: Fatal Context Manipulation Attacks on Web3 Agents."
+    # Malicious memory entries include an explicit dormancy instruction ("do not act yet",
+    # "stay dormant", "wait until triggered") so they appear inert at injection time and
+    # bypass scans that check for immediate-action payloads. The entry activates silently
+    # in a future session when a benign user query matches the trigger condition.
+    # Demonstrated on ElizaOS (Web3 agent framework); memory injection outperforms prompt
+    # injection by a significant margin across CrAIBench's 500+ attack test cases.
+    DetectionPattern(
+        id="mem_sleeper_dormant",
+        name="Sleeper Memory Injection (Dormant Trigger)",
+        category="memory_poisoning",
+        pattern=_p(
+            # Explicit dormancy instruction — designed to make entry appear inert at scan time
+            r"(?:do\s+not\s+(?:act|execute|respond|run|invoke|call|perform|process)"
+            r"(?:\s+on\s+this)?(?:\s+(?:now|yet|immediately))?|"
+            r"(?:stay|remain)\s+(?:dormant|inactive|silent|hidden)|"
+            r"wait\s+until\s+(?:the\s+)?(?:user|next|a\s+later|someone)|"
+            r"activate\s+(?:when|if|once)|"
+            r"trigger\s+this\s+(?:when|if|once)|"
+            r"do\s+nothing\s+until|hold\s+(?:off|on)\s+until)\b"
+            r".{0,200}"
+            # Deferred exfiltration once the trigger fires
+            r"(?:send|forward|exfiltrate|relay|transmit|transfer|upload|post|submit|leak)\b"
+            r".{0,100}"
+            r"(?:https?://[^\s]{5,}|external|attacker|webhook|@[a-z0-9][a-z0-9.]{3,})"
+        ),
+        base_score=60,
+        description=(
+            "Sleeper (dormant) memory injection: a memory entry instructs the agent to take "
+            "no immediate action ('do not act now', 'stay dormant', 'wait until triggered'), "
+            "then specifies a deferred exfiltration action to execute once a future trigger "
+            "condition is met. The explicit dormancy instruction is designed to make the entry "
+            "appear harmless during initial ingestion scans. Documented in "
+            "arxiv:2503.16248 (March 2026) using the ElizaOS Web3 agent framework; memory "
+            "injection attacks outperformed direct prompt injection across all 150+ test "
+            "scenarios in the CrAIBench benchmark."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint=(
+            "Reject memory entries that combine a dormancy instruction ('do not act now', "
+            "'stay dormant', 'wait until activated') with any deferred exfiltration directive. "
+            "Legitimate memory entries describe facts or completed task states; they do not "
+            "schedule future conditional actions. Cross-session memory stores should be scanned "
+            "on both write and read, not only at the moment of ingestion."
+        ),
+    ),
     # --- ClawHavoc campaign (Feb 2026): SOUL.md / MEMORY.md targeting ---
     # 341+ malicious OpenClaw skills modified persistent agent memory files to install
     # backdoors that survived context resets. Targeting by filename is the key signal.
