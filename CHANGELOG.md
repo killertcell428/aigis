@@ -12,7 +12,7 @@ what got documented across releases.
 
 ## [Unreleased]
 
-## [1.0.18] - 2026-05-13
+## [1.0.19] - 2026-05-13
 
 ### Hardened
 
