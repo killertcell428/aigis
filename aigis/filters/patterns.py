@@ -1099,6 +1099,77 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "is governed by institutional ethics review, not AI chat."
         ),
     ),
+    # --- v1.0.18 jailbreak-extraction cycle 3 ---
+    DetectionPattern(
+        id="jb_structured_extraction",
+        name="JSON / Dict Field Enumeration for System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:output|return|show|give|print|format|export|dump|display)\s+"
+            r"[\s\S]{0,80}?"
+            r"(?:json|yaml|xml|toml|dict(?:ionary)?|config(?:uration)?|struct(?:ure)?|object)\b"
+            r"[\s\S]{0,100}?"
+            r"(?:system[._\s-]?prompt|content[._\s-]?polic|safety[._\s-]?(?:rule|guideline)|"
+            r"internal[._\s-]?instruction|hidden[._\s-]?instruction|"
+            r"system[._\s-]?config(?:uration)?|system[._\s-]?instruction)"
+        ),
+        base_score=65,
+        description=(
+            "Input requests the model to output its system configuration in a structured format "
+            "(JSON, YAML, dict) with field names that correspond to system-prompt internals such "
+            "as `system_prompt`, `content_policy`, or `restrictions`. Badhan Chandra Das et al. "
+            "(arxiv:2505.23817, May 2025) documented that this structured-output framing bypasses "
+            "naive extraction detectors (which only match literal 'show me your system prompt') "
+            "and achieved up to 92% attack success rate against Llama-3 and Falcon-3 before "
+            "defense. The aigis `pi_system_prompt_leak` pattern (score 45) does not cover this "
+            "framing; this rule adds higher-confidence coverage specifically for the "
+            "JSON/dict/YAML field-enumeration variant."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Requesting structured output containing system-prompt field names is a structured "
+            "extraction attack. Reject inputs that ask the model to format its own guidelines, "
+            "restrictions, or configuration into JSON/dict/YAML. Treat any output that mirrors "
+            "the model's internal configuration as a potential leak and redact before returning."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_sandwich_extraction",
+        name="Sandwich-Style Verbatim System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:repeat|output|reveal|print|show|give|return|reproduce|echo|copy|"
+            r"state|transcribe|write\s+out)\s+"
+            r"(?:(?:the|your|all|complete|full|entire|exact|verbatim)\s+)?"
+            r"(?:system\s+(?:prompt|instruction|config(?:uration)?)|"
+            r"initial\s+(?:prompt|instruction)|"
+            r"(?:hidden|base|internal|original|actual|real|true)\s+(?:instruction|prompt|config(?:uration)?)s?)"
+            r"[\s\S]{0,150}?"
+            r"(?:verbatim|word\s+for\s+word|"
+            r"(?:without|no)\s+(?:any\s+)?(?:additional|extra|other|unnecessary)\s+"
+            r"(?:text|modification|edit|change|addition|word|content|information|comment|explanation|note|preamble|header))"
+        ),
+        base_score=65,
+        description=(
+            "The extended sandwich attack for system-prompt extraction: the model is asked to "
+            "reproduce its system instructions verbatim, qualified with 'without additional text', "
+            "'without modifications', or 'word for word'. Badhan Chandra Das et al. "
+            "(arxiv:2505.23817, May 2025) demonstrated that appending this negative-constraint "
+            "qualifier to a prompt-extraction request significantly increases success rate "
+            "(up to 84% ASR on Falcon-3, 92% on Llama-3) by suppressing the model's tendency "
+            "to paraphrase or add explanatory preamble. The basic extraction phrase alone is "
+            "covered by `pi_system_prompt_leak` (score 45); this rule targets the higher-risk "
+            "verbatim-qualifier form that maximises extraction fidelity."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Verbatim repetition of the system prompt enables full leakage of proprietary "
+            "guidelines, safety rules, and business logic. Reject requests that ask for the "
+            "system prompt 'without additional text' or 'verbatim'. Apply an output filter "
+            "that detects long substrings shared with the system prompt and redact them before "
+            "returning the response."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
