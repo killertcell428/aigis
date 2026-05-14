@@ -295,61 +295,65 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
             "AI agents with network access should restrict outbound DNS to approved resolvers only."
         ),
     ),
-    # --- v1.0.18 data-exfiltration cycle 3 (third pass) ---
+    # --- v1.0.19 data-exfiltration cycle 3 (already released) ---
     DetectionPattern(
-        id="unicode_tag_block_smuggling",
-        name="Unicode Tag Block Hidden Instruction",
-        category="data_exfiltration",
-        pattern=_p(r"[\U000E0000-\U000E007F]{8,}"),
-        base_score=80,
-        description=(
-            "Detects sequences of 8+ Unicode Tag Block characters (U+E0000–U+E007F). "
-            "These code points map 1-to-1 to ASCII but render as invisible zero-width glyphs; "
-            "LLMs read and execute instructions hidden in them while humans cannot see them. "
-            "Used in EchoLeak (CVE-2025-32711, CVSS 9.3) to bypass Microsoft's XPIA classifier "
-            "and documented in arXiv:2603.00164 (Reverse CAPTCHA, 2026) as achieving high attack "
-            "success rates against frontier models including GPT-4o and Claude. "
-            "The 8-character threshold avoids false positives from subdivision flag emoji sequences "
-            "(e.g., England 🏴󠁧󠁢󠁥󠁮󠁧󠁿), which use at most 6 tag characters."
-        ),
-        owasp_ref="OWASP LLM01: Prompt Injection",
-        remediation_hint=(
-            "Strip or reject Unicode Tag Block characters (U+E0000–U+E007F) from input "
-            "before processing. These characters are invisible to users but readable by LLMs, "
-            "making them a powerful covert injection channel. Subdivision flag emoji use at most "
-            "6 tag characters and will not trigger this rule."
-        ),
-    ),
-    DetectionPattern(
-        id="exfil_shard_split_requests",
-        name="Sharded Exfiltration Instruction",
+        id="exfil_search_query_encode",
+        name="Web-Search Covert Channel — Encoded Data in Search Query",
         category="data_exfiltration",
         pattern=_p(
             r"(?:"
-            r"(?:split|shard|fragment|chunk|divide)\s+.{0,60}"
-            r"(?:(?:http|network|web|api)[\s_-]?requests?|multiple[\s_-]requests?|separate[\s_-]requests?)"
-            r"|"
-            r"(?:send|transmit|exfiltrat?e?)\s+.{0,40}"
-            r"(?:in\s+(?:small|multiple|several|separate|different)\s+(?:request|chunk|part|batch|piece)s?"
-            r"|across\s+(?:multiple|several|separate)\s+(?:request|call|message|chunk)s?)"
-            r"|"
-            r"(?:shard|fragment)\s+.{0,40}(?:transmit|exfil|send\s+each|send\s+them)"
+            r"(?:(?:web\s+)?search|search_tool|brave_search|google_search|bing_search)"
+            r".{0,60}?(?:base64|b64|hex|url.{0,5}encod).{0,60}(?:secret|key|token|pass(?:word)?|data|context|email|credential)|"
+            r"(?:base64|b64|hex).{0,50}(?:as|into|for|in)\s+(?:the\s+)?(?:web\s+)?search\s+(?:query|term)|"
+            r"(?:search\s+(?:query|term)|web\s+search).{0,50}(?:encod|base64|hex).{0,50}(?:secret|key|token|data|email|credential)"
             r")"
         ),
         base_score=65,
         description=(
-            "Detects instructions to fragment sensitive data across multiple separate HTTP requests "
-            "to evade per-request data-loss-prevention checks. The 'Silent Egress' paper "
-            "(arXiv:2602.22450, Feb 2026) demonstrated that injected instructions can cause an "
-            "LLM agent to split stolen context into small fragments (e.g., 4-character chunks), "
-            "transmit each fragment via a separate HTTP request, and rely on the attacker to "
-            "reassemble the data server-side — bypassing output-based safety checks in 95% of runs."
+            "Input instructs the agent to embed encoded sensitive data into a web search query "
+            "string as a covert exfiltration channel. Dennis Rall et al. (arxiv:2510.09093, Oct 2025) "
+            "demonstrated that an AI agent with a web search tool can be hijacked by a maliciously "
+            "crafted webpage to base64-encode conversation secrets and issue them as search queries, "
+            "leaking data to an attacker-controlled server through search-log interception. "
+            "Unlike URL-based exfiltration (which requires explicit link generation), this technique "
+            "abuses the agent's legitimate search capability as the transport channel."
         ),
         owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
         remediation_hint=(
-            "Instructions combining 'split/shard/chunk' language with 'requests' or 'send' "
-            "are a strong signal of a sharded-exfiltration attempt. Legitimate data pagination "
-            "is handled at the application layer, not instructed through AI prompts."
+            "Block prompts that pair encoding operations with web-search tool invocations. "
+            "Audit agent tool-call logs for search queries containing long base64 or hex strings. "
+            "Treat the search tool as a potential exfiltration channel, not just an information source."
+        ),
+    ),
+    # --- Unreleased: complementary web-search exfil regex (broader trigger surface) ---
+    DetectionPattern(
+        id="exfil_web_search_encode",
+        name="Web Search Query Encoding Exfiltration Instruction",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            r"(?:base64|b64|hex|url)[-_\s]?encod\w*.{0,60}"
+            r"(?:web[-_\s]?search|search[-_\s]tool|look\s+up\s+online|google\b|bing\b)|"
+            r"(?:web[-_\s]?search|search[-_\s]tool).{0,60}"
+            r"(?:base64|b64|hex)[-_\s]?encod\w*"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Input instructs an agent to encode sensitive context data and embed it in a web "
+            "search query — the covert exfiltration channel documented in arxiv:2510.09093 "
+            "(Oct 2025, revised Apr 2026). Attackers plant the instruction in retrieved web "
+            "content; when the agent executes the search, the encoded secret appears in the "
+            "search engine's server logs and is recovered via an SEO-optimized attacker-"
+            "controlled page. Attack success rate exceeded 80% across five tested agent "
+            "architectures. Complements `exfil_search_query_encode` with a broader trigger "
+            "surface (looser proximity, no secret-keyword requirement)."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Flag prompts that combine encoding directives with web-search tool calls. "
+            "Agents should never construct search queries from encoded user-context data; "
+            "audit web-search tool inputs for base64/hex strings before execution."
         ),
     ),
 ]
@@ -1124,6 +1128,77 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "Requests pairing educational framing with drug synthesis, weapon construction, "
             "or exploit code should be rejected. Legitimate research on sensitive topics "
             "is governed by institutional ethics review, not AI chat."
+        ),
+    ),
+    # --- v1.0.18 jailbreak-extraction cycle 3 ---
+    DetectionPattern(
+        id="jb_structured_extraction",
+        name="JSON / Dict Field Enumeration for System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:output|return|show|give|print|format|export|dump|display)\s+"
+            r"[\s\S]{0,80}?"
+            r"(?:json|yaml|xml|toml|dict(?:ionary)?|config(?:uration)?|struct(?:ure)?|object)\b"
+            r"[\s\S]{0,100}?"
+            r"(?:system[._\s-]?prompt|content[._\s-]?polic|safety[._\s-]?(?:rule|guideline)|"
+            r"internal[._\s-]?instruction|hidden[._\s-]?instruction|"
+            r"system[._\s-]?config(?:uration)?|system[._\s-]?instruction)"
+        ),
+        base_score=65,
+        description=(
+            "Input requests the model to output its system configuration in a structured format "
+            "(JSON, YAML, dict) with field names that correspond to system-prompt internals such "
+            "as `system_prompt`, `content_policy`, or `restrictions`. Badhan Chandra Das et al. "
+            "(arxiv:2505.23817, May 2025) documented that this structured-output framing bypasses "
+            "naive extraction detectors (which only match literal 'show me your system prompt') "
+            "and achieved up to 92% attack success rate against Llama-3 and Falcon-3 before "
+            "defense. The aigis `pi_system_prompt_leak` pattern (score 45) does not cover this "
+            "framing; this rule adds higher-confidence coverage specifically for the "
+            "JSON/dict/YAML field-enumeration variant."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Requesting structured output containing system-prompt field names is a structured "
+            "extraction attack. Reject inputs that ask the model to format its own guidelines, "
+            "restrictions, or configuration into JSON/dict/YAML. Treat any output that mirrors "
+            "the model's internal configuration as a potential leak and redact before returning."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_sandwich_extraction",
+        name="Sandwich-Style Verbatim System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:repeat|output|reveal|print|show|give|return|reproduce|echo|copy|"
+            r"state|transcribe|write\s+out)\s+"
+            r"(?:(?:the|your|all|complete|full|entire|exact|verbatim)\s+)?"
+            r"(?:system\s+(?:prompt|instruction|config(?:uration)?)|"
+            r"initial\s+(?:prompt|instruction)|"
+            r"(?:hidden|base|internal|original|actual|real|true)\s+(?:instruction|prompt|config(?:uration)?)s?)"
+            r"[\s\S]{0,150}?"
+            r"(?:verbatim|word\s+for\s+word|"
+            r"(?:without|no)\s+(?:any\s+)?(?:additional|extra|other|unnecessary)\s+"
+            r"(?:text|modification|edit|change|addition|word|content|information|comment|explanation|note|preamble|header))"
+        ),
+        base_score=65,
+        description=(
+            "The extended sandwich attack for system-prompt extraction: the model is asked to "
+            "reproduce its system instructions verbatim, qualified with 'without additional text', "
+            "'without modifications', or 'word for word'. Badhan Chandra Das et al. "
+            "(arxiv:2505.23817, May 2025) demonstrated that appending this negative-constraint "
+            "qualifier to a prompt-extraction request significantly increases success rate "
+            "(up to 84% ASR on Falcon-3, 92% on Llama-3) by suppressing the model's tendency "
+            "to paraphrase or add explanatory preamble. The basic extraction phrase alone is "
+            "covered by `pi_system_prompt_leak` (score 45); this rule targets the higher-risk "
+            "verbatim-qualifier form that maximises extraction fidelity."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Verbatim repetition of the system prompt enables full leakage of proprietary "
+            "guidelines, safety rules, and business logic. Reject requests that ask for the "
+            "system prompt 'without additional text' or 'verbatim'. Apply an output filter "
+            "that detects long substrings shared with the system prompt and redact them before "
+            "returning the response."
         ),
     ),
 ]
@@ -2856,6 +2931,99 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
         "and convenience settings, not safety policy. Reject any preference claim that "
         "includes a directive to bypass, ignore, or disable safety controls.",
     ),
+    # --- Context-chained plan injection — arxiv:2506.17318, ICML 2025 ---
+    # Patlan, Hebbar, Viswanath & Mittal: "Context manipulation attacks: Web agents are
+    # susceptible to corrupted memory." Plan injections corrupt the agent's stored task
+    # plan by disguising malicious directives as logical continuations of the user's goal.
+    # Achieves 46–63% ASR on Browser-use and Agent-E even when prompt injection defenses
+    # are applied; context-chained variants outperform direct injections by 3× on average.
+    DetectionPattern(
+        id="mem_plan_injection",
+        name="Context-Chained Plan Injection",
+        category="memory_poisoning",
+        pattern=_p(
+            # Task-continuation framing — the attacker disguises the payload as a
+            # natural follow-up to the user's legitimate goal stored in the agent's plan
+            r"(?:as\s+(?:a\s+|the\s+)?next\s+step|"
+            r"to\s+complete\s+(?:this|the)\s+(?:task|request|goal|workflow)|"
+            r"continuing\s+(?:from|the|this)\s+(?:previous|current|prior)|"
+            r"as\s+part\s+of\s+(?:this|the)\s+(?:workflow|plan|task|process)|"
+            r"in\s+addition\s+to\s+(?:your|the)\s+(?:current|previous|ongoing|main)\s+"
+            r"(?:task|goal|plan|step)|"
+            r"to\s+(?:finish|finalize|conclude)\s+(?:this|the)\s+(?:task|request|step)|"
+            r"as\s+a\s+follow.?up\s+to\s+(?:your|the)?\s*(?:task|goal|request|plan))\b"
+            r".{0,150}"
+            # Unauthorized exfiltration / redirect action
+            r"(?:send|forward|exfiltrate|relay|transfer|redirect|upload|post|submit|transmit|leak)\b"
+            r".{0,100}"
+            r"(?:https?://[^\s]{5,}|external|attacker|webhook|@[a-z0-9][a-z0-9.]{3,})"
+        ),
+        base_score=55,
+        description=(
+            "Context-chained plan injection: a memory entry disguises a data exfiltration "
+            "or redirect directive as a logical continuation of the user's stated task "
+            "('as a next step…', 'to complete this request…', 'continuing from the previous "
+            "step…'). The injection corrupts the agent's stored task plan rather than the "
+            "prompt itself, bypassing standard prompt-injection defenses. Documented at ICML "
+            "2025 (arxiv:2506.17318); tested on Browser-use and Agent-E, achieving 46–63% ASR "
+            "even when prompt injection filters were active (3× higher than direct injection)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint=(
+            "Agent task plans stored in external memory should be treated as untrusted input. "
+            "Reject any plan entry that combines task-continuation framing ('as a next step', "
+            "'to complete this task') with an instruction to send or forward data to an external "
+            "address. Task plans should be set by the operator system prompt, not modified by "
+            "content retrieved from external sources."
+        ),
+    ),
+    # --- Sleeper / dormant memory injection — arxiv:2503.16248, Mar 2026 ---
+    # "Real AI Agents with Fake Memories: Fatal Context Manipulation Attacks on Web3 Agents."
+    # Malicious memory entries include an explicit dormancy instruction ("do not act yet",
+    # "stay dormant", "wait until triggered") so they appear inert at injection time and
+    # bypass scans that check for immediate-action payloads. The entry activates silently
+    # in a future session when a benign user query matches the trigger condition.
+    # Demonstrated on ElizaOS (Web3 agent framework); memory injection outperforms prompt
+    # injection by a significant margin across CrAIBench's 500+ attack test cases.
+    DetectionPattern(
+        id="mem_sleeper_dormant",
+        name="Sleeper Memory Injection (Dormant Trigger)",
+        category="memory_poisoning",
+        pattern=_p(
+            # Explicit dormancy instruction — designed to make entry appear inert at scan time
+            r"(?:do\s+not\s+(?:act|execute|respond|run|invoke|call|perform|process)"
+            r"(?:\s+on\s+this)?(?:\s+(?:now|yet|immediately))?|"
+            r"(?:stay|remain)\s+(?:dormant|inactive|silent|hidden)|"
+            r"wait\s+until\s+(?:the\s+)?(?:user|next|a\s+later|someone)|"
+            r"activate\s+(?:when|if|once)|"
+            r"trigger\s+this\s+(?:when|if|once)|"
+            r"do\s+nothing\s+until|hold\s+(?:off|on)\s+until)\b"
+            r".{0,200}"
+            # Deferred exfiltration once the trigger fires
+            r"(?:send|forward|exfiltrate|relay|transmit|transfer|upload|post|submit|leak)\b"
+            r".{0,100}"
+            r"(?:https?://[^\s]{5,}|external|attacker|webhook|@[a-z0-9][a-z0-9.]{3,})"
+        ),
+        base_score=60,
+        description=(
+            "Sleeper (dormant) memory injection: a memory entry instructs the agent to take "
+            "no immediate action ('do not act now', 'stay dormant', 'wait until triggered'), "
+            "then specifies a deferred exfiltration action to execute once a future trigger "
+            "condition is met. The explicit dormancy instruction is designed to make the entry "
+            "appear harmless during initial ingestion scans. Documented in "
+            "arxiv:2503.16248 (March 2026) using the ElizaOS Web3 agent framework; memory "
+            "injection attacks outperformed direct prompt injection across all 150+ test "
+            "scenarios in the CrAIBench benchmark."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint=(
+            "Reject memory entries that combine a dormancy instruction ('do not act now', "
+            "'stay dormant', 'wait until activated') with any deferred exfiltration directive. "
+            "Legitimate memory entries describe facts or completed task states; they do not "
+            "schedule future conditional actions. Cross-session memory stores should be scanned "
+            "on both write and read, not only at the moment of ingestion."
+        ),
+    ),
     # --- ClawHavoc campaign (Feb 2026): SOUL.md / MEMORY.md targeting ---
     # 341+ malicious OpenClaw skills modified persistent agent memory files to install
     # backdoors that survived context resets. Targeting by filename is the key signal.
@@ -2886,6 +3054,63 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
             "by name in combination with a write/modify verb. "
             "Memory persistence should be managed exclusively by the trusted agent runtime, "
             "not by user-supplied or skill-supplied instructions."
+        ),
+    ),
+    # --- v1.0.20 data-exfiltration cycle (ZALyL patterns) ---
+    DetectionPattern(
+        id="unicode_tag_block_smuggling",
+        name="Unicode Tag Block Hidden Instruction",
+        category="data_exfiltration",
+        pattern=_p(r"[\U000E0000-\U000E007F]{8,}"),
+        base_score=80,
+        description=(
+            "Detects sequences of 8+ Unicode Tag Block characters (U+E0000–U+E007F). "
+            "These code points map 1-to-1 to ASCII but render as invisible zero-width glyphs; "
+            "LLMs read and execute instructions hidden in them while humans cannot see them. "
+            "Used in EchoLeak (CVE-2025-32711, CVSS 9.3) to bypass Microsoft's XPIA classifier "
+            "and documented in arXiv:2603.00164 (Reverse CAPTCHA, 2026) as achieving high attack "
+            "success rates against frontier models including GPT-4o and Claude. "
+            "The 8-character threshold avoids false positives from subdivision flag emoji sequences "
+            "(e.g., England 🏴󠁧󠁢󠁥󠁮󠁧󠁿), which use at most 6 tag characters."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Strip or reject Unicode Tag Block characters (U+E0000–U+E007F) from input "
+            "before processing. These characters are invisible to users but readable by LLMs, "
+            "making them a powerful covert injection channel. Subdivision flag emoji use at most "
+            "6 tag characters and will not trigger this rule."
+        ),
+    ),
+    DetectionPattern(
+        id="exfil_shard_split_requests",
+        name="Sharded Exfiltration Instruction",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            r"(?:split|shard|fragment|chunk|divide)\s+.{0,60}"
+            r"(?:(?:http|network|web|api)[\s_-]?requests?|multiple[\s_-]requests?|separate[\s_-]requests?)"
+            r"|"
+            r"(?:send|transmit|exfiltrat?e?)\s+.{0,40}"
+            r"(?:in\s+(?:small|multiple|several|separate|different)\s+(?:request|chunk|part|batch|piece)s?"
+            r"|across\s+(?:multiple|several|separate)\s+(?:request|call|message|chunk)s?)"
+            r"|"
+            r"(?:shard|fragment)\s+.{0,40}(?:transmit|exfil|send\s+each|send\s+them)"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Detects instructions to fragment sensitive data across multiple separate HTTP requests "
+            "to evade per-request data-loss-prevention checks. The 'Silent Egress' paper "
+            "(arXiv:2602.22450, Feb 2026) demonstrated that injected instructions can cause an "
+            "LLM agent to split stolen context into small fragments (e.g., 4-character chunks), "
+            "transmit each fragment via a separate HTTP request, and rely on the attacker to "
+            "reassemble the data server-side — bypassing output-based safety checks in 95% of runs."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Instructions combining 'split/shard/chunk' language with 'requests' or 'send' "
+            "are a strong signal of a sharded-exfiltration attempt. Legitimate data pagination "
+            "is handled at the application layer, not instructed through AI prompts."
         ),
     ),
 ]
@@ -4198,6 +4423,34 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
             "tunnel endpoints needed for a reviewed development workflow."
         ),
     ),
+    # --- v1.0.18 Output Patterns (data-exfiltration cycle 3) ---
+    DetectionPattern(
+        id="out_html_img_exfil",
+        name="HTML Image Tag Exfiltration Channel",
+        category="data_exfiltration",
+        pattern=_p(
+            r"<img\s[^>]*\bsrc=[\"']https?://"
+            r"(?!(?:localhost|127\.\d+|0\.0\.0\.0))"
+            r"[\w.\-]{4,}[^\"']*\?[^\"'&]{0,60}=[A-Za-z0-9+/=%_\-]{12,}"
+        ),
+        base_score=70,
+        description=(
+            "LLM output contains an HTML <img> tag whose src URL carries a long encoded query "
+            "parameter — the exfiltration technique used in ForcedLeak (CVSS 9.4, Noma Security, "
+            "Sep 2025), a critical vulnerability in Salesforce Agentforce. A prompt injected via "
+            "a Web-to-Lead form instructed the agent to encode CRM email addresses and embed them "
+            "in an <img> src URL; the browser fetched the URL when rendering the page, silently "
+            "delivering the stolen data to the attacker. The existing markdown-image filter "
+            "misses this variant because ForcedLeak used raw HTML rather than Markdown syntax."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Apply URL scanning to both Markdown ![img]() and HTML <img src=...> outputs. "
+            "Alert on any img src URL that carries query parameters with long encoded values. "
+            "Enforce a Trusted URLs allowlist (as Salesforce did post-ForcedLeak patch) so "
+            "agents cannot render images from arbitrary external hosts."
+        ),
+    ),
     # --- v1.0.2 Output Patterns (data-exfiltration cycle) ---
     DetectionPattern(
         id="out_markdown_img_exfil",
@@ -4241,7 +4494,34 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
             "Rotate any credentials that may have been exposed and investigate the prompt injection vector."
         ),
     ),
-    # --- v1.0.18 Output Patterns (data-exfiltration cycle, third pass) ---
+    # --- v1.0.18 data-exfiltration cycle 3 ---
+    DetectionPattern(
+        id="out_diagram_href_exfil",
+        name="Diagram DSL External Hyperlink (Mermaid / PlantUML Exfiltration)",
+        category="data_exfiltration",
+        pattern=_p(
+            r"```[ \t]*(?:mermaid|plantuml|d2)[^\n]*\n(?:[^`]){0,3000}"
+            r"(?:href|url)\s*[=:\s\"']+https?://(?!(?:localhost|127\.\d|0\.0\.0\.0))"
+        ),
+        base_score=65,
+        description=(
+            "LLM output contains a Mermaid, PlantUML, or D2 diagram block with an embedded external "
+            "hyperlink (`href=` or `url=`). Security researcher Adam Logue disclosed (Aug 2025, "
+            "patched Sep 2025) that indirect prompt injection via a malicious Excel spreadsheet "
+            "could instruct M365 Copilot to hex-encode corporate emails, embed them in a Mermaid "
+            "diagram node styled as a 'Verify Identity' button, and exfiltrate the encoded data "
+            "to an attacker server when clicked. Microsoft mitigated by disabling interactive "
+            "hyperlinks in Mermaid output. The technique extends to PlantUML and D2 diagram DSLs."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Strip or reject `href=` and `url=` attributes pointing to external hosts from "
+            "any rendered diagram (Mermaid, PlantUML, D2). "
+            "If diagram rendering is required, apply a strict allowlist of permissible link targets "
+            "and treat any external URL in a diagram block as a potential exfiltration vector."
+        ),
+    ),
+    # --- v1.0.20 Output Patterns (ZALyL patterns) ---
     DetectionPattern(
         id="out_unicode_tag_block_smuggling",
         name="Unicode Tag Block in LLM Output",
