@@ -49,6 +49,9 @@ class PolicyRule:
       - memory_retention: max days to remember ("90d")
       - delegation_depth: max agent-to-agent hops (1-5)
       - department: required department scope ("sales", "engineering")
+      - risk_above: rule fires only when event.risk_score >= this (0-100)
+      - risk_level: rule fires only when event.risk_level is at or above this
+        ("low" < "medium" < "high" < "critical")
     """
 
     id: str
@@ -173,6 +176,18 @@ def _check_conditions(event: ActivityEvent, conditions: dict) -> bool:
         if event.memory_scope and required_dept not in event.memory_scope:
             return False  # Wrong department — condition not met
 
+    if "risk_above" in conditions:
+        threshold = int(conditions["risk_above"])
+        if event.risk_score < threshold:
+            return False  # Below risk threshold — rule does not apply
+
+    if "risk_level" in conditions:
+        order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+        required = order.get(str(conditions["risk_level"]).lower(), -1)
+        actual = order.get((event.risk_level or "low").lower(), 0)
+        if required < 0 or actual < required:
+            return False  # Below required risk level — rule does not apply
+
     return True  # All conditions satisfied
 
 
@@ -286,6 +301,28 @@ def _default_policy() -> Policy:
                 target="*",
                 decision="allow",
                 reason="LLM prompts are scanned by Aigis's detection engine",
+            ),
+            # === Risk-threshold catch-all (Wall 1 detector escalation) ===
+            # Fires last, only when nothing more specific matched. Lets
+            # Wall 1 / Wall 2 detection signals escalate to a hard block
+            # even if no name-based rule matched the action+target.
+            # NOTE: critical must come before high — rules are first-match,
+            # so a risk=95 event needs to hit deny before it hits review.
+            PolicyRule(
+                id="risk_threshold_critical",
+                action="*",
+                target="*",
+                decision="deny",
+                reason="Critical-risk content detected by Aigis scan engine",
+                conditions={"risk_above": 80},
+            ),
+            PolicyRule(
+                id="risk_threshold_medium",
+                action="*",
+                target="*",
+                decision="review",
+                reason="Suspicious content detected by Aigis scan engine",
+                conditions={"risk_above": 40},
             ),
         ],
     )
