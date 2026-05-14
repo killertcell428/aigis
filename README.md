@@ -33,7 +33,8 @@
   <a href="#how-it-works">How It Works</a> &middot;
   <a href="#compliance">Compliance</a> &middot;
   <a href="#agent-security">Agent Security</a> &middot;
-  <a href="https://github.com/killertcell428/aigis/tree/master/docs">Docs</a>
+  <a href="https://github.com/killertcell428/aigis/tree/master/docs">Docs</a> &middot;
+  <a href="README.ja.md">日本語</a>
 </p>
 
 <p align="center">
@@ -101,6 +102,12 @@ Your AI agents are one prompt injection away from leaking secrets, executing mal
 | Self-improving | — | — | — | **Adversarial loop + auto-generated rules** |
 
 <sub>¹ LLM Guard, Guardrails AI, NeMo Guardrails — all single-layer scanner/validator architectures. Aigis is the only OSS firewall implementing the 2025–2026 paper stack and 4-wall deep defense. Suggestions / corrections welcome via Issues.</sub>
+
+<p align="center">
+  <a href="https://star-history.com/#killertcell428/aigis&Date">
+    <img src="https://api.star-history.com/svg?repos=killertcell428/aigis&type=Date" alt="Star History Chart" width="600" />
+  </a>
+</p>
 
 ---
 
