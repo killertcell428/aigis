@@ -4040,7 +4040,10 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
         pattern=_p(
             r"(?:pip\s+install\s+(?:[\w\-]+\s+)*|[\"']?)"
             r"(?:litellm==1\.82\.[78]|litellm==1\.56\.[0-3]|ultralytics==8\.3\.4[12]"
-            r"|torch==2\.5\.[01])"
+            r"|torch==2\.5\.[01]"
+            r"|mistralai==2\.4\.6"
+            r"|guardrails[-_]ai==0\.10\.1"
+            r"|lightning==2\.6\.[23])"
         ),
         base_score=80,
         description=(
@@ -4049,7 +4052,12 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
             "litellm 1.56.0-1.56.3 (March 2026): env-var exfiltration via compromised maintainer. "
             "ultralytics 8.3.41-8.3.42 (Dec 2024): crypto-miner via GitHub Actions compromise. "
             "torch 2.5.0-2.5.1 (CVE-2025-32434, CVSS 9.3): RCE via torch.load() bypassing "
-            "weights_only=True; patched in PyTorch 2.6.0."
+            "weights_only=True; patched in PyTorch 2.6.0. "
+            "mistralai 2.4.6 (Mini Shai-Hulud, May 2026): downloads transformers.pyz stealer "
+            "on import, exfiltrates credentials to 83.142.209.194. "
+            "guardrails-ai 0.10.1 (Mini Shai-Hulud, May 2026): same stealer payload. "
+            "lightning 2.6.2-2.6.3 (PyTorch Lightning, April 2026): installs IDE persistence "
+            "hooks in .claude/settings.json and .vscode/tasks.json; safe version is 2.6.1."
         ),
         owasp_ref="OWASP LLM03: Supply Chain",
         remediation_hint=(
@@ -4139,6 +4147,35 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
             "Never load model configs from untrusted sources with hydra.utils.instantiate(). "
             "Prefer SafeTensors format and validate model card checksums via the HuggingFace "
             "hub verification API before instantiating any config."
+        ),
+    ),
+    DetectionPattern(
+        id="sc_ide_hook_tamper",
+        name="IDE / Editor Settings Hook Tampering",
+        category="supply_chain",
+        pattern=_p(
+            r"\.claude/settings(?:\.local)?\.json.{0,400}(?:hooks|SessionStart|PreToolUse|PostToolUse)"
+            r'|"(?:hooks|SessionStart)"\s*[:{].{0,300}\.(?:mjs|js|sh|py|vbs|ps1)\b'
+            r"|\.vscode/tasks\.json.{0,400}runOn\s*[:\s]+folderOpen.{0,400}\.(?:mjs|js|sh|py)"
+        ),
+        base_score=75,
+        description=(
+            "Attempt to write or reference a malicious hook in an IDE/editor settings file. "
+            "PyTorch Lightning supply chain attack (lightning 2.6.2-2.6.3, April 2026): the "
+            "compromised package silently wrote a SessionStart hook into .claude/settings.json "
+            "pointing to a malicious script, and a parallel runOn:folderOpen task into "
+            ".vscode/tasks.json — both hooks fired automatically when the project was opened, "
+            "giving the attacker persistent code execution in the developer's environment. "
+            "An AI agent receiving indirect prompt injection (e.g. via a poisoned tool response) "
+            "could be directed to propagate the same persistence mechanism."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain / CWE-494 Download of Code Without Integrity Check",
+        remediation_hint=(
+            "Audit .claude/settings.json, .claude/settings.local.json, and .vscode/tasks.json "
+            "for unexpected hook or task entries, especially those pointing to files in .vscode/, "
+            ".claude/, or /tmp/. Treat any agent-suggested edit to these files as a high-risk "
+            "action requiring manual review. If lightning 2.6.2 or 2.6.3 was installed, treat "
+            "the environment as compromised and rotate all credentials."
         ),
     ),
 ]
