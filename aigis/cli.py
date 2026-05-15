@@ -366,6 +366,9 @@ def cmd_init(args: argparse.Namespace) -> int:
     print("    aig status       -Check governance status")
     print("    aig logs         -View activity stream")
     print("    aig policy show  -View active policy")
+    print()
+    print("  If Aigis helps you ship safer agents, a star keeps the project moving:")
+    print("    https://github.com/killertcell428/aigis")
     return 0
 
 
