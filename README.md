@@ -3,8 +3,13 @@
 </p>
 
 <p align="center">
-  <strong>The first AI agent firewall built on the 2025–2026 LLM-security literature.</strong><br />
-  Seven published papers — Mirror, StruQ, MI9, MemoryGraft, MSB, DataFilter, AdvJudge-Zero — shipped as a single zero-dependency Python package. Drop-in for Claude Code, Cursor, FastAPI, and LangChain.
+  <strong>AI agents need agent-era security.</strong><br />
+  Chatbot-era guards filter text in and out. Aigis catches what comes next — <strong>MCP rug-pull at runtime, memory poisoning across sessions, capability escalation in tool calls, indirect injection in retrieved content</strong>.<br />
+  Open source · zero dependencies · deterministic · no data leaves your environment.
+</p>
+
+<p align="center">
+  <em>Drop-in for Claude Code, Cursor, FastAPI, LangChain — 30 seconds via <code>pip install pyaigis && aigis init</code>.</em>
 </p>
 
 <table align="center">
@@ -118,20 +123,30 @@ aigis scan "DROP TABLE users; --"
 
 ## The Problem
 
-Your AI agents are one prompt injection away from leaking secrets, executing malicious code, or ignoring every safety rule you've set.
+Most existing guardrails were designed for **chatbots** — they classify text going into and coming out of an LLM. AI agents are a different problem: they call tools, write to memory across sessions, retrieve from RAG, and delegate to sub-agents. Each is a separate attack surface that an input/output classifier doesn't see.
 
-| | Commercial ($50K+/yr) | Cloud guardrails | OSS alternatives¹ | **Aigis** |
-|---|---|---|---|---|
-| License | Closed | Closed | OSS (varies) | **Apache 2.0** |
-| Pricing | $$$$ | $$ pay-per-call | Free | **Free forever** |
-| Setup | Weeks + vendor calls | Vendor lock-in | `pip install` + ML deps | **`pip install pyaigis` (zero deps, 30 sec)** |
-| Defense layers | 1 (typical) | 1 (typical) | 1 (scanners / validators / rails) | **4 walls + L4–L7 deep defense** |
-| Paper-grounded patterns (2025–2026) | — | — | — | **7 papers (Mirror · StruQ · MI9 · MemoryGraft · MSB · DataFilter · AdvJudge-Zero)** |
-| Multi-country compliance | US/EU only | — | — | **44 templates (US · CN · JP · EU)** |
-| MCP tool scanning | — | — | — | **3-stage (definitions + invocations + responses)** |
-| Self-improving | — | — | — | **Adversarial loop + auto-generated rules** |
+### Tools by the attack class they were designed for
 
-<sub>¹ LLM Guard, Guardrails AI, NeMo Guardrails — all single-layer scanner/validator architectures. Aigis is the only OSS firewall implementing the 2025–2026 paper stack and 4-wall deep defense. Suggestions / corrections welcome via Issues.</sub>
+| Tool | Designed for | Catches |
+|---|---|---|
+| **OpenAI Moderations / Azure Content Safety** | content moderation (toxicity, sexual, self-harm) | unsafe **content** in user input |
+| **LLM Guard, Guardrails AI, NeMo Guardrails, Rebuff** | **chatbot input/output filtering** | prompt-injection phrases, simple jailbreaks, PII in single-turn text |
+| Commercial vendors ($50K+/yr) | enterprise compliance + reporting | varies; usually a single-layer detector wrapped in dashboards and SLAs |
+| **Aigis** | **AI agents** — tool calls, memory, MCP, RAG, sub-agent delegation | the above **plus** MCP rug-pull at runtime, memory poisoning across sessions, capability escalation in tool calls, indirect injection in retrieved content, supply-chain LLM attacks |
+
+The difference isn't "more features." Other tools are well-engineered for chatbots — they just predate the agent attack surface. Aigis is built for the surface, not for chatbots.
+
+### What you actually get with Aigis
+
+- **`pip install pyaigis && aigis init --agent claude-code`** drops a pre-tool-use hook into `.claude/hooks/` in 30 seconds. Every Bash, Edit, Write, WebFetch is now intercepted before it runs.
+- **Zero required dependencies** for the core. The stdlib is enough. FastAPI / LangChain / OpenAI / Anthropic adapters are optional extras.
+- **Deterministic, no LLM-based judging.** $0 API cost, no data leaves your environment, identical inputs produce identical outputs.
+- **MCP 3-stage scanner** (definition + invocation + response) — the only OSS firewall that catches rug-pull and shadowing attacks that fire *after* the user has clicked "allow".
+- **44 compliance rule templates** spanning US (OWASP LLM/Agentic Top 10, NIST AI RMF, MITRE ATLAS, SOC2, HIPAA, Colorado AI Act), JP (AI 事業者ガイドライン v1.2 25 reqs, AI 推進法, APPI), CN (GenAI Interim Measures, PIPL), EU (GDPR, EU AI Act). All readable YAML — no black boxes.
+- **Weekly adversarial loop** auto-generates new detectors from observed bypasses. v1.0.0 → v1.1.0 was 21 patch releases and ≈60 new detectors in 8 days.
+- **Open source under Apache 2.0**, free forever, no telemetry.
+
+<sub>References: [LLM Guard](https://github.com/protectai/llm-guard) · [Guardrails AI](https://github.com/guardrails-ai/guardrails) · [NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) · [Rebuff](https://github.com/protectai/rebuff). Architectural comparison, not a feature checklist — suggestions / corrections welcome via Issues.</sub>
 
 <p align="center">
   <a href="https://star-history.com/#killertcell428/aigis&Date">
@@ -143,7 +158,16 @@ Your AI agents are one prompt injection away from leaking secrets, executing mal
 
 ## How It Works
 
-Most tools scan with a single layer. Aigis runs your input through four independent walls — what gets past one gets caught by the next.
+The agent attack surface has four distinct layers, each requiring a different defense:
+
+1. **Input / output text** — prompt injection, jailbreak, encoded payloads, indirect injection from retrieved RAG content. Aigis's **Wall 1–3** (pattern · semantic similarity · encoded-payload normalisation) plus a StruQ-inspired **Input Shaping** layer handle these.
+2. **Tool calls (MCP, function-calling)** — rug-pull, cross-tool shadowing, confused-deputy credential abuse. Aigis's **MCP 3-stage scanner** (definition + invocation + response) plus an **L4 capability-based** taint-tracking layer handle these.
+3. **Memory across sessions** — sleeper injections, false-preference impersonation, plan poisoning. Aigis's **memory imitation detector** and **MemoryGraft-style write filters** handle these.
+4. **Agent runtime behaviour** — goal drift, FSM violations, sub-agent collusion, audit-trail tampering. Aigis's **L5 atomic execution sandbox**, **L6 safety-spec verifier**, and **L7 goal-conditioned FSM** handle these.
+
+A single-layer scanner doesn't cover layers 2–4. Most existing guardrails are layer-1 tools retrofitted to agents. Aigis is built from layer 4 down.
+
+### The 4-wall pipeline (layer 1 in detail)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_2_architecture_en.png" alt="Aigis 4-Layer Deep Defense" width="800" />
@@ -156,9 +180,9 @@ Beyond the 4 walls, Aigis has deeper defense layers for advanced use cases:
 - **L6: Safety Specification Verifier** — Formal safety specs with proof-certificate verification.
 - **L7: Goal-Conditioned FSM** — Operator-declared agent state machines; any transition or tool call outside the spec is a hard `FSMViolation`, not a soft anomaly. Complements the statistical drift detector in `monitor/drift.py`. Inspired by [MI9](https://arxiv.org/abs/2508.03858) (Aug 2025).
 
-### The seven-paper stack
+### Research basis
 
-Aigis tracks the live LLM-security literature and maps each paper into an existing layer rather than adding a parallel framework. The seven research-driven detectors below are the core of [**v1.0.0**](https://github.com/killertcell428/aigis/releases/tag/v1.0.0) (released 2026-05-07; pre-release `0.0.x` graduated to stable with no breaking changes).
+Each detector below is the implementation of a named result from the 2025–2026 LLM-security literature, not a vibes-based heuristic. The list isn't a marketing claim — it's where the failure mode came from and which paper documented the attack-success rate. Treat it as provenance for the detectors, not as the headline.
 
 **Wall 1 (Pattern Matching)**
 

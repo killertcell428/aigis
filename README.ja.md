@@ -3,8 +3,13 @@
 </p>
 
 <p align="center">
-  <strong>2025–2026 年の LLM セキュリティ論文 7 本に基づいて構築された AI エージェント向けファイアウォール。</strong><br />
-  Mirror / StruQ / MI9 / MemoryGraft / MSB / DataFilter / AdvJudge-Zero ― 依存関係ゼロの単一 Python パッケージとして提供。Claude Code / Cursor / FastAPI / LangChain に組み込み可能。
+  <strong>AI エージェントには「エージェント時代」のセキュリティが必要。</strong><br />
+  チャットボット時代のガードレールは入出力テキストを濾過するだけ。Aigis はその先の攻撃面 ― <strong>MCP の rug-pull、セッション横断のメモリ汚染、ツール呼び出しでの権限昇格、取得済 RAG コンテンツ経由の間接インジェクション</strong> ― を捕える。<br />
+  OSS · 依存ゼロ · 決定論的 · データは環境外に出ない。
+</p>
+
+<p align="center">
+  <em>Claude Code / Cursor / FastAPI / LangChain にドロップイン ― <code>pip install pyaigis && aigis init</code> で 30 秒。</em>
 </p>
 
 <table align="center">
@@ -122,20 +127,30 @@ aigis scan "DROP TABLE users; --"
 
 ## 課題
 
-AI エージェントは、プロンプトインジェクション 1 回で、シークレットの漏洩、悪意のあるコードの実行、設定済み安全ルールの無視といった状態に至り得る。
+既存のガードレールの多くは **チャットボット** 向けに設計されており、LLM への入出力テキストを分類するに留まる。AI エージェントは別物 ― ツールを呼び出し、セッションを跨いでメモリに書き、RAG から取得し、サブエージェントに委任する。**それぞれが独立した攻撃面** であり、入出力分類器の視界には入らない。
 
-|  | 商用 ($50K+/年) | クラウド guardrails | OSS 既存¹ | **Aigis** |
-|---|---|---|---|---|
-| ライセンス | クローズド | クローズド | OSS（バラつきあり） | **Apache 2.0** |
-| 価格 | $$$$ | $$ 従量 | 無料 | **永久無料** |
-| 導入 | 数週間 + ベンダー折衝 | ベンダーロックイン | `pip install` + ML 依存 | **`pip install pyaigis`（依存ゼロ、30 秒）** |
-| 防御層 | 1（一般的） | 1（一般的） | 1（scanner / validator / rails） | **4 walls + L4–L7 深層防御** |
-| 論文ベース検出（2025–2026） | — | — | — | **7 本（Mirror · StruQ · MI9 · MemoryGraft · MSB · DataFilter · AdvJudge-Zero）** |
-| 多国コンプライアンス | 米欧のみ | — | — | **44 雛形（米・中・日・欧）** |
-| MCP ツール検査 | — | — | — | **3 段（定義 + 呼出し + 応答）** |
-| 自己改善 | — | — | — | **Adversarial loop + 自動ルール生成** |
+### 各ツールが想定する攻撃クラス
 
-<sub>¹ LLM Guard、Guardrails AI、NeMo Guardrails ― いずれも単層 scanner/validator 構成。Aigis は 2025–2026 論文スタックと 4-wall 深層防御を実装した唯一の OSS ファイアウォール。誤りや指摘は Issues で歓迎する。</sub>
+| ツール | 想定対象 | 検出範囲 |
+|---|---|---|
+| **OpenAI Moderations / Azure Content Safety** | コンテンツ・モデレーション（毒性・性的・自傷） | ユーザー入力中の不適切 **コンテンツ** |
+| **LLM Guard、Guardrails AI、NeMo Guardrails、Rebuff** | **チャットボット入出力フィルタリング** | プロンプトインジェクション語句、単純な jailbreak、単一ターン内の PII |
+| 商用ベンダー（$50K+/年） | エンタープライズ向けコンプライアンス＋レポーティング | ベンダー依存。多くは単層検出をダッシュボードと SLA で包装 |
+| **Aigis** | **AI エージェント** ― ツール呼出し・メモリ・MCP・RAG・サブエージェント委任 | 上記すべて **に加えて** MCP rug-pull の実行時検出、セッション横断のメモリ汚染、ツール呼出しでの権限昇格、取得済コンテンツ経由の間接インジェクション、サプライチェーン LLM 攻撃 |
+
+差は「機能数」ではない。他ツールはチャットボット向けに **よく設計されている** が、エージェント攻撃面が出現する前の設計のまま。Aigis はその攻撃面のために 1 から構築している。
+
+### Aigis を使うと実際に得られるもの
+
+- **`pip install pyaigis && aigis init --agent claude-code`** で `.claude/hooks/` に pre-tool-use フックを 30 秒で挿入。Claude Code の Bash・Edit・Write・WebFetch がすべて実行前に横取りされる
+- **コアの依存ゼロ**。Python 標準ライブラリだけで動く。FastAPI / LangChain / OpenAI / Anthropic アダプタは optional extras
+- **決定論的、LLM 判定を一切使わない**。API コスト $0、データが環境外に出ない、同じ入力に対して同じ出力
+- **MCP 3 段スキャナ**（定義 + 呼出し + 応答）― ユーザーが「許可」した **後** に発火する rug-pull / shadowing を捕える唯一の OSS ファイアウォール
+- **44 個のコンプライアンス雛形** ― 米国（OWASP LLM/Agentic Top 10、NIST AI RMF、MITRE ATLAS、SOC2、HIPAA、Colorado AI Act）、日本（AI 事業者ガイドライン v1.2 25 要件、AI 推進法、APPI / マイナンバー法）、中国（GenAI 暫定弁法、PIPL）、EU（GDPR、EU AI Act）。すべて読める YAML、ブラックボックスなし
+- **週次の adversarial loop** が観測した bypass から新規 detector を自動生成。v1.0.0 → v1.1.0 は 8 日で 21 パッチ・約 60 個の detector 追加
+- **Apache 2.0 OSS**、永久無料、テレメトリなし
+
+<sub>参考リンク: [LLM Guard](https://github.com/protectai/llm-guard) · [Guardrails AI](https://github.com/guardrails-ai/guardrails) · [NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) · [Rebuff](https://github.com/protectai/rebuff)。機能チェックリストではなくアーキテクチャ比較。誤りや指摘は Issues で歓迎。</sub>
 
 <p align="center">
   <a href="https://star-history.com/#killertcell428/aigis&Date">
@@ -149,7 +164,16 @@ AI エージェントは、プロンプトインジェクション 1 回で、�
 
 ## 仕組み
 
-多くのツールは単層スキャンで構成される。Aigis は独立した 4 つの壁に入力を順に通す ― 1 つを抜けたものは次の壁で捕える。
+エージェント攻撃面は 4 つの独立した層からなり、それぞれ異なる防御が必要：
+
+1. **入出力テキスト** ― プロンプトインジェクション、jailbreak、エンコード済ペイロード、取得済 RAG コンテンツからの間接インジェクション。Aigis の **Wall 1–3**（パターン・意味類似度・エンコード正規化）と StruQ 由来の **Input Shaping** 層がこれを担当
+2. **ツール呼出し（MCP・function calling）** ― rug-pull、クロスツール shadowing、confused-deputy による認証情報悪用。Aigis の **MCP 3 段スキャナ**（定義 + 呼出し + 応答）と **L4 ケイパビリティベース** taint 追跡層がこれを担当
+3. **セッション横断のメモリ** ― 休眠注入、偽嗜好なりすまし、プラン汚染。Aigis の **メモリ模倣検出器** と **MemoryGraft 系の書込みフィルタ** がこれを担当
+4. **エージェントランタイム挙動** ― ゴールドリフト、FSM 違反、サブエージェント結託、監査改ざん。Aigis の **L5 アトミック実行サンドボックス**、**L6 安全仕様 Verifier**、**L7 ゴール条件付き FSM** がこれを担当
+
+単層スキャナでは層 2〜4 がカバーできない。既存ガードレールの多くは層 1 のツールをエージェント向けに後付けしたもの。Aigis は層 4 から下に向かって構築している。
+
+### 4-wall パイプライン（層 1 の詳細）
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_2_architecture_ja.png" alt="Aigis 4-Layer Deep Defense" width="800" />
@@ -162,9 +186,9 @@ AI エージェントは、プロンプトインジェクション 1 回で、�
 - **L6: 安全仕様 Verifier** ― 形式的な安全仕様と証明書ベースの検証。
 - **L7: ゴール条件付き FSM** ― 運用者が宣言した状態機械。仕様外の遷移やツール呼出しは soft anomaly ではなく `FSMViolation` として確定的に弾く。`monitor/drift.py` の統計的ドリフト検出を補完する。[MI9](https://arxiv.org/abs/2508.03858)（2025-08）。
 
-### 7 本の論文スタック
+### 研究的裏付け
 
-Aigis は LLM セキュリティの最新論文を追跡し、新規フレームワークを生やすのではなく既存の壁内にマップする方針を取る。以下が [**v1.0.0**](https://github.com/killertcell428/aigis/releases/tag/v1.0.0)（2026-05-07 公開。pre-release `0.0.x` から破壊的変更なしで安定版に昇格）の中核となる 7 つの研究駆動検出器。
+以下に挙げる detector は、いずれも 2025–2026 年の LLM セキュリティ論文で名付けられた攻撃結果の実装であり、雰囲気ベースのヒューリスティクスではない。この一覧はマーケティング訴求ではなく ―― **どこから来た失敗モードか、どの論文で attack success rate が測定されているか** ―― という出自・引用としての位置付け。表題ではなく、検出器の根拠として扱ってほしい。
 
 **Wall 1（Pattern Matching）**
 
