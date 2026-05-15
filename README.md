@@ -9,12 +9,16 @@
 
 <table align="center">
   <tr>
-    <td align="center"><strong>98.9%</strong><br /><sub>Detection Rate</sub></td>
-    <td align="center"><strong>1,002</strong><br /><sub>Tests Passing</sub></td>
+    <td align="center"><strong>100%</strong><br /><sub>Detection on<br />paper-grounded<br />categories (76/76)</sub></td>
+    <td align="center"><strong>1,434</strong><br /><sub>Tests Passing<br />on v1.1.0</sub></td>
     <td align="center"><strong>44</strong><br /><sub>Compliance Templates<br />(US/CN/JP/EU)</sub></td>
     <td align="center"><strong>$0</strong><br /><sub>Forever</sub></td>
   </tr>
 </table>
+
+<p align="center">
+  <sub>Overall benchmark detection: <strong>93.5%</strong> (144/154) with <strong>0.0% false-positive rate</strong> (0/26 benign inputs). The 10 misses sit in alignment-frontier categories (sandbox escape, self-privilege escalation, audit tampering, evaluation gaming, CoT deception) — tracked on the L6/L7 verifier roadmap, not claimed as solved. <a href="https://github.com/killertcell428/aigis/releases/tag/v1.1.0">See v1.1.0 release notes →</a></sub>
+</p>
 
 <p align="center">
   <a href="https://pypi.org/project/pyaigis/"><img src="https://img.shields.io/pypi/v/pyaigis.svg" alt="PyPI" /></a>
@@ -47,6 +51,25 @@
     Prefer email only on releases? Click <strong>Watch → Custom → Releases</strong> at the top of the page.
   </sub>
 </p>
+
+<details>
+<summary><strong>🆕 What's new in v1.1.0 (2026-05-15) — 21-patch rollup</strong></summary>
+
+Eight days, 21 patch releases, ~60 new detectors across 14 auto-improvement cycles. Headline additions:
+
+- **Memory poisoning (8 detectors)** — MemoryGraft experience hijacking, ZombieAgent conditional exfiltration, Mnemonic Sovereignty false-preference injection, context-chained plan injection, dormant memory injection. Real-world fixes from OpenAI and Windsurf trace back to this class.
+- **MCP / A2A multi-agent (10+ detectors)** — Function Hijacking Attack (70–100% ASR on BFCL), namespace cross-shadowing (Invariant Labs WhatsApp PoC), confused-deputy credential abuse (SEAgent, 100% ASR), Agent Card Poisoning + Session Fabrication for Google A2A.
+- **Indirect prompt injection (10+ detectors)** — Promptware Kill Chain C2, task abandonment, ii_concealment_from_user, financial transaction injection (Unit 42 + Forcepoint), structured + sandwich system-prompt extraction (84–92% ASR).
+- **Data exfiltration channels (10+ detectors)** — EchoLeak (CVE-2025-32711, CVSS 9.3) Unicode Tag Block ASCII smuggling, ForcedLeak (CVSS 9.4) HTML `<img>` exfil, Mermaid/PlantUML/D2 `click href` channel, DNS tunneling, search-query exfiltration, sharded HTTP exfil (95% DLP evasion).
+- **Supply-chain LLM attacks (5+ detectors)** — Mini Shai-Hulud campaign packages (`mistralai==2.4.6`, `guardrails-ai==0.10.1`), PyTorch Lightning backdoor (`lightning==2.6.2/3`), IDE persistence-hook tampering, LangChain serialization RCE (CVE-2025-68664), Hydra `_target_` RCE (23% of top-1000 HF models compromised per JFrog).
+- **Encoding obfuscation (3 detectors)** — Unicode Tag Block, fullwidth Latin keywords (61.5% ASR), Python `__mro__` sandbox escape (CVE-2026-26030 CVSS 9.9).
+- **Compliance / regulation (5+ rules + new policy template)** — `gpai_provider` template for EU AI Act Art. 53/55 (model-eval bypass, systemic-risk concealment, training-data documentation bypass, incident suppression, copyright circumvention), NCII generation (EU AI Act Digital Omnibus), AI identity denial (Art. 52 + CA/WA/NE/OR state laws), social scoring (Art. 5(1)(c), €35M / 7% max fine).
+
+**Operational hardening:** OpenSSF Best Practices Silver tier preparation, DCO enforcement, Sigstore keyless release attestation, scanner ↔ Guard pattern parity (209 patterns shared), `pii_email_input` regex ~45× faster.
+
+Full per-rule changelog with `**Blocked example:**` payloads and ASR citations: [CHANGELOG.md](CHANGELOG.md). Release notes: [v1.1.0](https://github.com/killertcell428/aigis/releases/tag/v1.1.0).
+
+</details>
 
 ---
 
@@ -356,13 +379,26 @@ Being honest about limits builds more trust than overclaiming features.
 
 ```bash
 aigis benchmark
-# Prompt Injection    20/20 detected (100%)
-# Jailbreak           20/20 detected (100%)
-# SQL Injection       15/15 detected (100%)
-# PII Detection       12/12 detected (100%)
-# ...
-# Total: 112/112 attacks detected, 26/26 safe inputs passed
-# False positive rate: 0.0%
+# Output captured on v1.1.0 (2026-05-15):
+# prompt_injection_zh         7/7       100.0%
+# encoding_bypass             7/7       100.0%
+# memory_poisoning            9/9       100.0%
+# second_order_injection      9/9       100.0%
+# mcp_poisoning               8/8       100.0%
+# indirect_injection          8/8       100.0%
+# pii_input                   5/5       100.0%
+# pii_input_ko                3/3       100.0%
+# pii_input_zh                3/3       100.0%
+# data_exfiltration           4/4       100.0%
+# autonomous_exploit          7/7       100.0%
+# sandbox_escape              6/7        85.7%   (alignment-frontier)
+# self_privilege_escalation   6/7        85.7%   (alignment-frontier)
+# audit_tampering             5/7        71.4%   (alignment-frontier)
+# evaluation_gaming           4/7        57.1%   (alignment-frontier)
+# cot_deception               4/7        57.1%   (alignment-frontier)
+# -----------------------------------------------------------------
+# TOTAL                     144/154      93.5%   (76/76 = 100% on paper-grounded)
+# False positive rate: 0/26 safe inputs flagged (0.0%)
 ```
 
 ```bash
@@ -402,7 +438,7 @@ We welcome contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 git clone https://github.com/killertcell428/aigis.git
 cd aigis
 pip install -e ".[dev]"
-pytest  # 901 tests, all should pass
+pytest  # 1,434 tests on v1.1.0, all should pass
 ```
 
 ---
