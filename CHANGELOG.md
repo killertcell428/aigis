@@ -12,6 +12,55 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-15
+
+### Rollup
+
+v1.1.0 bundles every patch release from v1.0.1 through v1.0.21 into one
+minor version. The granular per-detector changelog for each cycle is
+preserved below in its original section. This rollup is a marketing /
+release-note artefact, not new code — running `pip install pyaigis==1.1.0`
+gives you exactly the same module set as `pip install pyaigis==1.0.21`.
+
+**Headline numbers (measured 2026-05-15 on `master` @ v1.1.0 candidate):**
+
+- **Tests:** 1,434 passed · 0 failed · 0 skipped (`uv run pytest --tb=no -q`)
+- **Benchmark:** 144/154 attacks detected (**93.5%** overall)
+  - **100% on the 11 paper-grounded attack categories** (prompt injection
+    EN/ZH, encoding-bypass, memory poisoning, second-order injection, MCP
+    poisoning, indirect injection, PII inputs EN/KO/ZH, data exfiltration,
+    autonomous exploit) — 76/76 attacks detected.
+  - 57.1–85.7% on alignment-frontier categories (sandbox escape,
+    self-privilege escalation, audit tampering, evaluation gaming, CoT
+    deception). These 10 misses are tracked on the L6 / L7 verifier
+    roadmap; the underlying research literature considers them partially
+    unsolved.
+- **False-positive rate:** 0/26 safe inputs flagged (**0.0%**)
+- **New detectors added since v1.0.0:** ≈ 60 across 14 auto-improvement
+  cycles touching memory poisoning, MCP/A2A multi-agent, indirect prompt
+  injection in retrieved content, data exfiltration channels, supply-chain
+  LLM attacks, encoding obfuscation, jailbreak/system-prompt extraction,
+  and compliance/regulation.
+
+**Operational hardening:**
+
+- OpenSSF Best Practices **Silver tier preparation** (v1.0.15) — DCO
+  enforcement, Sigstore keyless release attestation, assurance case,
+  access continuity inventory, tightened SECURITY.md SLA.
+- **`gpai_provider` policy template** (v1.0.14) — five EU AI Act Art. 53
+  / 55 detectors for General-Purpose AI providers.
+- **Scanner ↔ Guard pattern parity** (v1.0.16) — `aigis.scanner.scan()`
+  and `Guard(...)` now share all 209 patterns.
+- **`pii_email_input` regex perf fix** (v1.0.16) — ~45× faster on long
+  alphabetic inputs (~111 ms → ~2.5 ms on a 5 kB input with no `@`).
+- **False-positive tightening** on `ii_financial_transaction_injection`,
+  `ii_concealment_from_user`, `afe_sensitive_file_read` (v1.0.16) — fixes
+  documented FPs without losing any of the original true-positive
+  coverage.
+
+**For per-rule detail, blocked-example payloads, and ASR citations**, see
+the individual patch sections from v1.0.21 down to v1.0.1 below.
+
 ## [1.0.21] - 2026-05-14
 
 ### Hardened
