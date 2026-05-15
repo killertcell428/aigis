@@ -9,12 +9,16 @@
 
 <table align="center">
   <tr>
-    <td align="center"><strong>98.9%</strong><br /><sub>検出率</sub></td>
-    <td align="center"><strong>1,002</strong><br /><sub>テスト全通過</sub></td>
+    <td align="center"><strong>100%</strong><br /><sub>論文ベース<br />11 カテゴリで<br />76/76 検出</sub></td>
+    <td align="center"><strong>1,434</strong><br /><sub>テスト全通過<br />(v1.1.0)</sub></td>
     <td align="center"><strong>44</strong><br /><sub>コンプライアンス雛形<br />(US/CN/JP/EU)</sub></td>
     <td align="center"><strong>$0</strong><br /><sub>永久無料</sub></td>
   </tr>
 </table>
+
+<p align="center">
+  <sub>ベンチマーク全体検出率: <strong>93.5%</strong>（144/154）、<strong>誤検知率 0.0%</strong>（0/26）。残り 10 件の取りこぼしは alignment-frontier 系（sandbox escape、self-privilege escalation、audit tampering、評価ゲーミング、CoT deception）に集中しており、L6/L7 verifier ロードマップで進行中（解決済みとは主張しない）。<a href="https://github.com/killertcell428/aigis/releases/tag/v1.1.0">v1.1.0 リリースノート →</a></sub>
+</p>
 
 <p align="center">
   <a href="https://pypi.org/project/pyaigis/"><img src="https://img.shields.io/pypi/v/pyaigis.svg" alt="PyPI" /></a>
@@ -47,6 +51,25 @@
     リリース通知だけ欲しい場合は、ページ上部の <strong>Watch → Custom → Releases</strong> をクリック。
   </sub>
 </p>
+
+<details>
+<summary><strong>🆕 v1.1.0 で追加されたもの（2026-05-15 / 21 パッチのロールアップ）</strong></summary>
+
+8 日間で 21 パッチ、14 サイクル分の auto-improvement loop による約 60 個の新規 detector を統合：
+
+- **メモリ汚染（8 detector）** — MemoryGraft 経験ハイジャック、ZombieAgent 条件付き流出、Mnemonic Sovereignty 偽嗜好注入、文脈連鎖型プラン注入、休眠メモリ注入。OpenAI / Windsurf の実環境修正はこのクラス起因。
+- **MCP / A2A マルチエージェント（10+ detector）** — Function Hijacking Attack（BFCL で 70–100% ASR）、namespace cross-shadowing（Invariant Labs WhatsApp PoC）、confused-deputy 認証情報悪用（SEAgent、100% ASR）、Agent Card Poisoning + Session Fabrication。
+- **間接プロンプトインジェクション（10+ detector）** — Promptware Kill Chain C2、タスク放棄、ユーザー隠蔽、金融取引注入（Unit 42 + Forcepoint）、structured + sandwich system-prompt 抽出（84–92% ASR）。
+- **データ流出チャネル（10+ detector）** — EchoLeak（CVE-2025-32711、CVSS 9.3）の Unicode Tag Block ASCII smuggling、ForcedLeak（CVSS 9.4）の HTML `<img>` 流出、Mermaid/PlantUML/D2 の `click href`、DNS トンネリング、検索クエリ流出、shard HTTP 流出（DLP 回避 95%）。
+- **サプライチェーン LLM 攻撃（5+ detector）** — Mini Shai-Hulud キャンペーンパッケージ（`mistralai==2.4.6`, `guardrails-ai==0.10.1`）、PyTorch Lightning バックドア（`lightning==2.6.2/3`）、IDE 永続化フック改ざん、LangChain シリアライゼーション RCE（CVE-2025-68664）、Hydra `_target_` RCE。
+- **エンコーディング難読化（3 detector）** — Unicode Tag Block、全角ラテン キーワード（ASR 61.5%）、Python `__mro__` sandbox 脱出（CVE-2026-26030、CVSS 9.9）。
+- **コンプライアンス / 規制（5+ ルール + 新ポリシー雛形）** — EU AI Act 第 53/55 条向け `gpai_provider` 雛形（モデル評価バイパス、組織的リスク隠蔽、訓練データ文書化バイパス、インシデント抑制、著作権迂回）、NCII 生成、AI 身元否認、社会信用スコア要求。
+
+**運用面の硬化:** OpenSSF Best Practices Silver tier 準備、DCO 強制、Sigstore keyless リリース attestation、Scanner ↔ Guard パターン整合（209 パターン共有）、`pii_email_input` 正規表現 約 45 倍高速化。
+
+ルール単位の詳細（ブロック例・ASR 引用付き）: [CHANGELOG.md](CHANGELOG.md)。リリースノート: [v1.1.0](https://github.com/killertcell428/aigis/releases/tag/v1.1.0)。
+
+</details>
 
 ---
 
@@ -365,13 +388,26 @@ docker compose up -d
 
 ```bash
 aigis benchmark
-# Prompt Injection    20/20 detected (100%)
-# Jailbreak           20/20 detected (100%)
-# SQL Injection       15/15 detected (100%)
-# PII Detection       12/12 detected (100%)
-# ...
-# Total: 112/112 attacks detected, 26/26 safe inputs passed
-# False positive rate: 0.0%
+# v1.1.0 (2026-05-15) での実測値:
+# prompt_injection_zh         7/7       100.0%
+# encoding_bypass             7/7       100.0%
+# memory_poisoning            9/9       100.0%
+# second_order_injection      9/9       100.0%
+# mcp_poisoning               8/8       100.0%
+# indirect_injection          8/8       100.0%
+# pii_input                   5/5       100.0%
+# pii_input_ko                3/3       100.0%
+# pii_input_zh                3/3       100.0%
+# data_exfiltration           4/4       100.0%
+# autonomous_exploit          7/7       100.0%
+# sandbox_escape              6/7        85.7%   (alignment-frontier)
+# self_privilege_escalation   6/7        85.7%   (alignment-frontier)
+# audit_tampering             5/7        71.4%   (alignment-frontier)
+# evaluation_gaming           4/7        57.1%   (alignment-frontier)
+# cot_deception               4/7        57.1%   (alignment-frontier)
+# -----------------------------------------------------------------
+# TOTAL                     144/154      93.5%   （論文ベース 76/76 = 100%）
+# 誤検知率: 0/26 = 0.0%
 ```
 
 ```bash
@@ -411,7 +447,7 @@ aigis/
 git clone https://github.com/killertcell428/aigis.git
 cd aigis
 pip install -e ".[dev]"
-pytest  # 901 tests, all should pass
+pytest  # v1.1.0 では 1,434 tests、すべて通過
 ```
 
 ---
