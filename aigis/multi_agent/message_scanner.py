@@ -457,6 +457,96 @@ _SESSION_FABRICATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 9. Peer-agent trust authority citation: an agent falsely claims that another
+#    trusted peer agent has already approved an action, exploiting the inherent
+#    trust LLMs place in co-agent authority. Agents accept commands from peers
+#    even when they reject identical direct requests.
+#    Research: "The Trust Paradox in LLM-Based Multi-Agent Systems"
+#    (arxiv:2510.18563, 2025): inter-agent trust exploitation achieves 84.6 % ASR
+#    vs 46.2 % for direct injection, because agents treat peer agents as more
+#    authoritative than the user.
+_TRUST_AUTHORITY_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(the|your|our|a)\s+(security|verification|authorization|approval|"
+            r"supervisor|manager|orchestrator|admin|compliance|review|monitor)\s+agent\s+"
+            r"(has|already|have)?\s*"
+            r"(verified|approved|cleared|authorized|confirmed|validated|signed\s+off)\s+"
+            r"(this|the)\s+(action|request|operation|access|task|command|step)",
+            _FLAGS,
+        ),
+        "Trust authority citation: false claim that a trusted peer agent approved an action",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(your\s+supervisor|your\s+manager|the\s+orchestrator|the\s+admin\s+agent|"
+            r"the\s+root\s+agent|the\s+control\s+plane)\s+"
+            r"(said|told\s+you|instructed\s+you|authorized\s+you|approved\s+for\s+you|"
+            r"confirmed)\s+(to|that\s+you\s+(can|may|should|must))\s+"
+            r"(proceed|continue|bypass|skip|override|ignore|execute|run)",
+            _FLAGS,
+        ),
+        "Trust authority citation: falsely attributes authorization to an orchestrator/supervisor agent",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(pre-?approved|pre-?authorized|already\s+approved|already\s+authorized|"
+            r"previously\s+cleared|previously\s+authorized)\s+(by|from)\s+"
+            r"(agent\s+\w+|the\s+\w+\s+agent|your\s+supervisor|the\s+orchestrator|"
+            r"the\s+admin|peer\s+agent)",
+            _FLAGS,
+        ),
+        "Trust authority citation: claims pre-authorization by a named peer or supervisor agent",
+        "privilege_escalation",
+    ),
+]
+
+# 10. Goal / objective injection: an agent's output attempts to replace the
+#     receiving agent's current task or primary objective with a different,
+#     attacker-chosen goal — an orchestration-layer attack that bypasses
+#     per-message safety checks by operating at the planning level.
+#     Research: "Orchestration of Multi-Agent Systems: Architectures & Protocols"
+#     (arxiv:2601.13671, 2026): orchestration-layer injection bypasses individual
+#     agent guardrails because orchestrators trust upstream planning context;
+#     demonstrated via sub-goal DAG rewriting to trigger cascading privilege
+#     escalation.
+_GOAL_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(your|the)\s+(actual|real|true|primary|main|correct|revised|updated)\s+"
+            r"(task|goal|objective|purpose|mission|directive|assignment)\s+"
+            r"(for\s+this\s+|in\s+this\s+|during\s+this\s+)?"
+            r"(session|conversation|run|cycle|job|workflow)?\s*(is|:)",
+            _FLAGS,
+        ),
+        "Goal injection: attempts to substitute the agent's primary task/objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(forget|abandon|drop|replace|ignore|discard|set\s+aside|override)\s+"
+            r"(your|the)\s+(current|previous|original|prior|assigned|given|stated)\s+"
+            r"(task|goal|objective|assignment|instruction|purpose|directive)",
+            _FLAGS,
+        ),
+        "Goal injection: instructs agent to abandon its assigned task or objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(new\s+primary\s+objective|primary\s+goal\s+override|"
+            r"your\s+true\s+mission|actual\s+objective|override\s+(your|the)\s+"
+            r"(task|goal|objective|directive)|task\s+substitution|"
+            r"goal\s+substitution|objective\s+update\s*:)",
+            _FLAGS,
+        ),
+        "Goal injection: explicit goal/objective override or task substitution attempt",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -467,6 +557,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _COLLUSION_PATTERNS
     + _AGENT_CARD_POISONING_PATTERNS
     + _SESSION_FABRICATION_PATTERNS
+    + _TRUST_AUTHORITY_PATTERNS
+    + _GOAL_INJECTION_PATTERNS
 )
 
 

@@ -4,6 +4,7 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-05-15T03-02 | 6 | multi-agent | [research](research/2026-05-15T03-02_6-multi-agent.md) | [changes](changes/2026-05-15T03-02_changes.md) | v1.0.22 | 2 |
 | 2026-05-14T06-06 | 5 | supply-chain-llm | [research](research/2026-05-14T06-06_5-supply-chain-llm.md) | [changes](changes/2026-05-14T06-06_changes.md) | v1.0.21 | 2 |
 | 2026-05-14T09-00 | 2 | data-exfiltration | [research](research/2026-05-14T00-13_2-data-exfiltration.md) | [changes](changes/2026-05-14T09-00_changes.md) | v1.0.20 | 0 |
 | 2026-05-14T03-07 | 4 | memory-context | [research](research/2026-05-14T03-07_4-memory-context.md) | [changes](changes/2026-05-14T03-07_changes.md) | — | 2 |
