@@ -41,6 +41,13 @@
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/demo_cli_en.gif" alt="Aigis CLI Demo" width="700" />
 </p>
 
+<p align="center">
+  <sub>
+    <strong>⭐ Star this repo</strong> if you ship AI agents in production — we add new paper-grounded detectors on a weekly cycle.<br/>
+    Prefer email only on releases? Click <strong>Watch → Custom → Releases</strong> at the top of the page.
+  </sub>
+</p>
+
 ---
 
 ## Quick Start
