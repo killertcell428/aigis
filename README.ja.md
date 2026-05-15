@@ -41,6 +41,13 @@
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/demo_cli_ja.gif" alt="Aigis CLI Demo" width="700" />
 </p>
 
+<p align="center">
+  <sub>
+    AI エージェントを業務で運用するなら <strong>⭐ Star</strong> を ― 毎週、論文ベースの新規 detector を追加リリースしています。<br/>
+    リリース通知だけ欲しい場合は、ページ上部の <strong>Watch → Custom → Releases</strong> をクリック。
+  </sub>
+</p>
+
 ---
 
 <a id="quick-start"></a>
