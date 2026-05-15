@@ -457,6 +457,63 @@ _SESSION_FABRICATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 9. Chat template injection: adversarial messages embed model-specific chat-turn tokens
+#    (e.g. <|user|>, <|im_start|>assistant, Llama-3 header tokens) to fabricate a fake
+#    completed conversation, tricking the receiving LLM into treating a new malicious goal
+#    as a fresh user request. ChatInject (arxiv:2509.22830, AISec@CCS 2025) demonstrated
+#    that this technique raises attack success rate from 5% to 52% on InjecAgent benchmarks.
+#    Pseudo-Conversation Injection (arxiv:2410.23678) achieves 92% ASR on GPT-4o by
+#    appending a fabricated AI reply then a new malicious task.
+_CHAT_TEMPLATE_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"<\|\s*(user|assistant|system|human|im_start|im_end|eot_id"
+            r"|start_header_id|end_header_id|endoftext)\s*\|>",
+            _FLAGS,
+        ),
+        "Chat template injection: model-specific chat-turn token found in message content",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"\n{1,2}\s*(Human|Assistant|User|AI|Bot|System)\s*:\s+\S",
+            _FLAGS,
+        ),
+        "Chat template injection: fabricated role-prefix turn injected into message",
+        "injection_relay",
+    ),
+]
+
+# 10. Safety confirmation spoofing: a malicious agent claims that safety, security, or
+#     policy checks have already been performed and passed by a trusted entity (supervisor,
+#     orchestrator, security agent) so the receiving agent will skip its own checks.
+#     This exploits "trust inheritance" — the design flaw documented by Microsoft Security
+#     (May 2026) and multi-agent security researchers where receiving agents assume a peer's
+#     assertion of "cleared" is authoritative. Measured inter-agent trust exploitation
+#     succeeds in 82.4% of tested models vs. 41.2% for direct injection.
+_SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(safety|security|content|policy|authorization|compliance)\s+"
+            r"(check|scan|review|verification|screening|filter|audit)\s+"
+            r"(has\s+)?(already\s+)?(passed|cleared|approved|succeeded|completed|verified|confirmed)",
+            _FLAGS,
+        ),
+        "Safety spoof: claims a safety or security check has already passed",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(approved|verified|authorized|cleared|confirmed|pre-?approved)\s+(by\s+)?"
+            r"(the\s+)?(orchestrator|supervisor|security\s+agent|safety\s+agent"
+            r"|admin\s+agent|trust\s+agent|parent\s+agent|human\s+operator|compliance\s+agent)",
+            _FLAGS,
+        ),
+        "Safety spoof: claims authorization from a privileged agent or operator",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -467,6 +524,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _COLLUSION_PATTERNS
     + _AGENT_CARD_POISONING_PATTERNS
     + _SESSION_FABRICATION_PATTERNS
+    + _CHAT_TEMPLATE_INJECTION_PATTERNS
+    + _SAFETY_SPOOF_PATTERNS
 )
 
 
