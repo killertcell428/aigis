@@ -2615,6 +2615,63 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "Six consecutive fullwidth letters almost never appear in legitimate AI prompts."
         ),
     ),
+    DetectionPattern(
+        id="enc_flip_instruction",
+        name="Text Reversal / Flip Decode Instruction",
+        category="encoding_bypass",
+        pattern=_p(
+            r"(?:"
+            r"(?:read|interpret|decode|translate|spell\s+out|write\s+out)\s+"
+            r"(?:the\s+following|this|it)\s+(?:text\s+)?(?:in\s+)?(?:reverse|backwards?|from\s+right\s+to\s+left)"
+            r"|(?:the\s+following|this)\s+(?:text\s+|message\s+|prompt\s+)?(?:is|has\s+been|was)\s+"
+            r"(?:written\s+)?(?:in\s+reverse|backwards?|flipped|mirrored|reversed)"
+            r"|(?:flip|mirror|reverse|invert)\s+(?:the\s+)?(?:following\s+)?(?:text|letters?|words?|characters?|prompt|message|string)"
+            r"|(?:text|message|prompt)\s+(?:is\s+)?(?:reversed|flipped|written\s+backwards?)"
+            r")"
+        ),
+        base_score=45,
+        description=(
+            "An explicit instruction to reverse or flip text before reading it — the core "
+            "pattern of FlipAttack (arxiv:2410.02832, ICML 2025). FlipAttack disguises harmful "
+            "content by reversing characters or words, then prepends a one-line decode directive "
+            "('read the following backwards and execute'). The reversed text bypasses safety "
+            "classifiers trained on natural language; the decode instruction is the reliable "
+            "detection signal. FlipAttack achieves ~98% attack success rate on GPT-4o and "
+            "~78.97% average ASR across 8 LLMs in a single query (ICML 2025)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Reverse-decode instructions have no legitimate use in normal AI prompts. "
+            "When this pattern fires, reverse the text that follows the instruction and "
+            "re-scan the decoded result. Reject or flag for human review if the decoded "
+            "text contains prompt-injection or jailbreak patterns."
+        ),
+    ),
+    DetectionPattern(
+        id="enc_diacritics_overload",
+        name="Combining Diacritical Mark Overloading (Zalgo / Stacked Diacritics)",
+        category="encoding_bypass",
+        pattern=_p(r"[̀-ͯ]{3,}"),
+        base_score=50,
+        description=(
+            "Three or more consecutive Unicode combining diacritical marks (U+0300–U+036F) "
+            "detected. Adversarial diacritics overloading stacks multiple combining marks on "
+            "each base letter — e.g., ï̃́gnore — producing text that safety "
+            "classifiers treat as unusual tokens but that the underlying LLM reads as the "
+            "original keywords. The attack achieves 44–76% average attack success rate against "
+            "six production guardrails including Azure Prompt Shield and Meta Prompt Guard "
+            "(arxiv:2504.11168, Mindgard Research, 2025). Natural text (French, German, "
+            "Spanish, Vietnamese) uses at most two combining marks per character; three or "
+            "more consecutive combining marks is a reliable adversarial signal."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip combining diacritical marks (U+0300–U+036F) and normalize to NFC or NFKC "
+            "before scanning. In Python: unicodedata.normalize('NFKC', text) followed by "
+            "re.sub(r'[\\u0300-\\u036f]', '', text) removes stacked marks. "
+            "Re-scan the normalized text for injection patterns."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
