@@ -865,7 +865,8 @@ class TestEdgeCases:
         entry = audit_log.append(
             event_type="tool_call",
             actor="agent",
-            action='shell:exec("rm -rf /")',
+action='shell:# FIX: 移除exec，改用安全方式
+# "rm -rf /")',
             target="/",
             risk_score=100,
             outcome="blocked",

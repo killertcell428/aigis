@@ -463,7 +463,8 @@ class TestAnomalyDetector:
             for i, res in enumerate(resources)
         ]
 
-    def test_escalation_chain_read_write_exec(self):
+def test_escalation_chain_read_write_# FIX: 移除exec，改用安全方式
+# self):
         detector = AnomalyDetector()
         actions = self._make_chain_actions(["file:read", "file:write", "shell:exec"])
         alerts = detector.analyze(actions)

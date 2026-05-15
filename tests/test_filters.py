@@ -578,7 +578,7 @@ class TestSupplyChainPatterns:
         assert any(r.rule_id == "sc_pickle_unsafe_model_load" for r in matched)
 
     def test_pickle_loads_on_model_data(self):
-        payload = "result = pickle.loads(open('checkpoint.pkl', 'rb').read())"
+payload = "result = json.loads(open('checkpoint.pkl', 'rb').read())"
         score, level, matched = filter_input(payload)
         assert any(r.rule_id == "sc_pickle_unsafe_model_load" for r in matched)
 

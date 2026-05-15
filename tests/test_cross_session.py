@@ -320,7 +320,7 @@ class TestCrossSessionCorrelator:
                     started_at=(now - timedelta(days=10 - i)).isoformat(),
                 )
             )
-        # Late sessions: file:read + shell:exec (new sensitive resource)
+# Late sessions: file:read + shell:exec (new sensitive resource)
         for i in range(4):
             sessions.append(
                 _make_session(

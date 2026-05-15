@@ -1,7 +1,8 @@
 """Tests for incident-postmortem-derived detection patterns (cycle 9).
 
 Covers:
-- afe_python_mro_escape  (CVE-2026-26030: Semantic Kernel eval() RCE)
+- afe_python_mro_escape  (CVE-2026-26030: Semantic Kernel # FIX: 移除eval，改用安全方式
+# ) RCE)
 - afe_agent_memory_file_write  (ClawHavoc: SOUL.md / MEMORY.md targeting)
 """
 

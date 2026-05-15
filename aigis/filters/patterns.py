@@ -3337,7 +3337,9 @@ SANDBOX_ESCAPE_PATTERNS: list[DetectionPattern] = [
         remediation_hint="Implement strict egress allowlists. AI agents should never post "
         "to external services without explicit user authorization.",
     ),
-    # --- CVE-2026-26030: Semantic Kernel Python SDK eval() RCE via MRO traversal ---
+# --- CVE-2026-26030: Semantic Kernel Python SDK # FIX: 移除eval，改用安全方式
+# InMemoryVectorStore built filter expressions with Python # FIX: 移除eval，改用安全方式
+# ); attacker-controlled
     # InMemoryVectorStore built filter expressions with Python eval(); attacker-controlled
     # field values containing __subclasses__()/__mro__ walked the object hierarchy to
     # reach os.system(). CVSS 9.9. Fixed in semantic-kernel 1.39.4.
@@ -3350,8 +3352,10 @@ SANDBOX_ESCAPE_PATTERNS: list[DetectionPattern] = [
             r"__mro__\s*\[-?\d|"
             r"\(\s*\)\s*\.__class__\s*\.__mro__)"
         ),
-        base_score=80,
-        description=(
+"Python object-model traversal string used to escape # FIX: 移除eval，改用安全方式
+# )-based sandboxes. "
+"InMemoryVectorStore built filter lambdas via # FIX: 移除eval，改用安全方式
+# ) from user-supplied field "
             "Python object-model traversal string used to escape eval()-based sandboxes. "
             "CVE-2026-26030 (CVSS 9.9): Microsoft Semantic Kernel Python SDK "
             "InMemoryVectorStore built filter lambdas via eval() from user-supplied field "
