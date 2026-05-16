@@ -2615,6 +2615,40 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "Six consecutive fullwidth letters almost never appear in legitimate AI prompts."
         ),
     ),
+    DetectionPattern(
+        id="enc_zwc_keyword_split",
+        name="Zero-Width Character Keyword Splitting",
+        category="encoding_bypass",
+        pattern=_p("[A-Za-z](?:[​‌‍­][A-Za-z]){3,}"),
+        base_score=50,
+        description=(
+            "Keyword splitting via invisible Unicode characters detected: a visible letter "
+            "followed by a zero-width character followed by another visible letter, repeated "
+            "four or more times in sequence. Attackers insert a zero-width space (U+200B), "
+            "zero-width non-joiner (U+200C), zero-width joiner (U+200D), or soft hyphen "
+            "(U+00AD) between each letter of an attack keyword — for example, "
+            "'i​g​n​o​r​e' visually reads as 'ignore' but is "
+            "broken into individual characters that pass through ASCII keyword filters "
+            "undetected while the LLM reconstructs the complete word. This is distinct from "
+            "the 'te_unicode_noise' rule (which catches three or more consecutive invisible "
+            "characters); keyword splitting places exactly one invisible character between "
+            "each visible letter, so no two invisible characters are adjacent. "
+            "arxiv:2504.11168 (Apr 2026) evaluated zero-width character injection across six "
+            "production guardrail systems and measured up to 54% attack success rate. "
+            "arxiv:2603.00164 (Reverse CAPTCHA, Graves, Feb 2026) demonstrated that LLMs "
+            "reliably follow invisible Unicode-encoded instructions embedded in benign text, "
+            "with tool-use dramatically amplifying compliance (Cohen's h up to 1.37)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip zero-width characters (U+200B, U+200C, U+200D) and soft hyphens "
+            "(U+00AD) from user input before keyword scanning. "
+            "In Python: re.sub(r'[\\u200b\\u200c\\u200d\\u00ad]', '', text). "
+            "The pattern '[A-Za-z]([invisible][A-Za-z]){3+}' identifies four or more "
+            "letters each separated by an invisible character — a pattern with no "
+            "legitimate use in AI prompt text."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
