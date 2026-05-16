@@ -3,7 +3,7 @@ FROM python:3.14-slim@sha256:7a500125bc50693f2214e842a621440a1b1b9cbb2188f74ab04
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE NOTICE ./
 COPY aigis ./aigis
-RUN pip install --no-cache-dir --upgrade pip build \
+RUN pip install --no-cache-dir --upgrade 'pip==26.1.1' 'build==1.5.0' \
     && python -m build --wheel --outdir /wheels
 
 FROM python:3.14-slim@sha256:7a500125bc50693f2214e842a621440a1b1b9cbb2188f74ab045d29ed2ea5856 AS runtime
