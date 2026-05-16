@@ -4,7 +4,7 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
-| 2026-05-16T03-08 | 7 | evasion-obfuscation | [research](research/2026-05-16T03-08_7-evasion-obfuscation.md) | [changes](changes/2026-05-16T03-08_changes.md) | v1.1.1 | 2 |
+| 2026-05-16T03-08 | 7 | evasion-obfuscation | [research](research/2026-05-16T03-08_7-evasion-obfuscation.md) | [changes](changes/2026-05-16T03-08_changes.md) | v1.1.2 | 2 |
 | 2026-05-15T00-00 | 6 | multi-agent | [research](research/2026-05-15T00-00_6-multi-agent.md) | [changes](changes/2026-05-15T00-00_changes.md) | — | 2 |
 | 2026-05-14T06-06 | 5 | supply-chain-llm | [research](research/2026-05-14T06-06_5-supply-chain-llm.md) | [changes](changes/2026-05-14T06-06_changes.md) | v1.0.21 | 2 |
 | 2026-05-14T09-00 | 2 | data-exfiltration | [research](research/2026-05-14T00-13_2-data-exfiltration.md) | [changes](changes/2026-05-14T09-00_changes.md) | v1.0.20 | 0 |
