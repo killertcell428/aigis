@@ -2615,6 +2615,65 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "Six consecutive fullwidth letters almost never appear in legitimate AI prompts."
         ),
     ),
+    DetectionPattern(
+        id="enc_text_reversal",
+        name="Text Reversal / Flip Instruction",
+        category="encoding_bypass",
+        pattern=_p(
+            r"(?i)(?:"
+            r"(?:read|decode|interpret|process)\s+(?:this|it|the\s+(?:following|text|message|prompt|input))\s+(?:from\s+)?(?:right\s*to\s*left|backwards?|in\s+reverse)"
+            r"|(?:flip|reverse)\s+(?:each\s+|every\s+)?(?:word|character|letter|sentence)s?\b"
+            r"|(?:characters?|words?|letters?)\s+(?:are|have\s+been|were)\s+(?:flipped|reversed|scrambled)"
+            r")"
+        ),
+        base_score=40,
+        description=(
+            "Instruction to decode text that has been character- or word-reversed before "
+            "processing. FlipAttack (ICML 2025, arxiv:2410.02832) jailbreaks LLMs by "
+            "reversing the harmful payload at the word or character level and prepending a "
+            "'read backwards' or 'flip each word' instruction. The reversed text looks like "
+            "gibberish to text-pattern filters while the LLM fluently decodes and executes "
+            "it. FlipAttack achieves ~98% attack success rate against GPT-4o and ~98% bypass "
+            "rate against five deployed guardrail models in a single query. The attack is "
+            "already included in commercial red-team toolkits (Keysight ATI-2025-08 "
+            "StrikePack, strikes flipattack_fcs/fcw/fwo)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Reverse the input text (character- and word-level) and re-scan before passing "
+            "to the LLM. Explicit 'read backwards', 'flip each word', or 'characters are "
+            "reversed' directives in prompts are a strong injection signal with almost no "
+            "legitimate uses in an AI assistant context."
+        ),
+    ),
+    DetectionPattern(
+        id="enc_zalgo_diacritics",
+        name="Zalgo Text / Excessive Combining Diacritical Marks",
+        category="encoding_bypass",
+        pattern=_p(r"[̀-ͯ]{4,}"),
+        base_score=45,
+        description=(
+            "Four or more consecutive Unicode combining diacritical marks (U+0300–U+036F) "
+            "detected — the characteristic signature of Zalgo-style text obfuscation. "
+            "Attackers stack 10–30+ combining diacritical marks on each base character to "
+            "produce visually distorted 'glitching' text that is unreadable by humans and "
+            "bypasses text-matching filters, while the underlying LLM still decodes the base "
+            "characters and executes the payload. arxiv:2504.11168 (ACL LLMSEC 2025) measured "
+            "diacritics achieving 44–76% attack success rate against Azure Prompt Shield, "
+            "Meta Prompt Guard, and four other production guardrail systems. Legitimate text "
+            "— including heavily accented French, Spanish, or Vietnamese — uses at most 1–2 "
+            "consecutive combining marks; four or more is a near-certain indicator of zalgo "
+            "obfuscation."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip or limit combining diacritical marks before scanning. In Python: apply "
+            "unicodedata.normalize('NFC', text) to canonicalize, then remove runs of more "
+            "than two combining marks per base character using a regex replace on "
+            r"[̀-ͯ]{3,}. Four or more consecutive combining diacritical marks "
+            "have no legitimate use in AI prompt contexts."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
