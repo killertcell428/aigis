@@ -128,9 +128,11 @@ sdk/python/
 _tmp_*
 
 # ── Article authoring (managed locally; published via qiita-cli / zenn-cli) ──
-# qiita-cli managed
-/articles/
-# zenn-cli managed
+# zenn-cli managed — articles/<slug>.md is read by Zenn via GitHub integration,
+# so it MUST be tracked. (Was previously gitignored by mistake — Zenn drafts
+# were never reaching the dashboard.)
+# /articles/  ← do not re-add this line
+# zenn-cli public assets directory
 /public/
 # local drafts / weekly / monthly review notes
 /content/articles/
