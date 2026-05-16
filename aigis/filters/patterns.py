@@ -2751,6 +2751,65 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "marks per base character; three or more indicates zalgo obfuscation."
         ),
     ),
+    DetectionPattern(
+        id="enc_zwc_binary_payload",
+        name="Zero-Width Character Binary Steganography Payload",
+        category="encoding_bypass",
+        pattern=_p(r"[\u200b\u200c]{8,}"),
+        base_score=55,
+        description=(
+            "Eight or more consecutive zero-width space (U+200B) and/or zero-width "
+            "non-joiner (U+200C) characters detected. These two code points are used as "
+            "a binary encoding pair — one represents bit '0', the other bit '1' — enabling "
+            "attackers to embed arbitrary hidden instructions at the rate of one character "
+            "per bit. Eight consecutive chars is the minimum to encode a single byte of "
+            "payload. The resulting text looks completely blank to human reviewers and "
+            "survives copy-paste and most sanitization pipelines. The Reverse CAPTCHA "
+            "study (arxiv:2603.00164, Feb 2026) demonstrated that models follow invisible "
+            "instructions encoded this way, with tool-use amplifying compliance by an effect "
+            "size of 1.37 (large). Keysight ATI-2025-08 (May 2025) confirmed the bypass "
+            "against production guardrails. Existing aigis te_unicode_noise targets noise/"
+            "stuffing from a broad invisible-char set; this rule specifically targets the "
+            "steganographic binary-encoding attack class in the encoding_bypass category."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip U+200B and U+200C from all inputs before processing. In Python: "
+            "import re; re.sub(r'[\\u200b\\u200c]+', '', text). These characters have "
+            "no legitimate use in AI API request bodies. Apply this normalization at "
+            "ingestion time — before security scanning — so decoders do not receive "
+            "steganographic content. For defense-in-depth, strip the full Unicode Cf "
+            "(format character) category: unicodedata.category(ch) == 'Cf'."
+        ),
+    ),
+    DetectionPattern(
+        id="enc_zwc_splitter",
+        name="Zero-Width Space Keyword Splitter",
+        category="encoding_bypass",
+        pattern=_p(r"[a-z]\u200b[a-z]"),
+        base_score=35,
+        description=(
+            "A zero-width space (U+200B) appears between two ASCII letters. This is the "
+            "keyword-splitting technique: attack words such as 'ignore', 'bypass', 'system', "
+            "and 'inject' are split with invisible characters — for example 'ig​nore' "
+            "or 'by​pass' — so that naive string-match blocklists see two fragments "
+            "instead of the banned word, while the LLM reads the full keyword without any "
+            "explicit instruction to decode it. Documented in the Hidden-in-Plain-Text "
+            "benchmark (arxiv:2601.10923, Jan 2026) as a carrier technique that survives "
+            "RAG ingestion pipelines and HTML-to-text extraction. Confirmed as a production "
+            "guardrail bypass by Keysight ATI-2025-08 (May 2025). The existing te_unicode_noise "
+            "rule requires 3+ consecutive invisible chars and does not catch the single-splitter "
+            "case detected here."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip U+200B (zero-width space) from all input before scanning or forwarding "
+            "to the LLM. In Python: text.replace('\\u200b', ''). This removes the splitter "
+            "while preserving visible text. After stripping, re-scan for the underlying "
+            "attack keyword. U+200B has no legitimate use between two ASCII letters; "
+            "legitimate uses (line-break hints in long URLs) do not appear between letters."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
