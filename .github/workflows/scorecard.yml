@@ -32,6 +32,11 @@ jobs:
           results_file: results.sarif
           results_format: sarif
           publish_results: true
+          # PAT with `public_repo` + `read:org` scope to read branch protection
+          # rules. Falls back to GITHUB_TOKEN if unset (Branch-Protection check
+          # will return "?"). Create at: Settings → Secrets → Actions →
+          # SCORECARD_TOKEN. See https://github.com/ossf/scorecard-action#authentication-with-fine-grained-pat-optional
+          repo_token: ${{ secrets.SCORECARD_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
