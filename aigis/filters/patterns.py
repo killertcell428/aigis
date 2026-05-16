@@ -2615,6 +2615,61 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "Six consecutive fullwidth letters almost never appear in legitimate AI prompts."
         ),
     ),
+    DetectionPattern(
+        id="enc_math_unicode_keywords",
+        name="Mathematical/Styled Unicode Letter Obfuscation",
+        category="encoding_bypass",
+        pattern=_p(r"[\U0001D400-\U0001D7FF]{4,}"),
+        base_score=45,
+        description=(
+            "Four or more consecutive Mathematical Alphanumeric Symbols (U+1D400–U+1D7FF) "
+            "detected. This Unicode block provides styled variants of every Latin and Greek "
+            "letter — bold (𝐢𝐠𝐧𝐨𝐫𝐞), italic (𝑖𝑔𝑛𝑜𝑟𝑒), script (𝒾𝑔𝓃𝑜𝓇𝑒), fraktur (𝔦𝔤𝔫𝔬𝔯𝔢), "
+            "monospace (𝚒𝚐𝚗𝚘𝚛𝚎) — and attackers substitute attack keywords with these "
+            "styled variants to bypass ASCII-based keyword filters. The base LLM reads "
+            "styled variants as their plain-text equivalents without any explicit instruction, "
+            "because these codepoints appear in LLM pre-training corpora. "
+            "arxiv:2508.14070 (Aug 2025) identified Mathematical Alphanumeric Symbols as a "
+            "distinct obfuscation class and measured 61%+ ASR against four aligned open-source "
+            "LLMs; arxiv:2504.11168 (Apr 2026) placed the styled-letter class alongside "
+            "fullwidth and BIDI as the three highest-throughput obfuscation families against "
+            "production-grade guardrail systems."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Normalize Mathematical Alphanumeric Symbols to their ASCII equivalents before "
+            "scanning. Python's unicodedata.normalize('NFKC', text) maps 𝐢→i, 𝑔→g, 𝓃→n, "
+            "etc. Four consecutive styled letters almost never appear in legitimate AI "
+            "agent prompts."
+        ),
+    ),
+    DetectionPattern(
+        id="enc_zalgo_text",
+        name="Zalgo / Excessive Combining Diacritic Attack",
+        category="encoding_bypass",
+        pattern=_p(r"[̀-ͯ]{3,}"),
+        base_score=35,
+        description=(
+            "Three or more consecutive Unicode combining diacritical marks (U+0300–U+036F) "
+            "detected. 'Zalgo text' stacks large numbers of these marks on each base "
+            "character, producing visually corrupted output (e.g., ḭ̸̧͊g̷͙̈n̸̪̓o̵̙͝r̷̝͘ê) "
+            "that defeats keyword-matching filters because the combining codepoints are "
+            "interleaved with the attack keyword's base characters. The LLM reads through "
+            "combining marks and reconstructs the semantic meaning of the underlying word. "
+            "This obfuscation class was catalogued in the TokenBreak study (arxiv:2506.07948, "
+            "Jun 2025) and the unified jailbreak survey (arxiv:2601.03594, Jan 2026) as part "
+            "of the invisible-character bypass family. Three consecutive combining marks "
+            "never occur in well-formed Unicode text of any natural language."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip combining diacritical marks before scanning: "
+            "unicodedata.normalize('NFD', text) decomposes precomposed characters, then "
+            "filter out codepoints in the category 'Mn' (Non-spacing Mark). "
+            "Or use unicodedata.normalize('NFKC', text) to both decompose and recompose, "
+            "collapsing stacked marks into canonical precomposed forms."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
