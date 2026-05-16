@@ -4,6 +4,7 @@ ClusterFuzzLite caught `te_ignore_prefix_buried` catastrophic backtracking on
 a 193-byte adversarial Unicode input. This test pins the fix at the framework
 level so that future pattern edits can't reintroduce the same class of bug.
 """
+
 import time
 
 import pytest
