@@ -2672,6 +2672,85 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "Re-scan the normalized text for injection patterns."
         ),
     ),
+    DetectionPattern(
+        id="enc_diacritics_keywords",
+        name="Diacritics-Substituted Attack Keyword Obfuscation",
+        category="encoding_bypass",
+        pattern=_p(
+            r"\b(?:"
+            # ignore — vowels i, o, e; at least one must be a diacritical variant
+            r"[ìíîïīĭįĩ]gn[oòóôõöōŏő]r[eèéêëēĕěę]"  # i diacritical
+            r"|ign[òóôõöōŏő]re?"  # o diacritical (i ASCII)
+            r"|ignor[èéêëēĕěę]"  # e diacritical (i, o ASCII)
+            # bypass — vowels y, a; at least one must be diacritical
+            r"|b[ýÿ]p[aàáâãäåāăą]ss"  # y diacritical
+            r"|byp[àáâãäåāăą]ss"  # a diacritical (y ASCII)
+            # system — vowels y, e; at least one must be diacritical
+            r"|s[ýÿ]st[eèéêëēĕěę]m"  # y diacritical
+            r"|syst[èéêëēĕěę]m"  # e diacritical (y ASCII)
+            # prompt — only vowel is o; must be diacritical
+            r"|pr[òóôõöōŏő]mpt"
+            # inject — vowels i, e; at least one must be diacritical
+            r"|[ìíîïīĭįĩ]nj[eèéêëēĕěę]ct"  # i diacritical
+            r"|inj[èéêëēĕěę]ct"  # e diacritical (i ASCII)
+            # jailbreak — vowels a, i, e, a; at least one must be diacritical
+            r"|j[àáâãäåāăą][iìíîïīĭ]lbr[eèéêëēĕěę][aàáâãäåāăą]k"  # first a diacritical
+            r"|jailbr[èéêëēĕěę][aàáâãäåāăą]k"  # e diacritical (a, i ASCII)
+            r"|jailbre[àáâãäåāăą]k"  # last a diacritical (first a, i, e ASCII)
+            r")\b"
+        ),
+        base_score=35,
+        description=(
+            "Attack keywords (ignore, bypass, system, prompt, inject, jailbreak) where "
+            "one or more vowels have been replaced with visually similar Latin diacritical "
+            "characters — for example, 'ígnore', 'bypàss', 'systèm', 'prómpt', 'injéct'. "
+            "Guardrail classifiers typically operate on byte-level or ASCII-normalized text "
+            "and miss these substitutions, while the underlying LLM decodes accented Latin "
+            "characters as their base equivalents. Documented in Mindgard Research (2025) "
+            "and arxiv:2504.11168, which found that diacritic injection achieves 44–76% "
+            "attack success rate against Azure Prompt Shield, Meta Prompt Guard, Protect AI, "
+            "NeMo Guardrails, and Vijil. The technique is also included as a first-pass "
+            "transform in automated red-teaming frameworks (DeepTeam, 2025)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Normalize diacritical characters to their ASCII base equivalents before "
+            "scanning. In Python, unicodedata.normalize('NFKD', text) followed by "
+            "encoding to ASCII with 'ignore' strips combining characters; alternatively "
+            "use a confusables library. aigis.decoders.normalize_confusables() handles "
+            "the most common substitutions. Once normalized, re-run the keyword scan."
+        ),
+    ),
+    DetectionPattern(
+        id="enc_zalgo_combining",
+        name="Zalgo / Combining Diacritic Flood Obfuscation",
+        category="encoding_bypass",
+        pattern=_p(r"[^̀-ͯ][̀-ͯ]{3,}"),
+        base_score=40,
+        description=(
+            "Text containing a base character followed by three or more Unicode Combining "
+            "Diacritical Marks (U+0300–U+036F) in a row — the hallmark of 'zalgo text'. "
+            "Attackers stack many invisible combining characters on single letters to "
+            "produce text that appears as visual noise to human reviewers (and sometimes "
+            "confuses log parsers), while the underlying character sequence remains "
+            "interpretable by the LLM's tokenizer. This technique is classified as a "
+            "visual-garbling obfuscation class in arxiv:2508.14070, which evaluated "
+            "14 special-character obfuscation methods across open-source aligned LLMs "
+            "and found combining-character attacks caused incoherent outputs or successful "
+            "jailbreaks across all model sizes tested (3.8B–32B). Normal Unicode text "
+            "rarely places more than one or two combining marks on a single base character; "
+            "three or more is a strong indicator of intentional obfuscation."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip excessive combining diacritical marks before processing. "
+            "In Python: import unicodedata; "
+            "unicodedata.normalize('NFC', text) collapses precomposed forms, and "
+            "a follow-up regex r'[\\u0300-\\u036f]{2,}' → '' removes stacked combining "
+            "marks beyond the first. Legitimate text needs at most one or two combining "
+            "marks per base character; three or more indicates zalgo obfuscation."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
