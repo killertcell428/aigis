@@ -659,8 +659,14 @@ TOKEN_EXHAUSTION_PATTERNS: list[DetectionPattern] = [
         id="te_ignore_prefix_buried",
         name="Instruction Buried Under Padding",
         category="token_exhaustion",
+        # NOTE: requires Python 3.11+ atomic groups `(?>...)` to avoid
+        # catastrophic backtracking. ClusterFuzzLite found the original
+        # unbounded form `(?:A|B){50,}` would hang for 200+ seconds on
+        # `"￿"*180 + "V:..."` (193 bytes). Atomic groups commit each greedy
+        # match, restoring linear time.
         pattern=_p(
-            r"(?:[^\w\n]{20,}|\w{1,3}\s){50,}.{0,200}"
+            r"(?>(?:[^\w\n]{20,100}+|\w{1,3}\s){50,100})"
+            r".{0,200}"
             r"(ignore|forget|disregard|bypass|override|jailbreak|reveal|system\s+prompt)"
         ),
         base_score=55,

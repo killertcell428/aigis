@@ -198,10 +198,20 @@ def _run_patterns(
     # Normalize text to defeat evasion techniques
     normalized = _normalize_text(text)
 
+    # Cap input length for built-in patterns too (defense-in-depth against
+    # ReDoS — ClusterFuzzLite found te_ignore_prefix_buried could hang on
+    # < 1 KB of adversarial unicode). 50k matches the custom-rule cap below.
+    _MAX_BUILTIN_REGEX_INPUT = 50_000
+    builtin_input = (
+        normalized[:_MAX_BUILTIN_REGEX_INPUT]
+        if len(normalized) > _MAX_BUILTIN_REGEX_INPUT
+        else normalized
+    )
+
     for p in patterns:
         if not p.enabled:
             continue
-        m = p.pattern.search(normalized)
+        m = p.pattern.search(builtin_input)
         if m:
             matched.append(
                 MatchedRule(
