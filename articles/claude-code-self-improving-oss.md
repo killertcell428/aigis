@@ -3,7 +3,7 @@ title: "自分の OSS を Claude Code に任せたら、寝ている間に 11 �
 emoji: "💤"
 type: "tech"
 topics: ["claudecode", "ai", "oss", "AIエージェント", "自動化"]
-published: false
+published: true
 ---
 
 ![自分の OSS が勝手に育つ](https://raw.githubusercontent.com/killertcell428/aigis/master/images/forge-loop/og.png)
