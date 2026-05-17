@@ -1,0 +1,8 @@
+# Pinned dependencies for the OSS-comparison benchmark.
+# Re-running the benchmark a year later should still work, so every
+# package is pinned to an exact version. Bump deliberately.
+
+# Aigis itself is installed from the parent repo via ``pip install -e ../..``
+# — no explicit pin needed here.
+
+httpx==0.27.2

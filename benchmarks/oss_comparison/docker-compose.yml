@@ -1,0 +1,63 @@
+# OSS-comparison benchmark sidecars.
+#
+# Boots LLM Guard, Guardrails AI, and NeMo Guardrails as three HTTP services
+# the driver can hit. Aigis runs in-process (no sidecar needed). Pin image
+# digests so a benchmark run a year from now still produces the same numbers.
+#
+# Usage:
+#   docker compose -f benchmarks/oss-comparison/docker-compose.yml up -d
+#   make bench
+#   docker compose -f benchmarks/oss-comparison/docker-compose.yml down
+#
+# Notes on the digests below: replace ``REPLACE_WITH_SHA256`` after pulling
+# locally with ``docker compose pull && docker images --digests``. The CI
+# workflow checks that no ``REPLACE_WITH_SHA256`` strings reach main.
+
+version: "3.9"
+
+services:
+  llm-guard:
+    image: laiyer/llm-guard-api:latest  # TODO: pin by sha256 — see file header
+    restart: unless-stopped
+    environment:
+      # The "default recommended" input scanners from LLM Guard's quickstart.
+      # https://llm-guard.com/get_started/quickstart/
+      LLM_GUARD_INPUT_SCANNERS: "PromptInjection,Toxicity,Secrets,BanSubstrings,BanTopics"
+    ports:
+      - "8001:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  guardrails-ai:
+    image: guardrailsai/guardrails-server:latest  # TODO: pin by sha256
+    restart: unless-stopped
+    environment:
+      # Out-of-the-box guards from Guardrails AI's "Hello, World" example.
+      # https://www.guardrailsai.com/docs/getting_started/quickstart
+      GUARDRAILS_VALIDATORS: "PromptInjection,ToxicLanguage,DetectPII"
+    ports:
+      - "8002:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nemo-guardrails:
+    image: nvcr.io/nvidia/nemo-guardrails:latest  # TODO: pin by sha256
+    restart: unless-stopped
+    environment:
+      # Self-check input rails — NeMo's quickstart recommendation for
+      # input-side jailbreak/injection screening.
+      # https://docs.nvidia.com/nemo/guardrails/getting_started/4_input_rails/
+      NEMO_CONFIG_ID: "self_check_input"
+    ports:
+      - "8003:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/v1/rails/configs || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

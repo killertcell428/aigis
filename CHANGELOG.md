@@ -12,6 +12,28 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Added
+
+- **`benchmarks/oss_comparison/`** — Reproducible head-to-head benchmark vs
+  LLM Guard, Guardrails AI, and NeMo Guardrails (closes the scaffolding for
+  [#32](https://github.com/killertcell428/aigis/issues/32)). Ships:
+  a 72-record curated dataset (42 attacks + 30 benign, multi-lingual safe
+  baseline), pluggable adapters for all four tools (Aigis in-process, others
+  via HTTP sidecars), a `docker-compose.yml` that boots the three external
+  services, a `make bench` / `make bench-aigis` driver, a markdown reporter
+  showing per-category TPR + FPR + p50/p95 latency, a CI workflow with a
+  ±2 pp regression guard on the Aigis row, and
+  [`docs/benchmarks/oss-comparison.md`](docs/benchmarks/oss-comparison.md)
+  documenting methodology, acknowledged gaps, and limitations.
+
+  The Aigis baseline (default policy) on the v0 dataset is **14.3% overall
+  detection rate, 0% false positives, p50 0.49 ms**, with category-level
+  rates of `prompt_injection 16.7%`, `jailbreak 33.3%`,
+  `data_exfiltration 0%`, `evasion 0%`. The 0% rows are real coverage gaps
+  surfaced (not hidden) by the benchmark and inform the next
+  auto-improvement cycle. External-tool rows populate once their Docker
+  images are pinned by SHA256 in a follow-up.
+
 ### Hardened
 
 - **`enc_zwc_binary_payload`** (score 55, input filter) — Detects zero-width steganographic

@@ -1,0 +1,70 @@
+name: Benchmark / OSS comparison (Aigis baseline)
+
+# Aigis-only benchmark runs on every PR that touches the benchmark code or
+# the aigis package itself. This is the regression guard for Issue #32: if
+# a code change pushes Aigis's detection rate down by >2 pp on the v0
+# dataset, the job fails and the PR author has to acknowledge it.
+#
+# The three external tools (LLM Guard, Guardrails AI, NeMo Guardrails) run
+# under docker-compose and are not in this job — they live in a separate
+# nightly workflow once their images are pinned by SHA256.
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "aigis/**"
+      - "benchmarks/oss_comparison/**"
+      - ".github/workflows/bench-oss-comparison.yml"
+  push:
+    branches: [main, master]
+    paths:
+      - "aigis/**"
+      - "benchmarks/oss_comparison/**"
+      - ".github/workflows/bench-oss-comparison.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench-aigis:
+    name: Aigis baseline (no Docker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+
+      - name: Install package + bench deps
+        run: |
+          uv pip install --system -e .
+          uv pip install --system -r benchmarks/oss_comparison/requirements.txt
+
+      - name: Run benchmark (Aigis only)
+        run: python -m benchmarks.oss_comparison.driver --adapter aigis --quiet
+
+      - name: Generate report
+        run: python -m benchmarks.oss_comparison.report
+
+      - name: Regression guard — Aigis detection rate must not drop > 2 pp
+        run: python benchmarks/oss_comparison/scripts/regression_guard.py
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bench-aigis-report
+          path: |
+            benchmarks/oss_comparison/results/results.csv
+            benchmarks/oss_comparison/results/report.md
+          retention-days: 30

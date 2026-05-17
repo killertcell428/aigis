@@ -1,0 +1,16 @@
+{
+  "_comment": "Frozen Aigis baseline for CI regression guard. Update intentionally — see benchmarks/oss_comparison/scripts/regression_guard.py.",
+  "_measured_on": "2026-05-17",
+  "_dataset_version": "v0 (72 records: 42 attacks + 30 benign)",
+  "aigis": {
+    "policy": "default",
+    "detection_rate_pct": 14.3,
+    "false_positive_rate_pct": 0.0,
+    "by_category": {
+      "prompt_injection": 16.7,
+      "jailbreak": 33.3,
+      "data_exfiltration": 0.0,
+      "evasion": 0.0
+    }
+  }
+}
