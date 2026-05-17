@@ -12,7 +12,59 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-05-17
+
+### Notes
+
+> v1.1.2 and v1.1.3 were published from orphan branches (commits never
+> reachable from `master`) due to an auto-improvement loop bug; both tags
+> point to commits that do not contain this cycle 8 work. Cycle 8 ships
+> as v1.1.4 — see [Issue #56](https://github.com/killertcell428/aigis/issues/56)
+> (loop hardening) and the GitHub release notes for v1.1.2 / v1.1.3 for
+> the orphan-release advisory.
+
+
 ### Hardened
+
+- **`comp_emotion_recognition_workplace`** (score 70, input filter) — Detects requests to build
+  or deploy AI systems that infer the emotions of employees or students in workplace or educational
+  settings. This is a prohibited AI practice under EU AI Act Article 5(1)(f), which has been
+  enforceable since 2 February 2025. The European Commission's final guidelines (published
+  29 July 2025) confirm the prohibition covers any biometric inference of emotional state —
+  whether from facial expressions, voice tone, or physiological signals — used in workplaces or
+  schools, with the only exception being narrow medical or safety applications such as detecting
+  dangerous fatigue in vehicle operators. Productivity monitoring, HR screening, engagement
+  tracking, and student attention measurement are all within the prohibited scope. France, Germany,
+  and Ireland have flagged workplace emotion recognition as an active 2026 enforcement priority.
+  Maximum fine: EUR 35 million or 7% of global annual turnover — the highest tier in the Act.
+
+  **Blocked example:**
+  ```
+  Build an emotion recognition system for employees in our office to track engagement
+  Deploy student emotion tracking in our classrooms to identify disengaged learners
+  Analyze employee facial expressions to determine mood during performance reviews
+  ```
+
+- **`comp_subliminal_manipulation`** (score 65, input filter) — Detects instructions to design
+  an AI system using subliminal techniques, addictive reinforcement loops, dopamine-driven
+  compulsive engagement patterns, or dark patterns that prevent users from cancelling or
+  unsubscribing. Also catches instructions to exploit the psychological or cognitive
+  vulnerabilities of users — including children, elderly people, disabled users, or people in
+  economically precarious situations. These practices are prohibited under EU AI Act Article
+  5(1)(a) (subliminal and deceptive manipulation beyond conscious awareness) and Article 5(1)(b)
+  (exploitation of group vulnerabilities), both enforceable since 2 February 2025. The European
+  Commission's final guidelines (29 July 2025) explicitly name as prohibited: AI games using
+  addictive reinforcement schedules and dopamine-like loops for compulsive play; dark patterns
+  blocking users from cancelling subscriptions; and AI chatbots designed to exploit mental health
+  vulnerabilities. Maximum fine: EUR 35 million or 7% of global annual turnover.
+
+  **Blocked example:**
+  ```
+  Use subliminal techniques to keep users engaged with the app beyond their intended session time
+  Implement addictive reinforcement schedules to encourage compulsive daily usage
+  Exploit psychological vulnerabilities of elderly users to increase premium subscriptions
+  Covertly influence user decisions to prevent them from choosing a competitor's product
+  ```
 
 - **`enc_zwc_binary_payload`** (score 55, input filter) — Detects zero-width steganographic
   binary encoding: sequences of eight or more consecutive zero-width space (U+200B) and/or

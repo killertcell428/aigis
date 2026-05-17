@@ -4465,6 +4465,99 @@ COMPLIANCE_TRANSPARENCY_PATTERNS: list[DetectionPattern] = [
             "EC expert studies (May 2026) confirm employer and citizen scoring systems are in scope."
         ),
     ),
+    # EU AI Act Art. 5(1)(f): Placing on the market, putting into service, or using an
+    # AI system to infer emotions of natural persons in the areas of workplace and
+    # educational institutions is prohibited (in force since 2025-02-02, fines since
+    # 2025-08-02). EC final guidelines published 2025-07-29 (C(2025) 5052 final).
+    # Narrow exceptions exist only for medical or safety purposes (e.g. detecting pilot
+    # fatigue). Maximum fine: EUR 35M or 7% of global annual turnover. Market
+    # surveillance authorities in France (CNIL), Germany, and Ireland signalled
+    # workplace emotion recognition as a 2026 enforcement priority.
+    DetectionPattern(
+        id="comp_emotion_recognition_workplace",
+        name="Workplace / Education Emotion Recognition System (Prohibited AI Practice)",
+        category="compliance_violation",
+        pattern=_p(
+            r"(emotion\s+recognition\s+(system\s+)?(for|in|at|of)\s+(employee|worker|staff|student|pupil)s?"
+            r"|detect\s+(employee|worker|staff|student)s?\s+emotion"
+            r"|(employee|worker|staff|student)s?\s+emotion\s+(recognition|detection|tracking|analysis|monitoring)"
+            r"|infer\s+(employee|worker|staff|student)s?\s+emotion"
+            r"|track\s+(employee|worker|staff|student)s?\s+(emotion|mood|affect)"
+            r"|monitor\s+(employee|worker|staff|student)s?\s+(emotion|mood|affect)"
+            r"|analyze\s+(employee|worker|staff|student)s?\s+(emotion|facial\s+expression|mood)"
+            r"|emotion\s+(detection|tracking|recognition|analysis)\s+(in|at|for)\s+(the\s+)?(workplace|office|classroom|school|factory)"
+            r"|workplace\s+emotion\s+(recognition|detection|tracking|monitoring|analysis)"
+            r"|classroom\s+emotion\s+(recognition|detection|tracking|monitoring|analysis))"
+        ),
+        base_score=70,
+        description=(
+            "Request to build or deploy an AI system that infers employee or student emotions. "
+            "This is a prohibited practice under EU AI Act Art. 5(1)(f), enforceable since "
+            "2025-02-02: AI must not be used to infer emotions of natural persons in workplaces "
+            "or educational institutions unless strictly for medical or safety reasons (e.g. "
+            "detecting pilot fatigue). EC final guidelines (C(2025) 5052 final, 2025-07-29) "
+            "clarify the prohibition covers facial expression, voice tone, and physiological "
+            "biometric inference in these settings. Maximum fine: EUR 35M or 7% of global turnover."
+        ),
+        owasp_ref="EU AI Act Art. 5(1)(f) / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "Building AI emotion recognition for employees or students is a prohibited AI practice "
+            "under EU AI Act Art. 5(1)(f) (in force since 2025-02-02). Remove the feature. "
+            "The only permitted exceptions are systems used strictly for medical or safety reasons, "
+            "such as detecting dangerous fatigue levels in vehicle operators. Productivity "
+            "monitoring, HR screening, engagement measurement, and student attention tracking "
+            "are all within the prohibited scope. France (CNIL), Germany, and Ireland have "
+            "flagged this as an active 2026 enforcement priority."
+        ),
+    ),
+    # EU AI Act Art. 5(1)(a): AI systems that deploy subliminal techniques beyond a
+    # person's consciousness or purposefully manipulative or deceptive techniques, with
+    # the objective or effect of materially distorting behaviour, are prohibited
+    # (enforceable since 2025-02-02, fines since 2025-08-02). EC final guidelines
+    # (C(2025) 5052 final, 2025-07-29) explicitly cite: addictive reinforcement schedules
+    # and dopamine-like loops, dark patterns that prevent cancellation/unsubscription, and
+    # AI toys designed to create compulsive usage in children. Art. 5(1)(b) extends the
+    # prohibition to AI systems that exploit age-, disability-, or socioeconomic
+    # vulnerabilities to materially distort behaviour. Maximum fine: EUR 35M or 7% of
+    # global annual turnover (highest tier).
+    DetectionPattern(
+        id="comp_subliminal_manipulation",
+        name="Subliminal Manipulation or Psychological Vulnerability Exploitation (Prohibited AI Practice)",
+        category="compliance_violation",
+        pattern=_p(
+            r"(subliminal\s+(technique|message|manipulation|advertising|stimuli|cue|influence|trigger)"
+            r"|addictive\s+reinforcement\s+(schedule|loop)"
+            r"|dopamine\s+(loop|hook|trigger)\s+(to|for)\s+(encourage|increase|boost)\s+(play|usage|engagement|retention)"
+            r"|exploit\s+(psychological|cognitive)\s+vulnerabilit"
+            r"|exploit\s+(user|people|child|elderly|disabled|vulnerable)\w*\s+vulnerabilit"
+            r"|manipulate\s+(users?|people|customers?)\s+without\s+(their\s+)?(knowing|awareness|knowledge|consent)"
+            r"|covertly\s+(influence|manipulate|persuade)\s+(users?|people|human)"
+            r"|dark\s+pattern\s+(to|for)\s+(prevent|stop|block)\s+(user|subscriber|customer)s?\s+(from\s+)?(cancel|unsubscrib|opt.out|leav))"
+        ),
+        base_score=65,
+        description=(
+            "Instruction to deploy subliminal, covert, or psychologically manipulative techniques "
+            "in an AI system. EU AI Act Art. 5(1)(a) prohibits AI that uses subliminal techniques "
+            "beyond conscious awareness or purposefully manipulative/deceptive techniques that "
+            "materially distort behaviour (enforceable since 2025-02-02). EC final guidelines "
+            "(C(2025) 5052 final, 2025-07-29) name as prohibited: addictive reinforcement schedules "
+            "and dopamine-like loops; dark patterns blocking cancellation; and AI designed to create "
+            "compulsive usage. Art. 5(1)(b) also prohibits exploiting vulnerabilities of specific "
+            "groups (children, elderly, disabled, low-income) to distort behaviour. "
+            "Maximum fine: EUR 35M or 7% of global annual turnover."
+        ),
+        owasp_ref="EU AI Act Art. 5(1)(a)(b) / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "Instructions to use subliminal techniques, addictive reinforcement, dopamine loops, "
+            "or dark patterns that prevent users from cancelling/unsubscribing describe prohibited "
+            "AI practices under EU AI Act Art. 5(1)(a)(b) (in force since 2025-02-02). Remove "
+            "these design requirements. Engagement optimization must rely on transparent, conscious "
+            "user choice — not covert influence. Similarly, targeting vulnerable groups "
+            "(children, elderly, disabled, low-income) with manipulative AI is prohibited under "
+            "Art. 5(1)(b). Both violations carry the Act's highest fines: EUR 35M or 7% of "
+            "global annual turnover."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------

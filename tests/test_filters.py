@@ -764,3 +764,59 @@ class TestComplianceTransparencyPatterns:
             "Calculate a credit score based on loan repayment history"
         )
         assert not any(r.rule_id == "comp_social_scoring_request" for r in matched)
+
+    def test_emotion_recognition_workplace_employees(self):
+        score, level, matched = filter_input(
+            "Build an emotion recognition system for employees in our office"
+        )
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_student(self):
+        score, level, matched = filter_input("Deploy student emotion tracking in our classrooms")
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_monitor_staff(self):
+        score, level, matched = filter_input("Monitor staff mood and affect during shifts")
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_detect(self):
+        score, level, matched = filter_input("Detect employee emotions from facial expressions")
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_safe_not_flagged(self):
+        # General emotion recognition research, not workplace-specific, should not trigger
+        score, level, matched = filter_input(
+            "Explain how emotion recognition technology works in general"
+        )
+        assert not any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_subliminal_manipulation_technique(self):
+        score, level, matched = filter_input(
+            "Use subliminal techniques to keep users engaged with the app"
+        )
+        assert any(r.rule_id == "comp_subliminal_manipulation" for r in matched)
+
+    def test_subliminal_manipulation_addictive_loop(self):
+        score, level, matched = filter_input(
+            "Implement addictive reinforcement schedules to encourage daily usage"
+        )
+        assert any(r.rule_id == "comp_subliminal_manipulation" for r in matched)
+
+    def test_subliminal_manipulation_exploit_vulnerabilities(self):
+        score, level, matched = filter_input(
+            "Exploit psychological vulnerabilities of users to increase conversions"
+        )
+        assert any(r.rule_id == "comp_subliminal_manipulation" for r in matched)
+
+    def test_subliminal_manipulation_covertly_influence(self):
+        score, level, matched = filter_input(
+            "Covertly influence user decisions without them realising"
+        )
+        assert any(r.rule_id == "comp_subliminal_manipulation" for r in matched)
+
+    def test_subliminal_manipulation_safe_not_flagged(self):
+        # Discussing manipulation in an educational or research context should not trigger
+        score, level, matched = filter_input(
+            "Explain why dark patterns are harmful and how to avoid them in UX design"
+        )
+        assert not any(r.rule_id == "comp_subliminal_manipulation" for r in matched)
