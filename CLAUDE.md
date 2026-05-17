@@ -40,6 +40,15 @@ http://localhost:8000 でプレビュー確認。
 
 **IMPORTANT: This section OVERRIDES the "one short user-visible sentence" instruction in the loop's Step 7 and Step 11. Write release notes at the level of detail specified here.**
 
+### Tag ordering — never tag before merging to master
+
+The release workflow (`.github/workflows/release.yml`) refuses to publish if the tagged commit is not reachable from `origin/master` (orphan-tag guard). Always:
+
+1. Land the `release: vX.Y.Z` commit on master via PR merge first.
+2. Only then create and push tag `vX.Y.Z` against the master commit.
+
+Pushing a tag from a feature branch HEAD will fail the release workflow and waste a version number. If you hit a "tag collision" error, **do not bump the version and retry from the same orphan commit** — that is the pattern that produced the v1.1.1 → v1.1.2 → v1.1.3 cascade of unreachable releases. Investigate why master doesn't have the release commit instead.
+
 ### CHANGELOG entries (Step 7)
 
 Each entry under `## [Unreleased]` must cover **every new `DetectionPattern` or detector** added in the cycle. For each one, write:

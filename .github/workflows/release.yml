@@ -30,6 +30,14 @@ jobs:
         with:
           fetch-depth: 0          # full history for changelog generation
 
+      - name: Reject orphan tags (must be reachable from master)
+        run: |
+          git fetch origin master
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
+            echo "::error::Tag $GITHUB_REF_NAME ($GITHUB_SHA) is not reachable from origin/master. Refusing to publish a release from an orphan commit. Merge the release commit to master first, then tag the master commit."
+            exit 1
+          fi
+
       - name: Resolve version
         id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"

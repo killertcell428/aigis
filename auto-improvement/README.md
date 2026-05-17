@@ -27,3 +27,24 @@ aigis を 6 時間ごとに自動強化する保守ループの作業領域。
 - `pending/` を定期的に眺めて、採否を判断する
 - 大きな機能拡張・路線変更は人間が `pending/` を昇格 or 別ブランチで実装
 - リリースノートは `CHANGELOG.md` を読めば時系列で全変更が把握できる
+
+## リリース手順（必ずこの順序を守る）
+
+タグから feature ブランチを切らない。**master にマージされたコミットからのみタグを打つ**。
+`release.yml` は `merge-base --is-ancestor origin/master` の guard で orphan commit からのリリースを拒否する。
+
+1. feature ブランチで release コミット（`release: vX.Y.Z`）と `uv.lock` 更新を作成
+2. PR を開き、CI / レビューを通して **master にマージ**
+3. master の HEAD（マージ後のコミット）に対してタグを打つ
+   ```bash
+   git checkout master && git pull
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+4. タグ push が `release.yml` を起動 → PyPI 公開 → GitHub Release 作成
+
+### NG パターン（過去に v1.1.0〜v1.1.3 で発生）
+
+- feature ブランチの HEAD からタグを打って push する → orphan commit から公開されてしまう
+- PR が master にマージされずに残るため、CHANGELOG とソースツリーが一致しない
+- 次サイクルで「tag collision」を理由に version bump を再試行し、orphan tag を量産する
