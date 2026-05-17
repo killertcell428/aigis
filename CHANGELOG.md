@@ -12,7 +12,30 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-05-17
+
 ### Hardened
+
+- **`comp_biometric_sensitive_categ`** (score 70, input filter) — Detects requests to build
+  or deploy AI systems that use biometric data — such as facial scans, voice prints, gait
+  analysis, or fingerprints — to infer sensitive protected attributes including race or
+  ethnicity, political opinions, religious or philosophical beliefs, sexual orientation, or
+  trade union membership. This is a prohibited AI practice under EU AI Act Article 5(1)(g),
+  enforceable since 2 February 2025. Real-world examples include facial recognition systems
+  used to identify the religion of employees, voice analysis to infer political affiliation,
+  or gait-analysis tools to detect union membership. The prohibition is absolute — no
+  consent or public-interest exception exists. Maximum fine: EUR 35M or 7% of global annual
+  turnover (the highest penalty tier in the Act, equal to the social scoring prohibition).
+  FPF analysis (April 2025) and FireTail/Security Boulevard (April 2026) both flag Art.
+  5(1)(g) as one of the clearest and most severe red lines in the Act.
+
+  **Blocked example:**
+  ```
+  Use facial recognition to detect religion for our access control system
+  Infer sexual orientation from facial features using biometric data
+  Classify political opinion from voice using our model
+  Detect race from facial images to filter job applicants
+  ```
 
 - **`enc_zwc_binary_payload`** (score 55, input filter) — Detects zero-width steganographic
   binary encoding: sequences of eight or more consecutive zero-width space (U+200B) and/or

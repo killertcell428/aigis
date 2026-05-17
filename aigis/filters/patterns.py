@@ -4388,6 +4388,10 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
 # mandatory AI transparency and anti-abuse regulations:
 #   - EU AI Act Art. 52 (AI transparency obligations, enforceable 2026-08-02)
 #   - EU AI Act Art. 5(1)(c) (social scoring, prohibited since 2025-02-02)
+#   - EU AI Act Art. 5(1)(g) (biometric categorisation for sensitive attributes,
+#     prohibited since 2025-02-02): AI must not infer race, political opinions,
+#     religious beliefs, sexual orientation, or trade union membership from
+#     biometric data. Maximum fine: EUR 35M or 7% of global turnover.
 #   - US state chatbot disclosure laws (CA, WA, NE, OR — wave of 2026 laws)
 #   - CHATBOT Act (proposed federal, Mar 2026)
 #   - Expert studies on Art. 5 prohibitions published by EC, May 2026
@@ -4463,6 +4467,48 @@ COMPLIANCE_TRANSPARENCY_PATTERNS: list[DetectionPattern] = [
             "history, or personality characteristics where the resulting score affects them in "
             "unrelated contexts (e.g. creditworthiness decided by social media activity). "
             "EC expert studies (May 2026) confirm employer and citizen scoring systems are in scope."
+        ),
+    ),
+    # EU AI Act Art. 5(1)(g): biometric categorisation systems that deduce or
+    # infer sensitive protected attributes from biometric data are a prohibited
+    # practice enforceable since 2025-02-02. Covered attributes: race/ethnicity,
+    # political opinions, trade union membership, religious or philosophical
+    # beliefs, sex life or sexual orientation. Maximum fine: EUR 35M or 7% of
+    # global annual turnover (highest tier alongside social scoring).
+    # Source: Article 5(1)(g) EU AI Act (Regulation (EU) 2024/1689); FPF
+    # analysis "Red Lines under the EU AI Act" (April 2025); Security Boulevard
+    # analysis "Article 5 and the EU AI Act's Absolute Red Lines" (April 2026).
+    DetectionPattern(
+        id="comp_biometric_sensitive_categ",
+        name="Biometric Categorisation for Sensitive Attributes (Prohibited AI Practice)",
+        category="compliance_violation",
+        pattern=_p(
+            r"(facial\s+recognition\s+(?:to|for)\s+(?:detect|infer|identify|classify|deduce|predict)\w*\s+"
+            r"(?:race|ethnicity|religion|political|sexual\s+orientation|union\s+membership|gay|lesbian|transgender)\b"
+            r"|biometric\w*\s+(?:\w+\s+)?(?:to\s+)?(?:classify|categoris|categoriz|infer|detect|identify|deduce|predict)\w*"
+            r"\s+(?:race|ethnicity|political|religion|religious|sexual\s+orientation|trade\s+union)\b"
+            r"|(?:infer|deduce|detect|classify|categorize|categorise|predict)\s+"
+            r"(?:race|ethnicity|political\s+(?:opinion|view|affiliation)|religion|religious\s+belief|"
+            r"sexual\s+orientation|trade\s+union\s+membership)\s+"
+            r"(?:from|using|via|with|based\s+on)\s+(?:biometric|facial|face|voice|fingerprint|gait|iris|retina)\b)"
+        ),
+        base_score=70,
+        description=(
+            "Request to build or deploy an AI system that uses biometric data to infer sensitive "
+            "protected attributes such as race, ethnicity, political opinions, religious beliefs, "
+            "sexual orientation, or trade union membership. Prohibited AI practice under EU AI Act "
+            "Art. 5(1)(g) since 2025-02-02. The prohibition applies to any biometric categorisation "
+            "system that deduces sensitive attributes regardless of stated purpose. Maximum fine: "
+            "EUR 35M or 7% of global annual turnover."
+        ),
+        owasp_ref="EU AI Act Art. 5(1)(g) / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "Building AI systems that infer race, political opinions, religious beliefs, sexual "
+            "orientation, or union membership from biometric data is a prohibited practice under "
+            "EU AI Act Art. 5(1)(g) (enforceable since 2025-02-02). Remove or fundamentally "
+            "redesign this feature. The prohibition covers deduction of these attributes from "
+            "face images, voice prints, gait, fingerprints, iris scans, or any other biometric "
+            "data. Maximum fine: EUR 35M or 7% of global annual turnover."
         ),
     ),
 ]
