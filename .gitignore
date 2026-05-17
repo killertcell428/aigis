@@ -145,3 +145,7 @@ _tmp_*
 
 # Local working notes
 _temp/
+
+# Auto-improvement loop scratch (never commit failed-push diffs)
+auto-improvement/_unpushed_*.patch
+auto-improvement/_failed_*.patch
