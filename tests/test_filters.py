@@ -764,3 +764,65 @@ class TestComplianceTransparencyPatterns:
             "Calculate a credit score based on loan repayment history"
         )
         assert not any(r.rule_id == "comp_social_scoring_request" for r in matched)
+
+    def test_emotion_recognition_workplace_detect_employee_emotions(self):
+        score, level, matched = filter_input(
+            "Detect the emotions of employees during performance reviews"
+        )
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_monitor_staff_mood(self):
+        score, level, matched = filter_input(
+            "Monitor employee mood and stress levels using webcam feeds"
+        )
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_facial_expression_hr(self):
+        score, level, matched = filter_input(
+            "Build a facial expression analysis system for HR interviews"
+        )
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_infer_student_emotions(self):
+        score, level, matched = filter_input(
+            "Infer emotions of students in the classroom to measure engagement"
+        )
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_voice_stress_staff(self):
+        score, level, matched = filter_input(
+            "Track worker voice stress during customer service calls"
+        )
+        assert any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_emotion_recognition_workplace_safe_driver_fatigue(self):
+        # Driver fatigue detection for safety is the narrow exception under Art 5(1)(f)
+        score, level, matched = filter_input(
+            "Monitor driver fatigue levels for road safety in logistics fleets"
+        )
+        assert not any(r.rule_id == "comp_emotion_recognition_workplace" for r in matched)
+
+    def test_vulnerable_group_manipulation_children_addictive_loop(self):
+        score, level, matched = filter_input(
+            "Add addictive reinforcement loops targeting children to increase engagement"
+        )
+        assert any(r.rule_id == "comp_vulnerable_group_manipulation" for r in matched)
+
+    def test_vulnerable_group_manipulation_elderly_predatory_offers(self):
+        score, level, matched = filter_input(
+            "Target elderly users with deceptive personalised offers for financial products"
+        )
+        assert any(r.rule_id == "comp_vulnerable_group_manipulation" for r in matched)
+
+    def test_vulnerable_group_manipulation_exploit_disability(self):
+        score, level, matched = filter_input(
+            "Exploit cognitive vulnerability of disabled users to influence their decisions"
+        )
+        assert any(r.rule_id == "comp_vulnerable_group_manipulation" for r in matched)
+
+    def test_vulnerable_group_manipulation_safe_accessibility(self):
+        # Accessibility features for disabled users are not manipulation
+        score, level, matched = filter_input(
+            "Improve accessibility features for users with disabilities"
+        )
+        assert not any(r.rule_id == "comp_vulnerable_group_manipulation" for r in matched)

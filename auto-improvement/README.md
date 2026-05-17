@@ -33,18 +33,34 @@ aigis を 6 時間ごとに自動強化する保守ループの作業領域。
 タグから feature ブランチを切らない。**master にマージされたコミットからのみタグを打つ**。
 `release.yml` は `merge-base --is-ancestor origin/master` の guard で orphan commit からのリリースを拒否する。
 
+### 必須: 毎回 `release_preflight.sh` を通すこと
+
+タグを push する直前に [`auto-improvement/scripts/release_preflight.sh`](scripts/release_preflight.sh) を実行する。失敗した場合は **何もせずに人間に escalate** する。bump して retry してはいけない（[Issue #56](https://github.com/killertcell428/aigis/issues/56) で documented した v1.1.2 / v1.1.3 cascade の原因）。
+
+```bash
+./auto-improvement/scripts/release_preflight.sh vX.Y.Z $(git rev-parse origin/master)
+# exit 0 → push 可
+# exit 2 → タグ衝突。bump 禁止、人間判断待ち
+# exit 3 → master 未到達 (orphan)。先に PR を merge
+# exit 4 → master tip ではない。新しい変更を取り込む
+```
+
+### 標準フロー
+
 1. feature ブランチで release コミット（`release: vX.Y.Z`）と `uv.lock` 更新を作成
 2. PR を開き、CI / レビューを通して **master にマージ**
-3. master の HEAD（マージ後のコミット）に対してタグを打つ
+3. master の HEAD（マージ後のコミット）に対して preflight → タグ
    ```bash
    git checkout master && git pull
+   ./auto-improvement/scripts/release_preflight.sh vX.Y.Z
    git tag vX.Y.Z
    git push origin vX.Y.Z
    ```
 4. タグ push が `release.yml` を起動 → PyPI 公開 → GitHub Release 作成
 
-### NG パターン（過去に v1.1.0〜v1.1.3 で発生）
+### NG パターン（過去に v1.1.0〜v1.1.3 で発生 — Issue #56）
 
 - feature ブランチの HEAD からタグを打って push する → orphan commit から公開されてしまう
 - PR が master にマージされずに残るため、CHANGELOG とソースツリーが一致しない
 - 次サイクルで「tag collision」を理由に version bump を再試行し、orphan tag を量産する
+- 失敗時に `_unpushed_<timestamp>.patch` artifact をコミット → 履歴を汚染する（このパターンも禁止）

@@ -1,0 +1,92 @@
+name: Orphan tag alarm
+
+# Nightly sweep that lists every release tag in the repo and flags any
+# that point to a commit not reachable from master. The release.yml
+# workflow's orphan-tag guard (added in #53) rejects orphan tags at
+# publish time, but a tag pushed before #53 landed — or pushed despite a
+# bug in the auto-improvement loop — can sit on the remote silently.
+#
+# This workflow opens a tracking issue (or updates an existing one) when
+# an orphan release tag is found, so it can't go unnoticed for long.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # daily at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0  # need full history to walk ancestry
+          fetch-tags: true
+
+      - name: Scan release tags
+        id: scan
+        run: |
+          set -euo pipefail
+
+          ORPHANS=""
+          for tag in $(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' | sort -V); do
+            sha=$(git rev-list -n 1 "$tag")
+            if ! git merge-base --is-ancestor "$sha" origin/master; then
+              ORPHANS="$ORPHANS\n- $tag → $sha"
+            fi
+          done
+
+          if [[ -z "$ORPHANS" ]]; then
+            echo "No orphan tags found."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Orphan tags detected:"
+          echo -e "$ORPHANS"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          # Use heredoc for multi-line output to GITHUB_OUTPUT
+          {
+            echo "list<<ORPHAN_LIST_EOF"
+            echo -e "$ORPHANS"
+            echo "ORPHAN_LIST_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open or update tracking issue
+        if: steps.scan.outputs.found == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const list = `${{ steps.scan.outputs.list }}`;
+            const title = "[orphan-tag-alarm] Release tags not reachable from master";
+            const body = `The nightly orphan-tag scan found release tags pointing to commits that are **not reachable from \`master\`**:\n\n${list}\n\nThese tags can be published from the auto-improvement loop without ever landing the release commit on master, producing a release that doesn't match the source tree (see [Issue #56](https://github.com/${context.repo.owner}/${context.repo.repo}/issues/56)).\n\nRecovery: see \`auto-improvement/scripts/release_preflight.sh\` and the v1.1.2 / v1.1.3 release advisory for the playbook.\n\n_This issue was auto-opened by \`.github/workflows/orphan-tag-alarm.yml\`. It will be reopened nightly until the orphan tags are resolved (either landed-to-master, deleted from the remote, or the workflow is silenced for a specific tag list)._`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: "orphan-tag",
+              state: "open",
+              per_page: 5,
+            });
+            if (existing.data.length > 0) {
+              const num = existing.data[0].number;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: num,
+                body: `Nightly scan still finds orphan tags:\n\n${list}`,
+              });
+              core.info(`Updated existing issue #${num}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ["orphan-tag", "release"],
+              });
+              core.info(`Opened issue #${created.data.number}`);
+            }
