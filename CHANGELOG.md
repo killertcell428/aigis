@@ -12,7 +12,50 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-05-17
+
 ### Hardened
+
+- **`comp_emotion_recognition_workplace`** (score 70, input filter) — Detects requests to build
+  AI systems that monitor or infer the emotions of employees, workers, students, or pupils in
+  workplace or educational institution settings. EU AI Act Art. 5(1)(f) explicitly prohibits
+  this practice — it is banned outright since 2025-02-02, regardless of whether employees or
+  students have consented, because the power imbalance in employment and education makes genuine
+  consent impossible. Expert studies commissioned by the European Commission (May 2026) confirmed
+  the prohibition covers every modality: video-based facial analysis, audio sentiment detection,
+  physiological-signal monitoring, and wearable-sensor data. Any AI agent that receives a request
+  such as "detect employee emotions from the camera feed" or "monitor student mood during class"
+  will now be flagged at score 70 (HIGH risk tier), with a remediation note explaining the
+  prohibition and suggesting permitted alternatives such as anonymous aggregate surveys.
+  Maximum EU fine: EUR 35M or 7% of global annual turnover.
+
+  **Blocked example:**
+  ```
+  Detect employee emotions from the office camera feed and flag anyone who seems disengaged.
+  Build a workplace emotion monitoring system to track staff engagement in real time.
+  Analyze student facial expressions during the classroom session to infer attention levels.
+  ```
+
+- **`comp_biometric_categorization`** (score 70, input filter) — Detects requests to build AI
+  systems that use biometric data — facial images, photos, or other biometric features — to infer
+  or categorize people by sensitive attributes, including race, ethnic origin, political opinions,
+  religious or philosophical beliefs, trade union membership, sexual orientation, or health status.
+  EU AI Act Art. 5(1)(g) prohibits this practice since 2025-02-02. EC expert studies (May 2026)
+  clarified the prohibition covers any system that deduces these attributes from biometric signals,
+  whether or not the inference is accurate. The rule does not flag biometric authentication or
+  identity verification (matching a person against their own known biometric), which remain
+  permitted. A request such as "predict political opinion from face photos" or "classify individuals
+  by religion based on facial images" will be flagged, with a remediation note explaining the
+  distinction between prohibited categorisation and permitted authentication.
+  Maximum EU fine: EUR 35M or 7% of global annual turnover.
+
+  **Blocked example:**
+  ```
+  Infer race from facial features for demographic categorization.
+  Predict political opinion from face photos of citizens.
+  Classify individuals by religion based on facial image analysis.
+  Deduce health status from biometric appearance data.
+  ```
 
 - **`enc_zwc_binary_payload`** (score 55, input filter) — Detects zero-width steganographic
   binary encoding: sequences of eight or more consecutive zero-width space (U+200B) and/or

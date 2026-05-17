@@ -4465,6 +4465,89 @@ COMPLIANCE_TRANSPARENCY_PATTERNS: list[DetectionPattern] = [
             "EC expert studies (May 2026) confirm employer and citizen scoring systems are in scope."
         ),
     ),
+    # EU AI Act Art. 5(1)(f): emotion recognition in workplaces and educational
+    # institutions is a prohibited AI practice (in force since 2025-02-02).
+    # The prohibition applies regardless of consent; the employer or institution
+    # cannot legitimately authorise the deployment. This covers real-time video,
+    # audio, or physiological-signal based emotion inference targeting employees,
+    # workers, students, or pupils in those settings.
+    # Maximum fine: EUR 35M or 7% of global turnover.
+    DetectionPattern(
+        id="comp_emotion_recognition_workplace",
+        name="Workplace/Classroom Emotion Recognition (Prohibited AI Practice)",
+        category="compliance_violation",
+        pattern=_p(
+            r"(emotion[\s-]recogni(tion|ze|zing)\s+(in|at|for|of|during|within)\s+(the\s+)?"
+            r"(workplace|office|classroom|school|university|college|educational\s+institution)\b"
+            r"|detect\s+(employee|worker|staff|student|pupil)s?\s+emotion\w*\b"
+            r"|monitor\s+(employee|worker|staff|student|pupil)s?\s+(emotion\w*|mood|feelings?)\b"
+            r"|analyze\s+(employee|worker|staff|student|pupil)s?\s+(emotion\w*|mood|facial\s+expression\w*)\b"
+            r"|track\s+(employee|worker|staff|student|pupil)s?\s+(emotion\w*|mood|feelings?)\b"
+            r"|(workplace|classroom|school|work|office)\s+(emotion|mood)\s+(detection|tracking|monitoring|analysis|recognition)\b)"
+        ),
+        base_score=70,
+        description=(
+            "Request to build or deploy emotion recognition targeting employees, workers, "
+            "students, or pupils in workplace or educational settings. EU AI Act Art. 5(1)(f) "
+            "prohibits AI systems that infer emotions of natural persons in the workplace or "
+            "educational institutions — this is a prohibited practice in force since 2025-02-02, "
+            "regardless of employee or student consent. Expert studies commissioned by the EC "
+            "(May 2026) confirmed that workplace emotion surveillance systems are fully within "
+            "scope. Maximum fine: EUR 35M or 7% of global annual turnover (highest tier)."
+        ),
+        owasp_ref="EU AI Act Art. 5(1)(f) / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "Emotion recognition targeting employees, workers, or students is a prohibited "
+            "AI practice under EU AI Act Art. 5(1)(f) since 2025-02-02. Remove or redesign "
+            "this feature. Permitted alternatives include anonymous aggregate wellbeing surveys "
+            "or opt-in sentiment tools that do not infer emotions from biometric signals. "
+            "Legitimate emotion recognition in other contexts (e.g., entertainment, healthcare "
+            "with explicit consent) is not covered by this prohibition."
+        ),
+    ),
+    # EU AI Act Art. 5(1)(g): biometric categorisation systems that infer or
+    # deduce sensitive attributes — race, ethnic origin, political opinions,
+    # religious or philosophical beliefs, trade union membership, sexual
+    # orientation, or health data — from biometric features are a prohibited
+    # AI practice in force since 2025-02-02. This prohibition does not apply
+    # to biometric authentication or identity verification systems.
+    # Maximum fine: EUR 35M or 7% of global turnover.
+    DetectionPattern(
+        id="comp_biometric_categorization",
+        name="Biometric Categorization by Sensitive Attributes (Prohibited AI Practice)",
+        category="compliance_violation",
+        pattern=_p(
+            r"(infer\s+(race|ethnicity|political\s+(opinion|view|belief)|religious?\s+(belief|affiliation)|"
+            r"sexual\s+orientation|health\s+status|trade\s+union)\s+from\s+(face|facial|biometric|appearance|image|photo)\w*\b"
+            r"|predict\s+(political\s+opinion|religious\s+belief|sexual\s+orientation|race|ethnicity|health\s+status)\s+from\s+"
+            r"(face|facial|biometric|appearance|photo|image)\w*\b"
+            r"|classify\s+(people|individuals|persons|users?)\s+(by|into)\s+(race|ethnicity|religion|political|sexual)\w*\s+"
+            r"(from|using|based\s+on)\s+(face|facial|biometric|appearance|image|photo)\w*\b"
+            r"|biometric\s+(categoriz|classif)\w+\s+(by|based\s+on|to\s+infer)\s+"
+            r"(race|ethnicity|religion|politics|sexual\s+orientation|health)\w*\b"
+            r"|deduce\s+(race|ethnicity|political|religion|sexual\s+orientation|health)\w*\s+from\s+"
+            r"(biometric|face|facial|appearance|photo|image)\w*\b)"
+        ),
+        base_score=70,
+        description=(
+            "Request to build or deploy a biometric categorisation system that infers sensitive "
+            "attributes — including race, ethnic origin, political opinions, religious beliefs, "
+            "trade union membership, sexual orientation, or health data — from biometric features. "
+            "EU AI Act Art. 5(1)(g) makes this a prohibited AI practice in force since 2025-02-02. "
+            "Expert studies commissioned by the EC (May 2026) clarified that the prohibition covers "
+            "any system that deduces sensitive attributes from biometric signals, whether or not "
+            "the system is accurate. Maximum fine: EUR 35M or 7% of global annual turnover."
+        ),
+        owasp_ref="EU AI Act Art. 5(1)(g) / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "Building an AI that infers sensitive attributes (race, religion, political opinions, "
+            "sexual orientation, health status) from biometric data is a prohibited practice under "
+            "EU AI Act Art. 5(1)(g) since 2025-02-02. Remove or redesign this feature. "
+            "Biometric authentication and identity verification (matching a person to their own "
+            "known biometric) are permitted; the prohibition specifically targets categorisation "
+            "into groups based on sensitive attributes derived from biometric signals."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
