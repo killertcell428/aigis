@@ -4465,6 +4465,93 @@ COMPLIANCE_TRANSPARENCY_PATTERNS: list[DetectionPattern] = [
             "EC expert studies (May 2026) confirm employer and citizen scoring systems are in scope."
         ),
     ),
+    # EU AI Act Art. 5(1)(f): Using AI to infer employee or student emotions from
+    # biometric data (facial expressions, voice tone, physiological signals) in
+    # workplace or education settings is a prohibited practice, in force since
+    # 2025-02-02. Maximum fine: EUR 35M or 7% of global turnover. The only
+    # exceptions are narrowly scoped medical or safety uses (e.g. driver fatigue
+    # monitoring). Text-only sentiment analysis is not in scope; biometric-based
+    # emotion inference is.
+    DetectionPattern(
+        id="comp_emotion_recognition_workplace",
+        name="Workplace/Education Emotion Recognition Request (Prohibited AI Practice)",
+        category="compliance_violation",
+        pattern=_p(
+            r"(detect\s+(the\s+)?(emotions?|mood|stress|affect)\s+of\s+(employees?|workers?|staff|students?|pupils?|candidates?)\b"
+            r"|monitor\s+(employee|worker|staff|student|candidate)\s+(emotions?|mood|affect|engagement|stress)\b"
+            r"|infer\s+(emotions?|mood|stress|affect)\s+(of|from|in)\s+(employees?|workers?|staff|students?|workplace|office|meeting|classroom)\b"
+            r"|(facial\s+expression|voice\s+(tone|stress)|emotion)\s+(analysis|recognition|detection|tracking|scoring)(?:\s+\w+){0,2}\s+(for|of|in|on)\s+(employees?|workers?|staff|students?|candidates?|hr|hiring|recruitment|performance|workplace|office|classroom)\b"
+            r"|emotion\s+(recognition|detection|monitoring|analysis)\s+(system|tool|app|platform|software|engine|model)\s+.{0,40}(employee|worker|staff|student|workplace|office|hiring|hr|recruitment|school|classroom)\b"
+            r"|(track|analyze|analyse|score|measure)\s+(employee|worker|staff|student)\s+(emotions?|mood|affect|facial\s+expressions?|voice\s+stress)\b"
+            r"|workplace\s+emotion\s+(recognition|detection|monitoring|analysis)\b"
+            r"|employee\s+sentiment\s+(detection|analysis|tracking)\s+(from|using|via)\s+(camera|webcam|video|biometric|facial|voice)\b)"
+        ),
+        base_score=65,
+        description=(
+            "Request to build or deploy an AI system that infers employee or student emotions "
+            "from biometric data (facial expressions, voice tone, physiological signals) in "
+            "workplace or education settings. This is a prohibited AI practice under EU AI Act "
+            "Art. 5(1)(f), in force since 2025-02-02. Prohibited examples include: monitoring "
+            "employee facial expressions during meetings to assess engagement, voice-stress "
+            "analysis on call-centre agents, and emotion detection during recruitment or "
+            "performance reviews. Maximum fine: EUR 35M or 7% of global annual turnover. "
+            "Narrow exceptions apply only to medical or safety uses (e.g. driver fatigue "
+            "detection in logistics). Pure text-based sentiment analysis is not in scope."
+        ),
+        owasp_ref="EU AI Act Art. 5(1)(f) / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "Deploying AI-based emotion recognition on employees or students in work or "
+            "education settings is prohibited under EU AI Act Art. 5(1)(f) since 2025-02-02. "
+            "Remove or redesign the system. The prohibition covers facial expression scoring, "
+            "voice-stress or tone analysis, and physiological signal monitoring used to infer "
+            "emotional states. Only narrowly defined medical or safety uses (e.g. fatigue "
+            "detection for vehicle operators) are exempt. Enforcement is active in Ireland "
+            "(Workplace Relations Commission) and France (CNIL)."
+        ),
+    ),
+    # EU AI Act Art. 5(1)(b): AI systems that exploit the vulnerabilities of a
+    # natural person or a specific group due to their age, disability, or a
+    # specific social or economic situation, with the objective or effect of
+    # materially distorting their behaviour in ways likely to cause harm, are
+    # prohibited since 2025-02-02. The EC Commission guidelines (Feb 2025) give
+    # examples: predatory offers targeting the elderly, addictive reward loops
+    # targeting children, and scam content targeting people in financial distress.
+    # Maximum fine: EUR 35M or 7% of global annual turnover.
+    DetectionPattern(
+        id="comp_vulnerable_group_manipulation",
+        name="Vulnerable Group Exploitation via AI (Prohibited AI Practice)",
+        category="compliance_violation",
+        pattern=_p(
+            r"((manipulate|exploit|target|deceive|trick)\s+(children|kids|minors?|elderly|seniors?|older\s+(people|adults?|users?)|people\s+with\s+disabilities?|disabled\s+(people|users?|persons?))\b"
+            r"|(exploit|leverage|use)\s+(their\s+)?(age|disability|vulnerabilit\w+|cognitive\s+decline|dementia|financial\s+distress|poverty)\s+(to\s+)?(influence|manipulate|change|alter|distort)\s+(their\s+)?(behavior|behaviour|decisions?|choices?|actions?)\b"
+            r"|addictive\s+(reinforcement\s+)?loops?\s+(for|targeting|aimed\s+at)\s+(children|kids|minors?|young\s+(people|users?))\b"
+            r"|addictive\s+(reward|mechanism|schedule)\s+(for|targeting|aimed\s+at)\s+(children|kids|minors?|young\s+(people|users?))\b"
+            r"|target\s+(elderly|seniors?|older\s+(people|adults?))\s+with\s+(deceptive|predatory|misleading|manipulative)\s+(offers?|ads?|advertisements?|content|messages?)\b"
+            r"|exploit\s+(cognitive|psychological)\s+(vulnerabilit\w+|weaknesses?|biases?)\s+of\s+(children|elderly|disabled|vulnerable)\b"
+            r"|(children|minors?|kids)\s+(addiction|addictive|compulsive|dopamine)\s+(loop|trigger|mechanic|hook|reward))"
+        ),
+        base_score=65,
+        description=(
+            "Request to deploy an AI system that exploits the vulnerabilities of children, "
+            "elderly people, people with disabilities, or people in difficult socioeconomic "
+            "situations to materially distort their behaviour in ways likely to cause harm. "
+            "This is a prohibited AI practice under EU AI Act Art. 5(1)(b), in force since "
+            "2025-02-02. EC Commission guidelines (Feb 2025) specifically name: addictive "
+            "reinforcement loops targeting children, predatory or deceptive personalised offers "
+            "targeting the elderly or people in financial distress, and AI that exploits "
+            "cognitive decline or disability. Maximum fine: EUR 35M or 7% of global annual turnover."
+        ),
+        owasp_ref="EU AI Act Art. 5(1)(b) / OWASP LLM09 Misinformation",
+        remediation_hint=(
+            "AI systems that exploit vulnerabilities of children, elderly, disabled, or "
+            "economically vulnerable people are prohibited under EU AI Act Art. 5(1)(b) since "
+            "2025-02-02. Remove or redesign any feature that uses age, disability, or "
+            "socioeconomic distress to manipulate user behaviour for profit or other objectives. "
+            "The prohibition covers addictive-loop design targeting minors, deceptive "
+            "personalisation targeting seniors, and scam-pattern content targeting people in "
+            "financial hardship. Fines of up to EUR 35M or 7% of global turnover apply."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
