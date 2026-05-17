@@ -76,10 +76,13 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: |
+          # cosign v3 deprecated --output-signature / --output-certificate in
+          # favour of a single --bundle file containing both the signature and
+          # the Sigstore certificate. The v1.1.4 release run failed on the
+          # legacy flags ("create bundle file: open : no such file or directory").
           for artifact in dist/*; do
             cosign sign-blob --yes \
-              --output-signature "${artifact}.sig" \
-              --output-certificate "${artifact}.crt" \
+              --bundle "${artifact}.cosign.bundle" \
               "${artifact}"
           done
 
