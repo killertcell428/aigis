@@ -4379,6 +4379,65 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
             "the environment as compromised and rotate all credentials."
         ),
     ),
+    # --- cycle 9 pass 3: incident-postmortems ---
+    DetectionPattern(
+        id="sc_langflow_build_exec",
+        name="Langflow Unauthenticated Build Endpoint / Flow Code Injection",
+        category="supply_chain",
+        pattern=_p(
+            r"(?:/api/v1/)?build_public_tmp/[A-Za-z0-9_\-]{5,}/flow\b"
+            r"|\"type\"\s*:\s*\"CustomComponent\".{0,600}"
+            r"(?:import\s+os\b|exec\s*\(|subprocess|__import__)"
+        ),
+        base_score=80,
+        description=(
+            "Detects references to Langflow's unauthenticated RCE endpoint or flow definitions "
+            "that embed Python code via CustomComponent nodes. "
+            "CVE-2026-33017 (CVSS 9.3, March 2026): the POST "
+            "/api/v1/build_public_tmp/{flow_id}/flow endpoint accepted attacker-supplied flow "
+            "data containing arbitrary Python code in node definitions and passed it directly "
+            "to exec() with no sandboxing and no authentication required. Attackers exploited "
+            "the flaw within 20 hours of advisory publication, extracting AWS credentials from "
+            "/proc/self/environ and deploying persistence tooling. Fixed in Langflow 1.9.0. "
+            "An AI agent with HTTP tool access could be directed via prompt injection to POST "
+            "a malicious flow payload to any exposed Langflow instance."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain / CWE-94 Improper Control of Code Generation",
+        remediation_hint=(
+            "Upgrade Langflow to >=1.9.0. Do not expose /build_public_tmp/ to the internet. "
+            "AI agents should not follow indirect instructions to POST attacker-controlled data "
+            "to pipeline-build endpoints."
+        ),
+    ),
+    DetectionPattern(
+        id="sc_ai_framework_auth_disabled",
+        name="AI Framework Hardcoded Authentication Bypass",
+        category="supply_chain",
+        pattern=_p(
+            r"AUTH_ENABLED\s*=\s*False\b"
+            r"|AUTH_TOKEN\s*=\s*None\b"
+            r"|DISABLE_AUTH\s*=\s*True\b"
+            r"|verify_token\s*=\s*(?:False|None)\b"
+            r"|authentication_required\s*=\s*False\b"
+        ),
+        base_score=70,
+        description=(
+            "Detects hardcoded authentication-disabled configuration in AI framework API servers. "
+            "PraisonAI CVE-2026-44338 (CVSS 7.3, May 2026): the legacy Flask API server "
+            "hard-coded AUTH_ENABLED = False and AUTH_TOKEN = None, leaving the /agents and "
+            "/chat endpoints open to any unauthenticated caller. Exploitation was observed "
+            "within 3 hours 44 minutes of advisory publication; attackers drained API quotas "
+            "and accessed sensitive agent outputs. Fixed in PraisonAI 4.6.34. "
+            "An AI agent could be instructed via prompt injection to write or validate "
+            "configuration code containing these auth-bypass patterns."
+        ),
+        owasp_ref="OWASP LLM08: Excessive Agency / CWE-306 Missing Authentication for Critical Function",
+        remediation_hint=(
+            "Never hard-code AUTH_ENABLED = False or AUTH_TOKEN = None in AI framework configs. "
+            "Require authentication on all endpoints that execute agent workflows. "
+            "Upgrade PraisonAI to >=4.6.34."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------

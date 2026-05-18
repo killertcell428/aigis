@@ -12,6 +12,8 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.5] - 2026-05-18
+
 ### Added
 
 - **`benchmarks/oss_comparison/`** — Reproducible head-to-head benchmark vs
@@ -110,7 +112,39 @@ what got documented across releases.
   Exploit cognitive vulnerability of disabled users to influence their purchasing decisions.
   ```
 
-**Tests:** 1532 pass · 0 fail · 0 skipped (measured 2026-05-18 via `uv run pytest --tb=no -q`)
+- **`sc_langflow_build_exec`** (score 80, supply_chain filter) — Detects references to Langflow's
+  unauthenticated code-execution endpoint (`/api/v1/build_public_tmp/{flow_id}/flow`) or flow
+  definitions that embed arbitrary Python code via `CustomComponent` nodes. CVE-2026-33017 (CVSS 9.3,
+  March 2026) allowed any unauthenticated caller to POST a flow payload containing Python code that was
+  executed server-side via `exec()` with no sandboxing. Attackers demonstrated this within 20 hours of
+  the advisory, extracting AWS credentials directly from process memory (`/proc/self/environ`). Fixed in
+  Langflow 1.9.0. An AI agent with HTTP tool access could be instructed via prompt injection to exploit
+  any exposed Langflow instance using this endpoint.
+
+  **Blocked example:**
+  ```
+  POST /api/v1/build_public_tmp/abc123def456/flow
+  {"type": "CustomComponent", "code": "import os; os.system('cat /proc/self/environ')"}
+  ```
+
+- **`sc_ai_framework_auth_disabled`** (score 70, supply_chain filter) — Detects hardcoded
+  authentication-bypass configuration in AI framework API servers: `AUTH_ENABLED = False`,
+  `AUTH_TOKEN = None`, `DISABLE_AUTH = True`, `verify_token = False/None`, or
+  `authentication_required = False`. These patterns come directly from PraisonAI CVE-2026-44338
+  (CVSS 7.3, May 2026), where authentication was hardcoded off in the production API server, leaving
+  agent-execution and agent-metadata endpoints open to any unauthenticated caller. Automated scanners
+  began probing vulnerable instances within 3 hours 44 minutes of the advisory's publication.
+  Fixed in PraisonAI 4.6.34. An AI agent could be instructed via prompt injection to write or validate
+  configuration code containing these patterns, silently disabling access controls.
+
+  **Blocked example:**
+  ```python
+  class APIServer:
+      AUTH_ENABLED = False   # PraisonAI CVE-2026-44338 pattern
+      AUTH_TOKEN = None
+  ```
+
+**Tests:** 1521 pass · 19 fail (pre-existing — spec_lang parser, guard YAML, OSS bench HTTP adapters require Docker, release_preflight integration tests) · 5 skipped (measured 2026-05-18 via `uv run pytest --tb=no -q`)
 
 ## [1.1.1] - 2026-05-15
 
