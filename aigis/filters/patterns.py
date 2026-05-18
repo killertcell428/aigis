@@ -3614,6 +3614,44 @@ SANDBOX_ESCAPE_PATTERNS: list[DetectionPattern] = [
             "Treat any reference to /proc/self/environ as a credential-theft signal."
         ),
     ),
+    # --- CVE-2026-21858 (CVSS 10.0) + CVE-2026-27493 — n8n expression injection RCE ---
+    # n8n evaluates {{ }} template expressions as JavaScript in workflow nodes. Attackers
+    # exploit this to call require('child_process').execSync(), process.env.*, or
+    # process.mainModule.require() — none of which appear in any legitimate n8n expression.
+    # CISA KEV; 24,700 exposed instances at time of advisory. Fixed in n8n >=1.121.0.
+    DetectionPattern(
+        id="afe_n8n_expression_injection",
+        name="n8n Workflow Expression Injection (JavaScript RCE)",
+        category="sandbox_escape",
+        pattern=_p(
+            r"\{\{[^\n]{0,300}"
+            r"(?:require\s*\(\s*['\"]child_process['\"]"
+            r"|process\.(?:env|mainModule|binding)\b"
+            r"|execSync\s*\("
+            r"|spawnSync\s*\("
+            r"|new\s+Function\s*\()"
+        ),
+        base_score=75,
+        description=(
+            "n8n-style {{ }} expression containing a dangerous JavaScript operation. "
+            "n8n evaluates expressions as JavaScript inside workflow nodes; legitimate "
+            'expressions use $json.*, $("Node").item.json.*, or built-in n8n helpers — '
+            "never Node.js system APIs. "
+            "CVE-2026-21858 (CVSS 10.0, CISA KEV): unauthenticated RCE via Form node expression "
+            "evaluation in n8n <=1.65.0, with 24,700 exposed instances at advisory publication. "
+            "CVE-2026-27493: second-order expression injection in Form nodes chains evaluation "
+            "with a sandbox escape to reach host-level code execution. "
+            "An AI agent generating or modifying n8n workflow JSON could be manipulated via "
+            "indirect prompt injection to embed these payloads in workflow parameters."
+        ),
+        owasp_ref="CWE-94: Improper Control of Code Generation / MITRE ATLAS: AML.T0048",
+        remediation_hint=(
+            "Upgrade n8n to >=1.121.0 (CVE-2026-21858 / CVE-2026-27493 patches). "
+            "Treat any {{ }} expression containing require(), process.env, or execSync "
+            "as a code injection attempt regardless of surrounding context. "
+            "Review all workflow definitions received from external sources before import."
+        ),
+    ),
 ]
 
 AUTONOMOUS_EXPLOIT_PATTERNS: list[DetectionPattern] = [
@@ -4377,6 +4415,44 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
             ".claude/, or /tmp/. Treat any agent-suggested edit to these files as a high-risk "
             "action requiring manual review. If lightning 2.6.2 or 2.6.3 was installed, treat "
             "the environment as compromised and rotate all credentials."
+        ),
+    ),
+    # --- LangChain allow_dangerous_code=True unsafe default — enables Python REPL RCE ---
+    # LangChain CSV Agent and Pandas DataFrame Agent require allow_dangerous_code=True to
+    # run; this disables the internal safety guard and passes user-controlled data directly
+    # to a Python REPL, making any prompt injection a direct code execution primitive.
+    # Langflow <=1.7.x hardcoded this flag in the CSV Agent node. Microsoft Security Blog
+    # (May 2026) identified it as a top unsafe default in surveyed AI agent deployments.
+    DetectionPattern(
+        id="sc_langchain_dangerous_code",
+        name="LangChain allow_dangerous_code=True Unsafe Code Execution Default",
+        category="supply_chain",
+        pattern=_p(
+            r"allow_dangerous_code\s*=\s*True"
+            r"|\"allow_dangerous_code\"\s*:\s*true"
+            r"|'allow_dangerous_code'\s*:\s*True"
+        ),
+        base_score=60,
+        description=(
+            "Explicit opt-in to LangChain's dangerous code execution mode. "
+            "allow_dangerous_code=True disables the internal safety guard for CSV Agent, "
+            "Pandas DataFrame Agent, and similar REPL-backed agent types, passing "
+            "user-controlled input directly to a Python interpreter. "
+            "Any successful prompt injection against an agent running with this flag becomes "
+            "a direct, no-extra-step code execution primitive on the host. "
+            "Langflow <=1.7.x hardcoded allow_dangerous_code=True in the CSV Agent node "
+            "(flagged in Microsoft Security Blog, May 2026, as a top unsafe AI agent default). "
+            "Complements afe_python_mro_escape (CVE-2026-26030) and sc_langchain_deserialization "
+            "(CVE-2025-68664): all three represent paths from prompt injection to host RCE "
+            "through LangChain or Langflow components."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain / CWE-94 Improper Control of Code Generation",
+        remediation_hint=(
+            "Never pass allow_dangerous_code=True in production AI agent configurations. "
+            "Use the LangChain safe_globals sandbox or a restricted Python interpreter "
+            "(RestrictedPython, PyPy sandbox) when agent-driven code execution is required. "
+            "Audit all LangChain agent configurations for this flag; treat any agent "
+            "suggestion to add it as a potential prompt injection attempt."
         ),
     ),
 ]

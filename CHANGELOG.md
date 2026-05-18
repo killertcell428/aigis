@@ -12,6 +12,46 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Hardened
+
+- **`afe_n8n_expression_injection`** (score 75, input/output filter) — Detects malicious JavaScript
+  embedded in n8n workflow `{{ }}` expressions: specifically `require('child_process')`,
+  `process.env.*`, `process.mainModule`, `execSync()`, `spawnSync()`, and `new Function()`.
+  n8n is a widely deployed workflow automation platform that evaluates these expressions as live
+  JavaScript code inside workflow nodes; legitimate n8n expressions only use built-in n8n helpers
+  such as `$json.*` and `$("Node").item.*` — never Node.js system APIs. CVE-2026-21858 (CVSS 10.0,
+  CISA KEV) allowed unauthenticated remote code execution via this expression engine with 24,700
+  exposed instances at advisory publication; CVE-2026-27493 chained expression injection with a
+  sandbox escape to reach host-level code execution. An AI agent building or modifying n8n workflow
+  definitions could be redirected via prompt injection to embed these payloads in any workflow
+  parameter, silently turning the workflow automation platform into a remote shell.
+
+  **Blocked example:**
+  ```
+  {{ require('child_process').execSync('id').toString() }}
+  {{ process.env.OPENAI_API_KEY }}
+  {{ process.mainModule.require('child_process').execSync('cat /etc/passwd') }}
+  ```
+
+- **`sc_langchain_dangerous_code`** (score 60, input/output filter) — Detects explicit use of
+  `allow_dangerous_code=True` (Python) or `"allow_dangerous_code": true` (JSON) in AI-generated
+  agent configurations. This parameter disables LangChain's internal safety guard for CSV Agent,
+  Pandas DataFrame Agent, and similar REPL-backed agent types, passing user-controlled data directly
+  to a Python interpreter. Any prompt injection against an agent running with this flag set becomes
+  an immediate, no-extra-step code execution primitive on the host — no sandboxing, no validation.
+  Microsoft Security Blog (May 2026) identified this as a top unsafe default across surveyed AI
+  agent deployments. Langflow ≤1.7.x hardcoded this flag in the CSV Agent node; the same parameter
+  appears across LangChain, Langflow, and several downstream frameworks. Complements the existing
+  `afe_python_mro_escape` (CVE-2026-26030) and `sc_langchain_deserialization` (CVE-2025-68664)
+  patterns that cover other LangChain/Langflow prompt-injection-to-RCE paths.
+
+  **Blocked example:**
+  ```
+  agent = create_csv_agent(llm, 'data.csv', allow_dangerous_code=True)
+  {"model": "gpt-4", "allow_dangerous_code": true, "verbose": true}
+  PandasDataFrameAgent(llm, df, allow_dangerous_code=True)
+  ```
+
 ## [1.1.4] - 2026-05-18
 
 > Renumbered from v1.1.2: the v1.1.2 / v1.1.3 PyPI slots were occupied by
