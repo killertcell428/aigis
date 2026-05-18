@@ -1,0 +1,91 @@
+name: Auto-improvement / Daily paper review
+
+# Reads ~10 unseen entries from tmylla/Awesome-LLM4Cybersecurity each day,
+# asks Claude Haiku whether they suggest a concrete Aigis hardening, and
+# files candidates as auto-improvement/pending/ stubs + one GitHub issue
+# summarising the batch. Code changes are NEVER made by this workflow —
+# humans promote pending entries into rule PRs.
+#
+# Cost guard: 10 papers × Haiku 4.5 (≈500 tokens out) ≈ a few cents/day.
+# State (paper_review_state.json) is committed back to master via a bot PR
+# so the next run advances; if the commit step fails the run still leaves
+# the issue + pending files visible.
+
+on:
+  schedule:
+    # 00:15 UTC daily — well clear of cflite/codeql peak times.
+    - cron: "15 0 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Parse + pick only, no API calls or writes"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+      max_papers:
+        description: "How many unseen papers to review this run"
+        required: false
+        default: "10"
+
+permissions:
+  contents: write       # to commit state.json + pending stubs
+  issues: write         # to file the daily summary issue
+  pull-requests: write  # so the bot can open a PR with the new pending files
+
+concurrency:
+  group: paper-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    name: Review 10 papers and file pending candidates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+
+      - name: Install anthropic SDK
+        run: uv pip install --system "anthropic>=0.40.0"
+
+      - name: Run paper review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          DRY="${{ inputs.dry_run || 'false' }}"
+          MAX="${{ inputs.max_papers || '10' }}"
+          ARGS="--max-papers $MAX"
+          if [ "$DRY" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          python auto-improvement/scripts/paper_review.py $ARGS
+
+      - name: Commit new pending + research + state on a bot branch
+        if: ${{ inputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- auto-improvement/; then
+            echo "No changes under auto-improvement/ — nothing to commit."
+            exit 0
+          fi
+          DATE="$(date -u +%Y-%m-%d)"
+          BRANCH="bot/paper-review/${DATE}"
+          git config user.name  "aigis-paper-review[bot]"
+          git config user.email "aigis-paper-review@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add auto-improvement/
+          git commit -m "auto-improvement: daily paper review ${DATE}"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --title "auto-improvement: daily paper review ${DATE}" \
+            --body "Bot PR with the daily batch of pending/ stubs and updated state. See the linked issue for the candidate list." \
+            --label "auto-improvement" || true

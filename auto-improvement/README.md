@@ -9,9 +9,29 @@ aigis を 6 時間ごとに自動強化する保守ループの作業領域。
 |------|------|
 | `ROTATION.md` | 10 領域ローテ定義 + 現在のカウンタ。毎回 +1 (mod 10) される |
 | `INDEX.md` | 全実行回の時系列インデックス（1 行サマリ） |
-| `research/` | 各回のリサーチレポート (UTC 名: `YYYY-MM-DDTHH-MM_NN-<domain>.md`) |
+| `research/` | 各回のリサーチレポート (UTC 名: `YYYY-MM-DDTHH-MM_NN-<domain>.md` または `..._paper-batch.md`) |
 | `changes/` | 各回の改修記録（追加機能・テスト結果・対応リサーチへのリンク） |
 | `pending/` | 大幅方向転換の提案。実装は保留。人間が後で採否を判断 |
+| `paper_review_state.json` | 後述「論文レビューループ」で読み終えた URL/タイトルの台帳 |
+| `scripts/paper_review.py` | 論文レビューループ本体（毎日 GH Actions から起動） |
+
+## 論文レビューループ（2026-05 追加）
+
+[Awesome-LLM4Cybersecurity](https://github.com/tmylla/Awesome-LLM4Cybersecurity) を毎日 10 件ずつ読み進める半自動ループ。`.github/workflows/paper-review.yml` が 00:15 UTC に走り、`scripts/paper_review.py` が以下を行う：
+
+1. 上流 `LITERATURES.md` を fetch
+2. `paper_review_state.json` の既読 URL/タイトルを除外し、未読の新しい順から 10 件ピック
+3. 各論文を Claude Haiku 4.5 に渡し、「Aigis に regex/部分一致で落とせる検出器候補があるか」を JSON で判定
+4. relevant=true のものを `pending/YYYY-MM-DD_paper_<slug>.md` として draft 化
+5. バッチ全体のサマリを `research/YYYY-MM-DDTHH-MM_paper-batch.md` に書き出し
+6. `gh issue create` でレビュー依頼 Issue を 1 本オープン
+7. 変更を bot ブランチで PR 化（人間がレビュー → master へマージ）
+
+実装は一切しない。pending/ に積まれた候補は、既存のルール（[ROTATION.md](ROTATION.md)）と同じく、人間が個別 PR で `aigis/` 配下に昇格させる。
+
+**必要な secrets:** `ANTHROPIC_API_KEY`（Anthropic console から発行、Settings → Secrets → Actions に登録）。未設定なら workflow は失敗するが、`workflow_dispatch` から `dry_run=true` でドライ実行は可能。
+
+**コスト目安:** 10 件 × Haiku 4.5（≈500 出力トークン）≈ 数¢/日。月 $1 弱を想定。
 
 ## 運用ルール（保守エージェントが守る）
 
