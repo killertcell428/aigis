@@ -1704,6 +1704,36 @@ INDIRECT_INJECTION_PATTERNS: list[DetectionPattern] = [
             "operations and do not allow tool-call arguments to be sourced from untrusted documents."
         ),
     ),
+    # --- CSS @font-face remote font injection (arxiv:2505.16957, May 2026) ---
+    # Malicious TrueType fonts loaded via @font-face remap standard ASCII characters
+    # to attacker-chosen glyph sequences.  What human users see ("product description")
+    # differs from what the LLM tokenises (an injection instruction).  Two attack
+    # scenarios were demonstrated against MCP-enabled agents: silent message relay to
+    # an attacker-controlled endpoint, and context exfiltration via tool calls.
+    # Retrieved documents processed by AI agents rarely have a legitimate need to load
+    # remote fonts; the @font-face + external HTTP URL combination is a reliable signal.
+    DetectionPattern(
+        id="ii_css_font_injection",
+        name="CSS Remote Font Injection (@font-face)",
+        category="indirect_injection",
+        pattern=_p(r"@font-face\s*\{[^}]*src\s*:\s*url\(\s*['\"]?\s*https?://"),
+        base_score=55,
+        description=(
+            "Detects @font-face CSS rules that load a font from a remote HTTP(S) URL in retrieved "
+            "or external web content. Attackers manipulate the font's character-code-to-glyph "
+            "mapping table so that text visible to human readers encodes adversarial instructions "
+            "at the LLM token level. Both attack scenarios demonstrated in the original research "
+            "(arxiv:2505.16957, May 2026) — malicious content relay and sensitive data leakage via "
+            "MCP tool calls — successfully bypassed production model safety filters."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect)",
+        remediation_hint=(
+            "Sanitize or strip CSS content (including @font-face blocks) from all external "
+            "documents before inserting them into an AI agent's context. Web content retrieved "
+            "for RAG or browser-agent use should never load remote fonts; presence of this "
+            "pattern in ingested content is a strong indicator of a font-injection attack attempt."
+        ),
+    ),
 ]
 
 
