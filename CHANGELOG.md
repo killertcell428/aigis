@@ -12,6 +12,18 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Hardened
+
+- Added detection for CSS `@font-face` rules that load fonts from remote HTTP(S) URLs in retrieved
+  or external web content (`ii_css_font_injection`, score 55). Attackers manipulate the font's
+  character mapping table so that text appearing harmless to human readers encodes adversarial
+  instructions at the LLM token level — when an AI agent processes the HTML, it "reads" the
+  injection instead of the innocent-looking surface text. Both attack scenarios demonstrated by
+  researchers (arxiv:2505.16957, May 2026) against MCP-enabled agents — silent message relay to
+  an attacker server and sensitive data exfiltration via tool calls — successfully bypassed
+  production model safety filters. Retrieved documents processed by AI agents rarely have a
+  legitimate need to load custom remote fonts, making this a reliable low-false-positive signal.
+
 ## [1.1.6] - 2026-05-18
 
 ### Hardened
