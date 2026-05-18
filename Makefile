@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov lint format type-check check build publish clean
+.PHONY: help install install-dev test test-cov lint format type-check check build publish clean bench bench-aigis bench-report
 
 PYTHON   ?= python
 PIP      ?= pip
@@ -80,3 +80,23 @@ clean:
 	find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name .mypy_cache  -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name .ruff_cache  -exec rm -rf {} + 2>/dev/null || true
+
+# ── OSS-comparison benchmark ─────────────────────────────────────────────────
+# See benchmarks/oss_comparison/README.md and docs/benchmarks/oss-comparison.md.
+#
+# `make bench-aigis`  — Aigis-only run, no Docker needed (CI uses this)
+# `make bench`        — run every adapter that is reachable; assumes sidecars
+#                       were started via `docker compose -f
+#                       benchmarks/oss_comparison/docker-compose.yml up -d`
+# `make bench-report` — regenerate results/report.md from results/results.csv
+
+bench-aigis:
+	$(PYTHON) -m benchmarks.oss_comparison.driver --adapter aigis
+	$(PYTHON) -m benchmarks.oss_comparison.report
+
+bench:
+	$(PYTHON) -m benchmarks.oss_comparison.driver --adapter all
+	$(PYTHON) -m benchmarks.oss_comparison.report
+
+bench-report:
+	$(PYTHON) -m benchmarks.oss_comparison.report
