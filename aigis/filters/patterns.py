@@ -4379,6 +4379,54 @@ SUPPLY_CHAIN_PATTERNS: list[DetectionPattern] = [
             "the environment as compromised and rotate all credentials."
         ),
     ),
+    # --- CVE-2025-59528: Flowise CustomMCP node JavaScript Function() constructor RCE ---
+    # The CustomMCP node parsed the mcpServerConfig string and executed JavaScript code via
+    # JavaScript's Function() constructor — identical to eval() — with full Node.js runtime
+    # access including child_process, fs, and process.env. An attacker who controls content
+    # that ends up in a Flowise workflow (e.g. via indirect prompt injection into a tool
+    # response that is used to build an MCP config) can achieve host-level RCE.
+    # Fixed in Flowise 3.0.6 (Function() replaced with JSON5.parse()); 12,000+ instances
+    # remained exposed as of April 2026. Exploitation began 6+ months after the patch.
+    DetectionPattern(
+        id="sc_flowise_js_rce",
+        name="JavaScript Function() Constructor / eval() in MCP Configuration (Flowise RCE Pattern)",
+        category="supply_chain",
+        pattern=_p(
+            r"new\s+Function\s*\([^)]{0,500}(?:require\s*\(\s*['\"](?:child_process|fs|os|net|http|https)['\"]"
+            r"|execSync|spawnSync|process\.env|\.exec\s*\()"
+            r"|Function\s*\.prototype\s*\.constructor\s*\("
+            r"|(?:mcpServerConfig\s*[\":]\s*|\"command\"\s*:\s*|\"args\"\s*:\s*)[\"'][^\"']{0,200}"
+            r"(?:eval\s*\(|new\s+Function\s*\(|require\s*\(\s*['\"]child_process)"
+        ),
+        base_score=85,
+        description=(
+            "JavaScript Function() constructor or eval() equivalent in an MCP server "
+            "configuration field. "
+            "CVE-2025-59528 (CVSS 10.0): Flowise CustomMCP node passed the user-supplied "
+            "mcpServerConfig string to JavaScript's Function() constructor without any "
+            "validation, giving attackers full Node.js runtime access. A payload such as "
+            '`new Function(\'return require("child_process").execSync("id")\')()` achieves '
+            "host-level RCE — not just prompt-level manipulation — on any Flowise instance. "
+            "Flowise instances commonly store OpenAI, Anthropic, and Azure API keys as well as "
+            "database credentials; a single exploit grants access to all of them. "
+            "12,000+ exposed instances were identified in April 2026; exploitation began over "
+            "six months after the patch was released. "
+            "Function.prototype.constructor is a JavaScript technique that reaches the same "
+            "Function() constructor through the prototype chain, bypassing naive string-match "
+            "blocklists that only check for the word 'eval'."
+        ),
+        owasp_ref="OWASP LLM03: Supply Chain / CWE-94 Improper Control of Code Generation",
+        remediation_hint=(
+            "Upgrade Flowise to version >=3.1.1 (CVE-2025-59528 fix replaced Function() "
+            "with JSON5.parse()). "
+            "Never allow user-controlled or LLM-generated strings to be passed to JavaScript's "
+            "Function() constructor, eval(), or any similar runtime code-generation call. "
+            "In MCP server configurations, validate all command and argument fields against an "
+            "allowlist of permitted values before use. "
+            "Treat any prompt or tool response containing Function() constructor calls combined "
+            "with Node.js system module references as a supply-chain RCE attempt."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
