@@ -12,6 +12,46 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.6] - 2026-05-18
+
+### Hardened
+
+- **`sc_flowise_js_rce`** (score 85, supply_chain filter) — Detects JavaScript `Function()`
+  constructor calls combined with dangerous Node.js system module references (`child_process`,
+  `fs`, `os`, `net`, `process.env`, `execSync`, `spawnSync`), and detects these patterns when
+  they appear inside MCP server configuration fields (`mcpServerConfig`, `"command":`,
+  `"args":`). This is the specific attack class exploited in Flowise CVE-2025-59528 (CVSS 10.0,
+  actively exploited April 2026): the Flowise CustomMCP node accepted user-supplied configuration
+  JSON and executed it via JavaScript's `Function()` constructor — functionally identical to
+  `eval()` — without any validation. A single payload such as
+  `new Function('return require("child_process").execSync("id")')()` achieves host-level code
+  execution on the Flowise server, giving the attacker access not just to the OS but to every
+  LLM API key stored in the application (OpenAI, Anthropic, Azure, database credentials).
+  12,000–15,000 Flowise instances were still unpatched when exploitation began, more than six
+  months after the fix was released. An AI agent receiving indirect prompt injection through a
+  poisoned tool response or retrieved document could be directed to inject this payload into a
+  Flowise workflow configuration. The rule also covers `Function.prototype.constructor`, a
+  prototype-chain bypass that reaches the same `Function()` object while evading naive
+  string-match blocklists that only search for the word `eval`. Fixed in Flowise 3.1.1.
+
+  **Blocked example:**
+  ```
+  new Function('return require("child_process").execSync("id")')()
+  mcpServerConfig: "new Function(code)()"
+  "command": "require('child_process').exec('rm -rf /tmp/*')"
+  ```
+
+### Notes
+
+- v1.1.6 is a manual follow-up release that salvages the `sc_flowise_js_rce` detector from
+  closed PR #62. PR #62 was closed because it raced PR #61 for the v1.1.5 slot and lost on
+  the merge order; the underlying Flowise CVE-2025-59528 detector is unrelated to the race
+  and is shipped here on its own.
+
+**Tests:** 1582 passed · 0 failed · 0 skipped (measured 2026-05-18 via
+`uv run --no-sync pytest --tb=no -q` on the v1.1.6 branch). 14 new tests added for
+`sc_flowise_js_rce` (10 true positives, 4 true negatives); rest unchanged from v1.1.5 master.
+
 ## [1.1.5] - 2026-05-18
 
 ### Added
