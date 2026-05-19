@@ -356,6 +356,50 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
             "audit web-search tool inputs for base64/hex strings before execution."
         ),
     ),
+    # --- cycle 2 data-exfiltration pass 4 — webhook relay exfiltration ---
+    DetectionPattern(
+        id="exfil_webhook_relay",
+        name="Webhook Relay Data Exfiltration Instruction",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            r"(?:\b(?:send|transmit|forward|upload|submit|dispatch)\b.{0,120}"
+            r"(?:webhook\.site/|requestcatcher\.com/|beeceptor\.com/|hookbin\.com/)"
+            r"|"
+            r"(?:webhook\.site/|requestcatcher\.com/|beeceptor\.com/|hookbin\.com/)"
+            r".{0,120}\b(?:send|transmit|forward|upload|submit|dispatch)\b)"
+            r"|"
+            r"(?:discord(?:app)?\.com/api/webhooks/|hooks\.slack\.com/services/|"
+            r"hooks\.zapier\.com/hooks/|hook\.us\.make\.com/|n8n\.io/webhook/)"
+            r".{0,300}"
+            r"(?:system[\s_\-]?prompt|conversation\s+(?:history|context|log)|"
+            r"api[\s_\-]?key|secret\s+key|passw(?:or)?d|credential|bearer\s+token|"
+            r"private\s+(?:data|key|info)|confidential)"
+            r")"
+        ),
+        base_score=70,
+        description=(
+            "Detects instructions directing an AI agent to transmit data to a public webhook "
+            "relay endpoint. HTTP-capture services such as webhook.site, requestcatcher.com, "
+            "and beeceptor.com are designed exclusively for development request inspection — "
+            "their appearance in agent instructions alongside data-send verbs is a strong "
+            "exfiltration signal. For mainstream notification webhooks (Discord, Slack, Zapier, "
+            "Make, n8n), the rule fires when the webhook URL appears within 300 characters of "
+            "sensitive-data terms such as 'system prompt', 'api key', or 'credentials'. "
+            "Multiple incidents in 2025–2026 documented indirect prompt injection attacks that "
+            "instructed AI assistants to POST stolen conversation context to attacker-controlled "
+            "Discord webhooks, bypassing traditional DLP controls because webhook traffic "
+            "resembles legitimate bot-notification traffic (PromptArmor, 2025; BlackFog, 2025)."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "AI agents should never POST conversation history, system prompts, or credentials "
+            "to external webhook endpoints. Allowlist permitted outbound domains and block "
+            "known HTTP-capture services (webhook.site, requestcatcher.com, beeceptor.com). "
+            "Treat any instruction combining a notification webhook URL (Discord, Slack, Zapier) "
+            "with sensitive-data keywords as a likely indirect prompt injection exfiltration attempt."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -5081,6 +5125,36 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
         remediation_hint=(
             "Strip Unicode Tag Block characters (U+E0000–U+E007F) from LLM output before "
             "rendering or forwarding to downstream agents or users."
+        ),
+    ),
+    # --- cycle 2 data-exfiltration pass 4 — Markdown reference-style link exfil (EchoLeak) ---
+    DetectionPattern(
+        id="out_markdown_ref_exfil",
+        name="Markdown Reference-Style Link with Encoded Query Parameter (EchoLeak Pattern)",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:^|\n)\s*\[[^\]]{1,80}\]\s*:\s*https?://[^\s?#]{4,}[?&]"
+            r"[A-Za-z0-9_%\-]{1,50}=[^\s&]{16,}"
+        ),
+        base_score=60,
+        description=(
+            "Detects Markdown reference-style link definitions (e.g., '[label]: https://...?param=...') "
+            "carrying a query-parameter value of 16 or more non-whitespace characters in LLM output. "
+            "CVE-2025-32711 (EchoLeak, CVSS 9.3) exploited this exact syntax to bypass Microsoft "
+            "Copilot's inline-link redaction filter: the attacker embedded encoded corporate data in "
+            "a reference definition at the bottom of the document, which markdown renderers "
+            "auto-fetched while the protection only scrubbed inline `![alt](url)` forms. "
+            "Legitimate LLM output rarely produces reference-style links with long query parameters; "
+            "their appearance in agent responses is a strong indicator of covert data embedding via "
+            "indirect prompt injection. See arxiv:2509.10540 for the full attack analysis."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Apply the same strict link-allowlisting to Markdown reference definitions as to "
+            "inline links and auto-fetched images. Strip or reject reference definitions whose "
+            "URLs carry query parameters with values longer than 15 characters. Markdown renderers "
+            "integrated with AI-generated content should not auto-fetch external URLs from "
+            "reference definitions — treat them identically to inline external hyperlinks."
         ),
     ),
 ]
