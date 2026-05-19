@@ -69,6 +69,8 @@ OpenSSF Scorecard が指摘する 5 件のガバナンス項目は、いずれ�
 <tr><td>CodeReview</td><td><span class="badge-info">info</span></td><td>運用変更</td><td>BranchProtection と一緒に解決</td></tr>
 <tr><td>CIIBestPractices</td><td><span class="badge-info">info</span></td><td>30分〜数時間</td><td>OSS 公開ならやる価値あり</td></tr>
 <tr><td>Fuzzing</td><td><span class="badge-info">info</span></td><td>数日</td><td>後回しでOK</td></tr>
+<tr><td>Token-Permissions (job-level)</td><td><span class="badge-info">info</span></td><td>—</td><td>受容 (§6)</td></tr>
+<tr><td>Pinned-Dependencies (local install)</td><td><span class="badge-info">info</span></td><td>—</td><td>受容 (§6)</td></tr>
 </tbody>
 </table>
 
@@ -123,6 +125,30 @@ OpenSSF Scorecard が指摘する 5 件のガバナンス項目は、いずれ�
 <div class="card">
 <strong>注意:</strong> 1 人開発のリポでも approval=1 を要求するとマージできなくなる場合があります。その場合は approval を 0 にしつつ status checks のみ必須化する、または GitHub の "Allow specified actors to bypass required pull requests" を使ってください。
 </div>
+
+<h3>現状（2026-05-19 時点）と Scorecard alert #8 の扱い</h3>
+
+<p>本リポは既に以下の Branch Protection を有効化済（<code>gh api repos/killertcell428/aigis/branches/master/protection</code> で確認）:</p>
+
+<ul>
+<li>✅ Required status checks (strict): <code>Lint &amp; Type Check</code>, <code>Test / Python 3.11</code>, <code>Test / Python 3.12</code></li>
+<li>✅ Required signatures (signed commits)</li>
+<li>✅ Enforce admins</li>
+<li>✅ Required linear history</li>
+<li>✅ Required conversation resolution</li>
+<li>✅ allow_force_pushes = false / allow_deletions = false</li>
+<li>✅ dismiss_stale_reviews = true / require_code_owner_reviews = true</li>
+<li>⚠️ <code>required_approving_review_count = 0</code> — <strong>1 人開発のため意図的</strong></li>
+</ul>
+
+<p>Scorecard alert <strong>#8 Branch-Protection (High)</strong> が残っているのは、最後の <code>required_approving_review_count = 0</code> に起因する。これは「自分の PR を自分でマージできる必要がある」というソロ開発の現実的制約で、外部コントリビュータが現れたら approval=1 に上げる方針。<strong>Won't fix として dismiss する</strong>。</p>
+
+<p><strong>dismiss 文言テンプレ</strong>:</p>
+<pre><code>Won't fix — solo developer repo. Branch protection enforces status
+checks, signed commits, linear history, and admin enforcement; only
+required_approving_review_count is 0 (would block all merges otherwise).
+Will raise to 1 once a second maintainer joins.
+See docs/scorecard-governance-setup.html §1.</code></pre>
 
 <h2>2. Maintained — リポジトリ作成から90日未満</h2>
 
@@ -195,6 +221,104 @@ atheris.Fuzz()</code></pre>
 </ol>
 
 <p><strong>後回しでOK</strong>。先に他の項目を片付けてから検討。</p>
+
+<h2>6. 受容方針 — Token-Permissions (job-level) と Pinned-Dependencies (local install)</h2>
+
+<p>
+Scorecard が High / Medium で機械的に検出するが、構成上「これ以上絞れない／絞ると別のリスクが増える」種類のアラートを<strong>明示的に受容する</strong>方針を以下に定める。新しいアラートが同じカテゴリで上がった場合、本セクションに照らして dismiss 可否を判断する。
+</p>
+
+<h3>6.1 Token-Permissions: job-level <code>contents: write</code> は許容、top-level は禁止</h3>
+
+<p><strong>方針</strong>:</p>
+<ul>
+<li>すべての workflow は <strong>top-level で <code>permissions: contents: read</code></strong>（または最小権限）を設定する。</li>
+<li><code>write</code> 権限は <strong>必要な job の <code>permissions:</code> ブロックでのみ</strong>付与する。</li>
+<li>上記を満たしていれば、Scorecard が job-level <code>write</code> を High として検出しても <strong>dismiss 可</strong>。</li>
+</ul>
+
+<p><strong>根拠</strong>:</p>
+<ul>
+<li>GitHub Actions の <code>GITHUB_TOKEN</code> は job 単位でスコープされるため、job-level に絞った時点で他 job への漏出は防げる。</li>
+<li>Scorecard の Token-Permissions チェックは <code>write</code> の出現を機械的にカウントするため、正しいスコープであっても High として残る既知の挙動。</li>
+<li>これを完全に消すには Deploy Key / GitHub App Token に置き換える必要があるが、シークレット管理コスト・監査トレイル変更のデメリットが運用上のリスク低減を上回る。</li>
+</ul>
+
+<p><strong>対応済アラート</strong>:</p>
+
+<table>
+<thead>
+<tr><th>Alert</th><th>ファイル</th><th>用途</th><th>判断</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>#179</td>
+  <td><code>.github/workflows/release.yml:134</code></td>
+  <td><code>github-release</code> job — GitHub Release 作成のため <code>contents: write</code> 必須</td>
+  <td>受容 (build/publish-pypi job は OIDC 化済で <code>contents: read</code>)</td>
+</tr>
+<tr>
+  <td>#180</td>
+  <td><code>.github/workflows/sync-zenn-qiita.yml:16</code></td>
+  <td>Zenn→Qiita 変換後の <code>public/</code> commit + push</td>
+  <td>受容</td>
+</tr>
+<tr>
+  <td>#181</td>
+  <td><code>.github/workflows/zenn-deploy-trigger.yml:14</code></td>
+  <td>Zenn deploy トリガーの empty commit push</td>
+  <td>受容</td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>dismiss 文言テンプレ</strong>（Code scanning UI で使用）:</p>
+<pre><code>Won't fix — job-level permissions are correctly scoped per
+docs/scorecard-governance-setup.html §6.1.
+Top-level is contents:read; this job's write scope is the
+minimum required for its function.</code></pre>
+
+<h3>6.2 Pinned-Dependencies: ローカルソースの <code>pip install</code> は許容</h3>
+
+<p><strong>方針</strong>:</p>
+<ul>
+<li>PyPI / 外部 registry から取得する依存は version pin を必須とし、可能なら hash pin（<code>--require-hashes</code>）を導入する。</li>
+<li><strong>ローカルソース (<code>pip install .</code>) は hash pin 不要</strong>として受容する。</li>
+<li>コンテナイメージは digest pin を必須とする (§ <code>Dockerfile</code> / <code>.clusterfuzzlite/Dockerfile</code> ともに digest pin 済)。</li>
+</ul>
+
+<p><strong>根拠</strong>:</p>
+<ul>
+<li>ローカルソース install はネットワークから wheel/sdist を取得しないため、サプライチェーン経由の改ざんリスクが存在しない。</li>
+<li>fuzz harness の build 環境内で完結しており、攻撃面が無い。</li>
+</ul>
+
+<p><strong>対応済アラート</strong>:</p>
+
+<table>
+<thead>
+<tr><th>Alert</th><th>ファイル</th><th>内容</th><th>判断</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>#175</td>
+  <td><code>.clusterfuzzlite/build.sh:8</code></td>
+  <td><code>pip3 install --no-cache-dir .</code> — ローカル aigis ソースの install</td>
+  <td>受容 (ネットワーク取得なし)</td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>dismiss 文言テンプレ</strong>:</p>
+<pre><code>Won't fix — installs local source only (no PyPI download),
+no supply-chain surface. See docs/scorecard-governance-setup.html §6.2.</code></pre>
+
+<h3>6.3 判断保留</h3>
+
+<p>以下は受容も修正もせず、運用コストとのトレードオフを継続検討する:</p>
+<ul>
+<li><strong>#174</strong> <code>Dockerfile:6</code> の <code>pip install pip==26.1.1 build==1.5.0</code> の hash pin 化。<code>pip-compile --generate-hashes</code> 運用が現実的か要検討。</li>
+</ul>
 
 <h2>完了確認</h2>
 

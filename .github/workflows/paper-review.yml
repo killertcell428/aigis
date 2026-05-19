@@ -29,9 +29,7 @@ on:
         default: "10"
 
 permissions:
-  contents: write       # to commit state.json + pending stubs
-  issues: write         # to file the daily summary issue
-  pull-requests: write  # so the bot can open a PR with the new pending files
+  contents: read
 
 concurrency:
   group: paper-review
@@ -41,6 +39,10 @@ jobs:
   review:
     name: Review 10 papers and file pending candidates
     runs-on: ubuntu-latest
+    permissions:
+      contents: write       # commit state.json + pending stubs to bot branch
+      issues: write         # file daily summary issue
+      pull-requests: write  # open bot PR with new pending files
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
