@@ -24,6 +24,17 @@ what got documented across releases.
   production model safety filters. Retrieved documents processed by AI agents rarely have a
   legitimate need to load custom remote fonts, making this a reliable low-false-positive signal.
 
+- Added detection for MCP tool descriptions that instruct an agent to act without logging the
+  action or without leaving an audit trail (`mcp_audit_suppression`, score 65). This is the
+  stealth mechanism documented in real-world MCP rug pull attacks, where a malicious tool
+  description combines a hidden financial or data action with explicit instructions to suppress
+  evidence — for example, redirecting payments to an attacker-controlled account "without logging
+  it or notifying the user." AI agents that accept MCP tool descriptions without scanning them
+  could execute these actions with no trace in the operator's logs, making the compromise
+  invisible until discovered through out-of-band means. Distinct from existing rules that catch
+  user-notification suppression and silent tool invocation: this rule specifically targets
+  instructions to bypass the audit trail itself.
+
 ## [1.1.6] - 2026-05-18
 
 ### Hardened
