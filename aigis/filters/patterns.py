@@ -3424,6 +3424,50 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
             "is handled at the application layer, not instructed through AI prompts."
         ),
     ),
+    # --- cycle 2 pass 4: CI/CD credential exfil via AI coding agents (Comment and Control) ---
+    DetectionPattern(
+        id="exfil_env_var_dump",
+        name="Process Environment Dump Instruction",
+        category="data_exfiltration",
+        pattern=_p(
+            # Agent instructed to run env/printenv to dump all environment variables
+            r"(?:run|execute|invoke|call|use)\s+`?(?:env\b|printenv\b)(?:\s+\S+)?`?"
+            r"|"
+            # Direct read of Linux process environment file
+            r"/proc/(?:self|\d+)/environ\b"
+            r"|"
+            # Instruction to output specific CI/CD credential variable values
+            r"(?:echo|print|output|show|display|send|post|submit|share|include|dump)\s+"
+            r"(?:(?:me|the)\s+)?"
+            r"\$?(?:ANTHROPIC_API_KEY|GITHUB_TOKEN|GEMINI_API_KEY|AWS_SECRET_ACCESS_KEY"
+            r"|OPENAI_API_KEY|CI_JOB_TOKEN|GITLAB_TOKEN|GH_TOKEN|CODECOV_TOKEN|NPM_TOKEN)\b"
+            r"|"
+            # ps with environment-display flags: ps auxe, ps auxeww
+            r"\bps\s+aux(?:e(?:ww?)?)(?:\b|$)"
+        ),
+        base_score=75,
+        description=(
+            "Detects instructions to dump process environment variables or directly reference "
+            "specific CI/CD credential names for exfiltration. Commands like `env`, `printenv`, "
+            "and `ps auxeww` expose all environment variables including API keys and tokens. "
+            "This pattern targets the 'Comment and Control' attack class disclosed in April 2026 "
+            "by Aonan Guan et al. (Johns Hopkins): attackers embed instructions in GitHub PR "
+            "titles, issue bodies, or HTML comments (`<!-- ... -->`), causing AI coding agents "
+            "(Claude Code, Gemini CLI, GitHub Copilot) to run these commands and post the "
+            "credential dump back as a PR comment. ANTHROPIC_API_KEY, GITHUB_TOKEN, and "
+            "GEMINI_API_KEY were successfully exfiltrated in proof-of-concept runs. A separate "
+            "empirical study (arxiv:2604.03070, Apr 2026) found 75.8% of LLM agent skills "
+            "inadvertently leak credentials via stdout capture into the agent context."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "AI agents integrated with CI/CD pipelines should run with explicit tool allowlists "
+            "and should never inherit unbounded shell access. Sanitize PR titles, issue bodies, "
+            "and comments before injecting them into agent prompts. Rotate any credentials "
+            "exposed in logs or PR comments immediately. In Claude Code, use --allowed-tools "
+            "to restrict which shell commands the agent may invoke."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
