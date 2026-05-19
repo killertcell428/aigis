@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Code Scanning アラート精査レポート — 2026-05-19</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --fg: #1b1f24;
+    --muted: #5b6470;
+    --bg: #fdfdfb;
+    --card: #ffffff;
+    --border: #e1e4e8;
+    --high: #b3261e;
+    --med: #b97a00;
+    --low: #475569;
+    --accept: #2e7d32;
+    --code-bg: #f6f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #e6edf3;
+      --muted: #9aa4b1;
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --code-bg: #161b22;
+    }
+  }
+  html, body { background: var(--bg); color: var(--fg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+    line-height: 1.65;
+  }
+  h1 { font-size: 1.75rem; margin: 0 0 4px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  h3 { font-size: 1.05rem; margin: 24px 0 6px; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin: 16px 0 8px;
+  }
+  .summary-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .summary-card .n { font-size: 1.6rem; font-weight: 700; }
+  .summary-card .l { font-size: 0.82rem; color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .sev-high { color: var(--high); font-weight: 600; }
+  .sev-med  { color: var(--med);  font-weight: 600; }
+  .sev-low  { color: var(--low);  font-weight: 600; }
+  .badge {
+    display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.78rem;
+    border: 1px solid var(--border); background: var(--code-bg); margin-left: 6px;
+  }
+  .badge.fix { color: var(--high); border-color: var(--high); }
+  .badge.acc { color: var(--accept); border-color: var(--accept); }
+  pre, code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; overflow-x: auto; font-size: 0.85rem;
+  }
+  code { background: var(--code-bg); padding: 1px 4px; border-radius: 3px; font-size: 0.88em; }
+  pre code { background: transparent; padding: 0; }
+  details { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin: 8px 0; }
+  details > summary { cursor: pointer; font-weight: 600; }
+  .alert {
+    background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--border);
+    border-radius: 6px; padding: 14px 18px; margin: 16px 0;
+  }
+  .alert.high { border-left-color: var(--high); }
+  .alert.med  { border-left-color: var(--med); }
+  .alert.low  { border-left-color: var(--low); }
+  .alert h3 { margin-top: 0; }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: 0.9rem; margin: 6px 0 10px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+  .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .nofile { color: var(--muted); font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>Code Scanning アラート精査レポート</h1>
+<div class="meta">対象: <code>killertcell428/aigis</code> · 取得日 2026-05-19 · 検出元 Scorecard · 件数 9 (High 5 / Medium 3 / Low 1)</div>
+
+<h2>1. エグゼクティブサマリ</h2>
+
+<div class="summary-grid">
+  <div class="summary-card"><div class="n" style="color:var(--high)">5</div><div class="l">High</div></div>
+  <div class="summary-card"><div class="n" style="color:var(--med)">3</div><div class="l">Medium</div></div>
+  <div class="summary-card"><div class="n" style="color:var(--low)">1</div><div class="l">Low</div></div>
+  <div class="summary-card"><div class="n">3</div><div class="l">即時修正推奨</div></div>
+  <div class="summary-card"><div class="n">3</div><div class="l">改善余地あり</div></div>
+  <div class="summary-card"><div class="n">3</div><div class="l">運用判断 / 受容</div></div>
+</div>
+
+<p>9件すべて Scorecard が機械的に検出したセキュリティ・ベストプラクティス違反であり、
+実害のある脆弱性ではない。ただし <strong>#182 (paper-review.yml の top-level write 権限)</strong>
+は GITHUB_TOKEN を最小権限化する観点で<strong>真の修正が必要</strong>。
+他の High 3件は既に job-level スコープを切っており、Scorecard の検出ロジックの粒度の問題で
+残っている false-positive 寄りのもの。Medium 3件 (Pinned-Dependencies) は OSS-Fuzz 慣行と
+噛み合わない部分があり、コスト対効果の判断が必要。</p>
+
+<h3>推奨対応順</h3>
+<ol>
+  <li><strong>即対応</strong> — #182 paper-review.yml の権限を job-level に移し top-level を <code>contents: read</code> に</li>
+  <li><strong>即対応</strong> — #173 .clusterfuzzlite/Dockerfile の base image を digest pin</li>
+  <li><strong>近日対応</strong> — #8 master の Branch Protection ルール設定 (<code>docs/scorecard-governance-setup.html</code> の続編)</li>
+  <li><strong>判断 → ドキュメント化</strong> — #179/#180/#181 (job-level write は許容方針として記録)</li>
+  <li><strong>判断 → ドキュメント化</strong> — #174/#175 (pip hash pinning は CI 維持コスト次第)</li>
+  <li><strong>後回し可</strong> — #57 CII Best Practices badge の取得</li>
+</ol>
+
+<h2>2. アラート一覧</h2>
+
+<table>
+  <thead>
+    <tr><th>#</th><th>カテゴリ</th><th>Sev</th><th>ファイル</th><th>判定</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>#182</td><td>Token-Permissions</td><td class="sev-high">High</td><td><code>.github/workflows/paper-review.yml:32</code></td><td>修正必須</td></tr>
+    <tr><td>#181</td><td>Token-Permissions</td><td class="sev-high">High</td><td><code>.github/workflows/zenn-deploy-trigger.yml:14</code></td><td>運用判断 (受容可)</td></tr>
+    <tr><td>#180</td><td>Token-Permissions</td><td class="sev-high">High</td><td><code>.github/workflows/sync-zenn-qiita.yml:16</code></td><td>運用判断 (受容可)</td></tr>
+    <tr><td>#179</td><td>Token-Permissions</td><td class="sev-high">High</td><td><code>.github/workflows/release.yml:134</code></td><td>運用判断 (受容可)</td></tr>
+    <tr><td>#8</td><td>Branch-Protection</td><td class="sev-high">High</td><td class="nofile">(repo settings)</td><td>設定追加推奨</td></tr>
+    <tr><td>#175</td><td>Pinned-Dependencies</td><td class="sev-med">Medium</td><td><code>.clusterfuzzlite/build.sh:8</code></td><td>低優先 (OSS-Fuzz 環境)</td></tr>
+    <tr><td>#174</td><td>Pinned-Dependencies</td><td class="sev-med">Medium</td><td><code>Dockerfile:6</code></td><td>判断 (hash pin コスト)</td></tr>
+    <tr><td>#173</td><td>Pinned-Dependencies</td><td class="sev-med">Medium</td><td><code>.clusterfuzzlite/Dockerfile:1</code></td><td>修正推奨 (low cost)</td></tr>
+    <tr><td>#57</td><td>CII-Best-Practices</td><td class="sev-low">Low</td><td class="nofile">(badge 未登録)</td><td>後回し可</td></tr>
+  </tbody>
+</table>
+
+<h2>3. アラート別の詳細と修正提案</h2>
+
+<!-- #182 ─────────────────────────────────────────────────────────── -->
+<div class="alert high">
+  <h3>#182 Token-Permissions <span class="badge fix">修正必須</span></h3>
+  <dl class="kv">
+    <dt>ファイル</dt><dd><code>.github/workflows/paper-review.yml:31-34</code></dd>
+    <dt>原因</dt><dd>top-level で <code>contents: write</code> / <code>issues: write</code> / <code>pull-requests: write</code> を付与している。Scorecard は top-level write 権限を「ワークフロー内のあらゆる action にトークンが流れる」として High 判定。</dd>
+    <dt>リスク</dt><dd>Anthropic API キー込みのワークフローで、悪意のある依存 (uv / setup-python のサプライチェーン経由) があった場合、トークン奪取によりリポジトリ書き込みまで連鎖し得る。</dd>
+  </dl>
+
+  <span class="label">修正案 — top-level を read に、job-level で必要権限を付与</span>
+<pre><code class="lang-yaml"># 31-34行目を以下に置換
+permissions:
+  contents: read
+
+concurrency:
+  group: paper-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    name: Review 10 papers and file pending candidates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # commit state.json + pending stubs to bot branch
+      issues: write         # file daily summary issue
+      pull-requests: write  # open bot PR
+    steps:
+      ...
+</code></pre>
+
+  <details>
+    <summary>確認ポイント</summary>
+    <ul>
+      <li>job-level <code>permissions:</code> を書いた瞬間、その job 内では top-level が無効化され job-level だけが効く。差し替えで実行影響なし。</li>
+      <li>このワークフローは job が <code>review</code> 1個だけなので機械的に移動するだけで完了。</li>
+    </ul>
+  </details>
+</div>
+
+<!-- #181 ─────────────────────────────────────────────────────────── -->
+<div class="alert high">
+  <h3>#181 Token-Permissions <span class="badge acc">運用判断 — 受容可</span></h3>
+  <dl class="kv">
+    <dt>ファイル</dt><dd><code>.github/workflows/zenn-deploy-trigger.yml:13-14</code></dd>
+    <dt>現状</dt><dd>top-level は既に <code>contents: read</code>。job-level で <code>contents: write</code> を最小限付与済 (push の為に必須)。</dd>
+    <dt>Scorecard 判定理由</dt><dd>Scorecard は <em>あらゆる</em> <code>write</code> 出現を High カウントするため、job-level でも残る。これはツール側の設計で、現状の構成は GitHub Actions のベストプラクティスに完全準拠している。</dd>
+  </dl>
+
+  <span class="label">対応案</span>
+  <p>3案あり、どれを選ぶかは運用ポリシー次第。</p>
+  <ol>
+    <li><strong>受容してドキュメント化 (推奨)</strong>: <code>docs/scorecard-governance-setup.html</code> に「job-level write は許容、top-level write は禁止」の方針を追記し、本アラートを Scorecard 側で dismiss する。</li>
+    <li><strong>Deploy Key 化</strong>: <code>GITHUB_TOKEN</code> をやめ、専用 SSH デプロイキーで push する。<code>contents:</code> 権限自体を不要にできるが、シークレット管理コストが増える。empty commit を打つだけのワークフローには過剰。</li>
+    <li><strong>外部 App Token 化</strong>: GitHub App を作って <code>actions/create-github-app-token</code> で発行。最小権限を厳密化できるが、運用が重い。</li>
+  </ol>
+</div>
+
+<!-- #180 ─────────────────────────────────────────────────────────── -->
+<div class="alert high">
+  <h3>#180 Token-Permissions <span class="badge acc">運用判断 — 受容可</span></h3>
+  <dl class="kv">
+    <dt>ファイル</dt><dd><code>.github/workflows/sync-zenn-qiita.yml:15-16</code></dd>
+    <dt>現状</dt><dd>#181 と同様、top-level <code>contents: read</code> + job-level <code>contents: write</code> の正しい構成。</dd>
+    <dt>用途</dt><dd>Zenn → Qiita 変換後の <code>public/</code> ディレクトリを bot push し、Qiita CLI で publish。</dd>
+  </dl>
+  <span class="label">対応案</span>
+  <p>#181 と同じく、受容＋ドキュメント化が現実解。Qiita publish 部分は別途 <code>QIITA_TOKEN</code> シークレットを使うので、<code>GITHUB_TOKEN</code> 側を厳しく絞るインセンティブは低い。</p>
+</div>
+
+<!-- #179 ─────────────────────────────────────────────────────────── -->
+<div class="alert high">
+  <h3>#179 Token-Permissions <span class="badge acc">運用判断 — 受容可 / 一部最適化余地</span></h3>
+  <dl class="kv">
+    <dt>ファイル</dt><dd><code>.github/workflows/release.yml:133-134</code> (<code>github-release</code> job)</dd>
+    <dt>現状</dt><dd>top-level <code>contents: read</code> + <code>github-release</code> job のみ <code>contents: write</code> (Release 作成のため必須)。<code>build</code> / <code>publish-pypi</code> は <code>contents: read</code> + OIDC <code>id-token: write</code> で正しくスコープ済。</dd>
+    <dt>Scorecard 判定理由</dt><dd>job-level の <code>contents: write</code> 1箇所を機械的に検出。</dd>
+  </dl>
+  <span class="label">対応案</span>
+  <ul>
+    <li><strong>受容 (推奨)</strong>: PyPI publish は OIDC 化、tag → Release のみ <code>contents: write</code> という構成は GitHub 公式 release workflow の標準形。CHANGELOG.md / CLAUDE.md の release 規約とも一致しているため、変更すべきではない。</li>
+    <li><strong>代替</strong>: <code>softprops/action-gh-release</code> を <code>GITHUB_TOKEN</code> ではなく App Token で動かせば <code>contents: write</code> を完全に剥がせるが、PR/tag フローの監査トレイル (release が誰名義で作られたか) が変わる。慎重に。</li>
+  </ul>
+</div>
+
+<!-- #8 ─────────────────────────────────────────────────────────── -->
+<div class="alert high">
+  <h3>#8 Branch-Protection <span class="badge fix">設定追加推奨</span></h3>
+  <dl class="kv">
+    <dt>対象</dt><dd>repository settings (no file)</dd>
+    <dt>原因</dt><dd>master ブランチに Branch Protection ルールが未設定 (または Scorecard が読み取れる範囲では未設定)。</dd>
+    <dt>リスク</dt><dd>direct push / force push / CI 未通過マージが理論上可能。CLAUDE.md の release プロセス (PR マージ → tag) を制度的に強制できない。</dd>
+  </dl>
+  <span class="label">推奨ルール (Settings → Branches → Add rule)</span>
+  <ul>
+    <li>Require a pull request before merging (1 approval)</li>
+    <li>Require status checks: <code>tests</code>, <code>codeql</code>, <code>scorecard</code></li>
+    <li>Require branches to be up to date before merging</li>
+    <li>Require signed commits (任意、CLAUDE.md の <code>--no-gpg-sign</code> 禁止と整合)</li>
+    <li>Do not allow bypassing the above settings (admin も含めて適用)</li>
+    <li>Restrict force push / deletion</li>
+  </ul>
+  <p>※ 既存の <code>docs/scorecard-governance-setup.html</code> に該当章があるかは要確認。なければ追記。</p>
+</div>
+
+<!-- #175 ─────────────────────────────────────────────────────────── -->
+<div class="alert med">
+  <h3>#175 Pinned-Dependencies <span class="badge acc">低優先</span></h3>
+  <dl class="kv">
+    <dt>ファイル</dt><dd><code>.clusterfuzzlite/build.sh:8</code> (<code>pip3 install --no-cache-dir .</code>)</dd>
+    <dt>原因</dt><dd>aigis 自身 (ローカルパス <code>.</code>) の install で <code>--require-hashes</code> 等のハッシュ検証なし。</dd>
+    <dt>リスク評価</dt><dd>ローカルソースを install しているため通常意味でのサプライチェーンリスクは低い。Scorecard はチェックロジック上 <code>pip install</code> の出現自体を機械的に検出。</dd>
+  </dl>
+  <span class="label">対応案</span>
+  <p>このまま受容で良い。ClusterFuzzLite の build はホスト fuzz 環境内で完結し、wheel/sdist を index から取らないため攻撃面が無い。Scorecard 側で dismiss reason = "No PyPI download — installs local source only" として閉じる。</p>
+</div>
+
+<!-- #174 ─────────────────────────────────────────────────────────── -->
+<div class="alert med">
+  <h3>#174 Pinned-Dependencies <span class="badge fix">判断 — hash pin か受容か</span></h3>
+  <dl class="kv">
+    <dt>ファイル</dt><dd><code>Dockerfile:6</code> (<code>pip install ... 'pip==26.1.1' 'build==1.5.0'</code>)</dd>
+    <dt>現状</dt><dd>バージョンは pin 済だが、Scorecard が要求するのは <code>--require-hashes</code> + <code>--no-deps</code> による SHA-256 hash pinning。</dd>
+  </dl>
+  <span class="label">案A — 完全 hash pin (Scorecard を Pass にする)</span>
+<pre><code class="lang-dockerfile">COPY requirements-build.txt /tmp/
+RUN pip install --no-cache-dir --require-hashes -r /tmp/requirements-build.txt
+</code></pre>
+  <p><code>requirements-build.txt</code>:</p>
+<pre><code>pip==26.1.1 \
+    --hash=sha256:&lt;...&gt;
+build==1.5.0 \
+    --hash=sha256:&lt;...&gt;
+</code></pre>
+  <p>+ <code>pip-compile --generate-hashes</code> でハッシュ生成、依存 update のたびに pin を更新する CI が必要。</p>
+
+  <span class="label">案B — 受容 (推奨)</span>
+  <p>build stage の依存は <code>pip</code> と <code>build</code> の2つだけで、いずれも PyPI 公式パッケージ。hash pin の運用コストの方が高い可能性。Dependabot で version pin を継続管理する方が ROI が高い。</p>
+</div>
+
+<!-- #173 ─────────────────────────────────────────────────────────── -->
+<div class="alert med">
+  <h3>#173 Pinned-Dependencies <span class="badge fix">修正推奨</span></h3>
+  <dl class="kv">
+    <dt>ファイル</dt><dd><code>.clusterfuzzlite/Dockerfile:1</code></dd>
+    <dt>原因</dt><dd><code>FROM gcr.io/oss-fuzz-base/base-builder-python</code> がタグなし・digest なし (=latest 相当)。</dd>
+    <dt>リスク</dt><dd>base image が更新されると fuzz harness の build 結果が変わる (再現性無し)。供給元 (Google OSS-Fuzz) は信頼できるが「再現可能ビルド」観点で問題。</dd>
+  </dl>
+  <span class="label">修正案</span>
+<pre><code class="lang-dockerfile"># 最新 digest を取得して固定
+FROM gcr.io/oss-fuzz-base/base-builder-python@sha256:&lt;digest&gt;
+</code></pre>
+  <p>本体 <code>Dockerfile</code> は既に <code>python:3.14-slim@sha256:7a500125...</code> で pin 済なので、同じ流儀に合わせるだけ。digest 取得は次のいずれか:</p>
+  <ul>
+    <li><code>docker pull gcr.io/oss-fuzz-base/base-builder-python && docker inspect --format='{{index .RepoDigests 0}}' gcr.io/oss-fuzz-base/base-builder-python</code></li>
+    <li>Google Container Registry の Web UI で確認</li>
+  </ul>
+  <p>運用: Dependabot は GCR の digest 更新も検知できるよう <code>package-ecosystem: docker</code> を <code>.github/dependabot.yml</code> に追加 (まだ無ければ)。</p>
+</div>
+
+<!-- #57 ─────────────────────────────────────────────────────────── -->
+<div class="alert low">
+  <h3>#57 CII-Best-Practices <span class="badge acc">後回し可</span></h3>
+  <dl class="kv">
+    <dt>対象</dt><dd>OpenSSF Best Practices Badge (旧 CII Best Practices)</dd>
+    <dt>原因</dt><dd><a href="https://www.bestpractices.dev/">bestpractices.dev</a> での self-certification 未取得。</dd>
+  </dl>
+  <span class="label">対応案</span>
+  <p>30〜60分の self-assessment フォーム記入で Passing badge は取得可能。README に bestpractices.dev のバッジを貼ると外部信頼度↑。<code>docs/openssf-best-practices.md</code> 既存ドキュメントの内容を踏まえると、すでにかなりの基準を満たしているはず。優先度低だがコストも低いので、空き時間にやれる。</p>
+</div>
+
+<h2>4. 実装プラン (採用された場合のチェックリスト)</h2>
+
+<details open>
+<summary>Phase 1 — 1 PR で完結する低リスク変更</summary>
+<ul>
+  <li>[ ] <code>.github/workflows/paper-review.yml</code> の permissions を job-level に移動 (#182)</li>
+  <li>[ ] <code>.clusterfuzzlite/Dockerfile</code> の base image を digest pin (#173)</li>
+  <li>[ ] CHANGELOG <code>[Unreleased]</code> に "ci: tighten paper-review GITHUB_TOKEN scope; pin clusterfuzzlite base image" を追加</li>
+</ul>
+</details>
+
+<details>
+<summary>Phase 2 — リポジトリ設定 (UI 操作)</summary>
+<ul>
+  <li>[ ] master の Branch Protection 設定 (#8) — Settings → Branches</li>
+  <li>[ ] <code>docs/scorecard-governance-setup.html</code> に方針を追記 (job-level write 受容、top-level write 禁止)</li>
+  <li>[ ] #179/#180/#181 を Scorecard 側で dismiss (reason: "acceptable risk per governance policy")</li>
+</ul>
+</details>
+
+<details>
+<summary>Phase 3 — 判断が必要な改善</summary>
+<ul>
+  <li>[ ] <code>Dockerfile</code> の pip hash pin 化 (#174) — 採用するか否か決定</li>
+  <li>[ ] <code>.clusterfuzzlite/build.sh</code> の扱い (#175) — dismiss か no-op か決定</li>
+  <li>[ ] OpenSSF Best Practices badge 申請 (#57)</li>
+</ul>
+</details>
+
+<h2>5. 参考</h2>
+<ul>
+  <li><a href="https://github.com/ossf/scorecard/blob/main/docs/checks.md#token-permissions">Scorecard: Token-Permissions</a></li>
+  <li><a href="https://github.com/ossf/scorecard/blob/main/docs/checks.md#pinned-dependencies">Scorecard: Pinned-Dependencies</a></li>
+  <li><a href="https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection">Scorecard: Branch-Protection</a></li>
+  <li><a href="https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token">GitHub Docs: GITHUB_TOKEN permissions</a></li>
+  <li>既存ドキュメント: <a href="scorecard-governance-setup.html">scorecard-governance-setup.html</a> / <a href="openssf-best-practices.md">openssf-best-practices.md</a></li>
+</ul>
+
+</body>
+</html>
