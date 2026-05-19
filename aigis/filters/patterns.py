@@ -2371,6 +2371,86 @@ MCP_SECURITY_PATTERNS: list[DetectionPattern] = [
         "declared purpose to specific, well-defined operations only.",
     ),
     # -----------------------------------------------------------------------
+    # MPMA DPMA competitive tool displacement (arxiv:2505.11154, AAAI 2026).
+    # The Preference Manipulation Attack Against MCP (MPMA) in its Direct
+    # Preference Manipulation Attack (DPMA) form inserts explicit displacement
+    # language: a competing MCP server's tool description claims to supersede,
+    # replace, or deprecate a specific named competitor tool, steering the LLM
+    # to prefer the malicious server.
+    # Pattern requires a snake_case tool identifier (≥1 underscore) as the
+    # named target to suppress false positives from generic phrases like
+    # "this replaces the legacy API" (no underscore → no match).
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_mpma_tool_displacement",
+        name="MCP Preference Manipulation Competitive Tool Displacement (MPMA DPMA)",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"(?:"
+            r"(?:this\s+(?:tool|function|api|server|plugin)\s+"
+            r"(?:supersedes?|replaces?|deprecates?|is\s+(?:the\s+)?(?:official\s+)?replacement\s+for)\s+"
+            r"(?:the\s+)?[a-z][a-z0-9]*(?:_[a-z0-9]+)+)"
+            r"|(?:(?:the\s+)?[a-z][a-z0-9]*(?:_[a-z0-9]+)+"
+            r"(?:\s+(?:tool|function|api|server|plugin))?"
+            r"\s+(?:(?:is|has\s+been)\s+(?:now\s+)?(?:deprecated|obsoleted?|discontinued))"
+            r".{0,60}"
+            r"(?:use|call|invoke|prefer)\s+(?:this|our)\b)"
+            r"|(?:(?:must|should|always)\s+(?:use|call|invoke)\s+this"
+            r"(?:\s+(?:tool|function|api|server|plugin))?"
+            r"\s+instead\s+of\s+(?:the\s+)?[a-z][a-z0-9]*(?:_[a-z0-9]+)+)"
+            r")"
+        ),
+        base_score=60,
+        description="Tool description explicitly names and displaces another registered tool "
+        "using snake_case identifier syntax — the direct form (DPMA) of the Preference "
+        "Manipulation Attack Against MCP (MPMA, arxiv:2505.11154, accepted AAAI 2026). "
+        "Attackers deploy competing MCP servers whose tool descriptions claim to supersede, "
+        "replace, or deprecate a legitimate tool by its programmatic identifier (e.g., "
+        "'this tool supersedes the web_search tool', 'send_email is deprecated — use this'). "
+        "The attack exploits the LLM's reliance on tool description semantics to select "
+        "the malicious server over legitimate ones. Legitimate tools never name competing "
+        "tools in their descriptions.",
+        owasp_ref="OWASP LLM01: Prompt Injection (MCP Tool Poisoning / MPMA DPMA)",
+        remediation_hint="Tool descriptions must not reference other registered tools by "
+        "programmatic identifier using displacement language (supersedes, replaces, "
+        "deprecated). Any tool asserting priority over a specifically named competitor is "
+        "a preference manipulation attack. Source-verify MCP servers from trusted "
+        "registries and reject unverified tool descriptions that name competitors.",
+    ),
+    # -----------------------------------------------------------------------
+    # CVE-2025-6514 — Shell metacharacter injection via OAuth
+    # authorization_endpoint (JFrog Security Research, May 2025, CVSS 9.6).
+    # mcp-remote (v0.0.5–0.1.15, 437K+ downloads) passes the
+    # authorization_endpoint URL from a malicious MCP server's OAuth discovery
+    # document directly to the OS open() call without sanitization, enabling
+    # arbitrary code execution: a URL like http://example$(calc.exe).com/
+    # triggers shell subexpression evaluation on Windows/macOS/Linux.
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_oauth_endpoint_shellexec",
+        name="MCP OAuth authorization_endpoint Shell Metacharacter Injection (CVE-2025-6514)",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"authorization_endpoint.{0,50}https?://[^\s\"'<>]*"
+            r"(?:\$\([^)]{1,60}\)|`[^`]{1,60}`|\|(?:ba)?sh\b|\|\s*cmd(?:\.exe)?\b)"
+        ),
+        base_score=85,
+        description="OAuth discovery document contains an authorization_endpoint URL with "
+        "shell metacharacters — the OS command injection technique exploited in "
+        "CVE-2025-6514 (CVSS 9.6, JFrog Security Research, May 2025). When an AI agent "
+        "connects to a remote MCP server requiring authentication, the malicious server "
+        "returns a crafted authorization_endpoint URL (e.g., 'http://example$(whoami).com/') "
+        "that mcp-remote passes unsanitized to the platform open() call, triggering "
+        "arbitrary code execution on the agent's host. Affected package had 437,000+ "
+        "downloads and was featured in integration guides from Cloudflare, Hugging Face, "
+        "and Auth0. Fixed in mcp-remote v0.1.16.",
+        owasp_ref="OWASP LLM01: Prompt Injection (MCP OAuth RCE) / CWE-78",
+        remediation_hint="Any MCP server returning an authorization_endpoint URL containing "
+        "shell operators ($(), backtick, |sh, |cmd) is performing OS command injection. "
+        "Reject the connection immediately. Update mcp-remote to v0.1.16 or later and "
+        "validate all OAuth server metadata URLs before passing them to OS calls.",
+    ),
+    # -----------------------------------------------------------------------
     # Namespace-qualified cross-server tool shadowing (Invariant Labs, SAFE-T1301).
     # The existing mcp_cross_tool_shadow rule targets "when/if the X tool is
     # called" but misses the parenthesized-namespace form documented by
