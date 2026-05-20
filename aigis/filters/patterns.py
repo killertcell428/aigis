@@ -3424,6 +3424,60 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
             "is handled at the application layer, not instructed through AI prompts."
         ),
     ),
+    # --- v1.1.8 data-exfiltration cycle 5 (Reprompt CVE-2026-24307) ---
+    DetectionPattern(
+        id="exfil_chain_callback_fetch",
+        name="Chain-Request Callback — Fetch Next Instructions from URL",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            # Form 1: "next/further instructions/prompts/commands ... from/at/via https://..."
+            r"\b(?:next|further|follow.?up|subsequent|additional)\s+"
+            r"(?:instruction|prompt|command|directive|payload)s?"
+            r"[^\n]{0,80}"
+            r"\b(?:from|at|via|fetch\s+from|get\s+from|retrieve\s+from|located\s+at)\b"
+            r"[^\n]{0,30}"
+            r"https?://[^\s\"'<>\n]{4,}"
+            r"|"
+            # Form 2: "fetch/get/retrieve/visit [the] next instructions ... https://..."
+            r"(?:fetch|get|retrieve|visit|check)\b"
+            r"[^\n]{0,40}"
+            r"\b(?:next|further|follow.?up|subsequent|additional)\b\s+"
+            r"(?:instruction|prompt|command|directive|payload)s?"
+            r"[^\n]{0,40}"
+            r"https?://[^\s\"'<>\n]{4,}"
+            r"|"
+            # Form 3: "fetch/visit/check ... https://... for/to get ... next instructions"
+            r"(?:fetch|visit|check|call\s+back\s+to|contact)\b"
+            r"[^\n]{0,40}"
+            r"https?://[^\s\"'<>\n]{4,}"
+            r"[^\n]{0,60}"
+            r"\b(?:for|to\s+(?:get|receive|obtain|retrieve))\b"
+            r"[^\n]{0,50}"
+            r"\b(?:next|further|follow.?up|subsequent|additional)\b\s+"
+            r"(?:instruction|prompt|command|directive|payload)s?"
+            r")"
+        ),
+        base_score=70,
+        description=(
+            "Detects the chain-request callback exfiltration pattern: instructions telling an agent "
+            "to fetch its next commands, prompts, or directives from an external URL, creating a "
+            "command-and-control loop. The Reprompt attack (CVE-2026-24307, Varonis Threat Labs, "
+            "Jan 2026) exploited this exact pattern against Microsoft Copilot: injected content "
+            "directed the agent to exfiltrate user context, then fetch progressive follow-up prompts "
+            "from an attacker-controlled server, enabling sustained dynamic data harvesting invisible "
+            "to client-side monitors. Unlike one-shot exfiltration, C2-callback loops let the "
+            "attacker adaptively query for specific data across multiple interaction turns."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "An agent instructed to retrieve 'next instructions' or 'follow-up commands' from a "
+            "runtime URL is operating as a C2 implant. Legitimate agent workflows define their task "
+            "graph at configuration time — they do not receive dynamic instructions from external "
+            "URLs during execution. Block any prompt combining 'next instruction/command/prompt' "
+            "language with an external URL reference."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -5081,6 +5135,34 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
         remediation_hint=(
             "Strip Unicode Tag Block characters (U+E0000–U+E007F) from LLM output before "
             "rendering or forwarding to downstream agents or users."
+        ),
+    ),
+    # --- v1.1.8 data-exfiltration cycle 5 (Terminal DiLLMa / Codex CLI Feb 2026) ---
+    DetectionPattern(
+        id="out_ansi_osc52_clipboard",
+        name="OSC 52 Clipboard Poisoning Sequence in Output",
+        category="data_exfiltration",
+        pattern=_p(r"(?:\x1b\]52;|\\x1b\]52;|\\033\]52;|\\e\]52;)"),
+        base_score=75,
+        description=(
+            "Detects the ANSI OSC 52 escape sequence in model output. OSC 52 "
+            "(`ESC]52;c;<base64>BEL`) instructs supporting terminal emulators (iTerm2, "
+            "Windows Terminal, xterm-compatible) to replace the system clipboard with "
+            "attacker-controlled content. The Terminal DiLLMa attack (embracethered.com, 2024) "
+            "demonstrated that LLM-powered CLI tools can be hijacked via prompt injection to emit "
+            "OSC 52 sequences, silently poisoning the clipboard. A concrete vulnerability in "
+            "Codex CLI (reported Feb 2026) allowed the `--model` parameter to inject ANSI "
+            "sequences into terminal output, which was chained with OSC 52 to overwrite the "
+            "user's clipboard — typically with a malicious shell command the user would paste "
+            "and execute without realising the content had been replaced."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Strip all ANSI escape sequences from AI model output before rendering in terminals. "
+            "Most AI CLI tools render output via libraries (rich, Click) that strip ANSI by "
+            "default — verify your integration does the same. An OSC 52 sequence in AI-generated "
+            "text almost certainly indicates a prompt injection attack attempting to poison the "
+            "user's clipboard with a malicious command."
         ),
     ),
 ]
