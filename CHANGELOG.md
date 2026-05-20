@@ -12,6 +12,28 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Hardened
+
+- Added detection for OAuth and MCP client registration documents that contain RFC 1918
+  private IP addresses in endpoint URL fields (`mcp_ssrf_private_ip`, score 70). When an AI
+  agent connects to a malicious MCP server, the server can return OAuth metadata pointing
+  `authorization_endpoint`, `client_metadata_url`, or `jwks_uri` at an internal network address
+  (10.x.x.x, 192.168.x.x, 172.16–31.x.x) — causing the Authorization Server to make requests
+  to private infrastructure and potentially exfiltrate cloud credentials or reach internal APIs.
+  This attack surface was introduced by the MCP November 2025 specification's Client ID Metadata
+  Document (CIMD) feature, and the same class of missing private-IP validation was exploited in
+  CVE-2026-39974 (n8n-MCP, CVSS 9.8); BlueRock Security found 36.7% of 7,000+ MCP servers were
+  exposed. The rule is scoped to OAuth field names to keep false-positive rates low, and
+  complements the existing `mcp_ssrf_metadata_endpoint` rule (which covers cloud IMDS addresses
+  such as 169.254.169.254).
+
+  **Blocked example:**
+  ```
+  {"authorization_endpoint": "http://192.168.1.100/auth"}
+  {"client_metadata_url": "https://10.0.0.1/client-metadata.json"}
+  {"jwks_uri": "https://172.16.0.5/.well-known/jwks.json"}
+  ```
+
 ## [1.1.7] - 2026-05-19
 
 ### Hardened

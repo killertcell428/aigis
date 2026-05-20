@@ -2219,6 +2219,54 @@ MCP_SECURITY_PATTERNS: list[DetectionPattern] = [
         "egress filtering.",
     ),
     # -----------------------------------------------------------------------
+    # SSRF via RFC 1918 private IPs in OAuth/CIMD endpoint fields.
+    # The MCP November 2025 spec introduced Client ID Metadata Documents (CIMD):
+    # the AS fetches a client-registered URL to retrieve metadata.  A malicious
+    # client can point authorization_endpoint / client_metadata_url / jwks_uri
+    # to an internal RFC 1918 host, causing the AS to reach private networks.
+    # CVE-2026-39974 (n8n-MCP, CVSS 9.8): BlueRock found 36.7% of 7,000+
+    # MCP servers lacked private-IP validation.  Scoped to OAuth field names to
+    # keep FP low — bare private IPs in unstructured text are not flagged.
+    # Complements mcp_ssrf_metadata_endpoint (IMDS addresses).
+    # -----------------------------------------------------------------------
+    DetectionPattern(
+        id="mcp_ssrf_private_ip",
+        name="MCP SSRF RFC 1918 Private IP in OAuth/CIMD Field",
+        category="mcp_poisoning",
+        pattern=_p(
+            r"(?:client_id|client_metadata_url|jwks_uri|authorization_endpoint"
+            r"|token_endpoint|redirect_uri|client_uri|registration_endpoint)"
+            r"\s*[=:\"'\s].{0,100}"
+            r"https?://(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+            r"|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}"
+            r"|192\.168\.\d{1,3}\.\d{1,3}"
+            r"|127\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+            r"|0\.0\.0\.0)"
+        ),
+        base_score=70,
+        description=(
+            "OAuth or MCP client registration field (authorization_endpoint, "
+            "client_metadata_url, jwks_uri, redirect_uri, etc.) contains a URL "
+            "pointing to an RFC 1918 private IP address. This is the SSRF attack "
+            "surface introduced by the MCP November 2025 specification's Client ID "
+            "Metadata Document (CIMD): a malicious client registers a CIMD URL "
+            "pointing to an internal host (10.x.x.x, 172.16-31.x.x, 192.168.x.x, "
+            "127.x.x.x), causing the Authorization Server to make requests to "
+            "internal infrastructure. CVE-2026-39974 (n8n-MCP, CVSS 9.8) exploited "
+            "the same class of missing private-IP validation; BlueRock Security found "
+            "36.7% of 7,000+ MCP servers were vulnerable to this attack surface."
+        ),
+        owasp_ref="OWASP LLM02: Indirect Prompt Injection (SSRF / Private Network Access)",
+        remediation_hint=(
+            "Reject any OAuth or MCP client registration document containing a private "
+            "IP (RFC 1918: 10.x.x.x, 172.16-31.x.x, 192.168.x.x) or loopback "
+            "(127.x.x.x) in endpoint URL fields. The mcp_ssrf_metadata_endpoint rule "
+            "covers cloud IMDS addresses; this rule closes the RFC 1918 gap. MCP "
+            "Authorization Servers should validate all CIMD URLs against a public-IP "
+            "allowlist before fetching client metadata."
+        ),
+    ),
+    # -----------------------------------------------------------------------
     # ToolCommander-style collector tool (NAACL 2025, arxiv:2412.10198).
     # A Manipulator Tool gathers user queries in stage-1, then forwards them
     # to an attacker-controlled endpoint in stage-2.  Key signature: combine
