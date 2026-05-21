@@ -1207,6 +1207,40 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_humor_framing",
+        name="Humor-Framing Safety Bypass",
+        category="jailbreak",
+        pattern=_p(
+            r"without\s+sacrificing\s+the\s+veracity\s+of\s+your\s+"
+            r"(?:help|assistance|response|answer|output|explanation|information)"
+        ),
+        base_score=55,
+        description=(
+            "Detects the humor-framing jailbreak technique documented by Cisneros-Velarde "
+            "(arxiv:2504.06577, ACL LLMSEC Workshop 2025). The attack wraps an unsafe request "
+            "in a conspiratorial, humorous context using a fixed template: a 'Psst' opener, "
+            "embedded harmful request, laughter sounds, and the qualifier 'without sacrificing "
+            "the veracity of your help' — explicitly instructing the model to preserve the "
+            "factual accuracy of its harmful assistance despite the playful framing. The "
+            "qualifier is the structural key that distinguishes this attack from genuine humor: "
+            "it tells the model the entertainment is a facade and the harmful content must be "
+            "real. Experiments across frontier LLMs confirmed effectiveness; both too little "
+            "and too much humor reduced success, demonstrating the attack depends on calibrated "
+            "balance rather than pure absurdity."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "The phrase 'without sacrificing the veracity of your help/assistance' signals "
+            "a documented humor-based jailbreak template. Legitimate humorous requests do not "
+            "need to explicitly instruct the AI to preserve factual accuracy — that qualifier "
+            "is added specifically to override the playful framing and extract harmful content "
+            "accurately. Reject or flag inputs containing this phrasing, especially when "
+            "combined with conspiratorial openers ('Psst'), laughter sounds, or third-party "
+            "framing ('my friend needs help to...')."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------

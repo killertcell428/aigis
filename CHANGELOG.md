@@ -12,6 +12,15 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Hardened
+
+- Added detection for the humor-framing jailbreak technique (Cisneros-Velarde, ACL LLMSEC
+  Workshop 2025), where an attacker embeds an unsafe request inside a playful, conspiratorial
+  prompt and then explicitly instructs the model to "not sacrifice the veracity of your help" —
+  a phrase that overrides the humorous tone and tells the model to provide accurate harmful
+  content regardless. aigis now flags this structural artifact (`jb_humor_framing`, score 55),
+  which appears in the documented attack template but not in legitimate humorous requests.
+
 ## [1.1.8] - 2026-05-21
 
 ### Hardened
