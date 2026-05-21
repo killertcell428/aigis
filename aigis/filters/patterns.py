@@ -1137,6 +1137,42 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
         ),
     ),
     # --- v1.0.18 jailbreak-extraction cycle 3 ---
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_task_masking",
+        name="SATA Masked-Keyword Jailbreak (Task-Linkage)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"\[(?:MASK|BLANK|REDACTED|CENSORED|TOKEN)\]"
+            r"[\s\S]{0,300}"
+            r"(?:fill\s+in|complete\s+the|missing\s+(?:word|token)|"
+            r"masked\s+(?:word|token)|what\s+(?:word|term|goes))"
+            r"|"
+            r"(?:fill\s+in|complete\s+the|missing\s+(?:word|token)|"
+            r"masked\s+(?:word|token)|what\s+(?:word|term|goes))"
+            r"[\s\S]{0,300}"
+            r"\[(?:MASK|BLANK|REDACTED|CENSORED|TOKEN)\]"
+            r")"
+        ),
+        base_score=55,
+        description=(
+            "SATA (Simple Assistive Task Linkage, ACL 2025, arxiv:2412.15289): uses "
+            "bracket-notation placeholder tokens ([MASK], [BLANK], [REDACTED], etc.) to "
+            "conceal harmful keywords in a prompt, then asks the model to 'fill in the blank' "
+            "via a masked-language-modeling task. The harmful word is absent from the raw input, "
+            "causing content classifiers that scan for explicit harmful terms to miss the attack. "
+            "On AdvBench, the MLM-task variant achieved 85% attack success rate (ASR) and the "
+            "position-lookup variant 76% ASR."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Bracket-notation placeholder tokens ([MASK], [BLANK], [REDACTED]) combined with "
+            "fill-in-the-blank task instructions are a documented jailbreak technique. Reject "
+            "inputs that pair masked placeholders with fill-in task framing. Apply output "
+            "scanning for harmful content in the model's response."
+        ),
+    ),
     DetectionPattern(
         id="jb_structured_extraction",
         name="JSON / Dict Field Enumeration for System-Prompt Extraction",

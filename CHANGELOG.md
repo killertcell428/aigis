@@ -12,6 +12,16 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Hardened
+
+- Added detection for the SATA (Simple Assistive Task Linkage) jailbreak technique, where an
+  attacker hides harmful keywords using bracket-notation placeholder tokens such as `[MASK]`,
+  `[BLANK]`, or `[REDACTED]`, then asks the AI to "fill in the blank" (`jb_task_masking`,
+  score 55). Because the actual harmful word is absent from the raw input text, earlier
+  content-safety rules that scan for explicit terms would miss these requests entirely.
+  Published in ACL 2025 Findings (arxiv:2412.15289), this technique achieved an 85% attack
+  success rate on standard harmful-instruction benchmarks.
+
 ## [1.1.8] - 2026-05-21
 
 ### Hardened
