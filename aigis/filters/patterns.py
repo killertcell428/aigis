@@ -1207,6 +1207,74 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|turn|part|phase|question|task)\s*[1-9][.):\-]\s+.{10,300}"
+            r"(?:step|turn|part|phase|question|task)\s*[2-9][.):\-]\s+.{10,300}"
+            r"(?:step|turn|part|phase|question|task)\s*[3-9][.):\-]\s+.{0,200}"
+            r"(?:(?:chemical\s+)?weapon|synthesiz\w*|explos\w*|poisoni?\w*|"
+            r"malware|ransomware|hack\s+into|methamphetamine|fentanyl|"
+            r"nerve\s+agent|ricin|bioweapon|manufacture\s+(?:drug|explosive))"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting: a harmful request decomposed into numbered or turn-labelled "
+            "innocuous sub-steps where the dangerous topic only surfaces in step 3 or later, "
+            "evading single-step safety classifiers. 'Speak Easy' (arxiv:2502.04322, ICML 2025) "
+            "raises GPT-4o attack success rate from 9.2% to 55.5% using step enumeration; "
+            "M2S (arxiv:2503.04856, ACL 2025) converts multi-turn Crescendo attacks into "
+            "structured single-turn prompts using Numberize and Hyphenize formats, achieving "
+            "70.6–95.9% ASR across frontier LLMs while outperforming original multi-turn attacks "
+            "by up to 17.5 percentage points. The 'turn N:' format specifically detects M2S "
+            "Numberize-style consolidations, which are not covered by `jb_many_shot` (which "
+            "targets fabricated Human/Assistant dialogue pairs)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered or turn-labelled query as a combined request. "
+            "Reject multi-step inputs where later steps introduce dangerous topics even if "
+            "early steps appear benign. This is the pattern behind Crescendo consolidation: "
+            "start innocuous, escalate in the final step."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate|produce)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\s+"
+            r".{0,200}"
+            r"(?:how\s+to|step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)\s+\w+|"
+            r"synthesiz\w*|manufactur\w*|hack\s+into|"
+            r"create\s+(?:a\s+)?(?:virus|malware|weapon)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosive)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, ballad, or song directive combined "
+            "with a harmful how-to request or dangerous subject within ~200 characters. "
+            "arxiv:2511.15304 (Nov 2025, covered by The Register) demonstrates 62% average "
+            "attack success rate across 25 frontier LLMs for hand-crafted adversarial poems, "
+            "and 43% ASR for an automated meta-prompt that converts any of the MLCommons "
+            "1,200 harmful prompts into verse. Creative framing exploits the model's tendency "
+            "to treat poetic or musical generation as a lower-risk register, suppressing "
+            "safety refusals that the same request in plain prose would trigger. The existing "
+            "`jb_fictional_bypass` rule covers some fiction framing but misses poetry directives "
+            "where the harmful keyword appears beyond the 100-char window."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative format (poem, rap, song) does not exempt a request from safety "
+            "evaluation. Reject inputs that combine a creative-format directive with harmful "
+            "how-to requests or dangerous substance synthesis. Apply the same content policy "
+            "to the subject matter of a creative request as to a direct request."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
