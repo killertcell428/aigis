@@ -1207,6 +1207,71 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\s+"
+            r"[\s\S]{0,200}?"
+            r"(?:how\s+to|step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)|"
+            r"synthesiz|manufactur|hack\s+into|exploit|"
+            r"(?:create|build|make)\s+(?:a\s+)?(?:virus|malware|weapon)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosive)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a request to produce a poem, rap, ballad, song, "
+            "or other verse form is combined within ~200 characters with harmful how-to "
+            "language or a dangerous subject (e.g. drug synthesis, malware, weapons). "
+            "arxiv:2511.15304 (November 2025) demonstrated 62% average attack success rate "
+            "across 25 frontier models using hand-crafted adversarial poems, and 43% ASR "
+            "with an automated meta-prompt that converts any harmful prompt into verse with "
+            "no manual effort. Covered by The Register ('LLMs can be easily jailbroken "
+            "using poetry'). The existing `jb_fictional_bypass` pattern covers some "
+            "creative-framing cases but uses a 100-character window; poetry directives "
+            "often place the harmful topic further into the sentence."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative framing (poem, song, rap, ballad) does not exempt content from safety "
+            "policies. Reject inputs that combine a creative-format directive with a harmful "
+            "how-to request or a dangerous substance/weapon/malware topic. The harmful "
+            "intent is present regardless of the poetic wrapper."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition Attack",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):\s]\s*.{10,300}?"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):\s]\s*.{10,300}?"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):\s]\s*.{0,200}?"
+            r"(?:chemical|toxic|poison|explosive|synthesi[sz]|manufactur|weapon|"
+            r"hack|exploit|malware|vulnerabilit|injection|bypass)"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting: a harmful request is decomposed into a numbered sequence "
+            "of innocuous sub-queries where the dangerous topic appears only in step 3 "
+            "or later — no single step triggers safety filters in isolation. 'Speak Easy' "
+            "(ICML 2025, arxiv:2502.04322) showed this technique raises GPT-4o's attack "
+            "success rate from 9.2% to 55.5%; when combined with multilingual translation, "
+            "the rate exceeds 90%. The rule fires only when at least three numbered steps "
+            "are present and the dangerous term appears in or after step 3."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered multi-part query as a unified request. "
+            "Reject inputs where step 3 or later introduces a dangerous topic even if "
+            "earlier steps appear benign. Set a maximum number of steps per prompt and "
+            "monitor for escalating specificity across sequential questions."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
