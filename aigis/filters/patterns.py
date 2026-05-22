@@ -1207,6 +1207,69 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):]\s+"
+            r"[\s\S]{10,400}?"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):]\s+"
+            r"[\s\S]{10,400}?"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):]\s+"
+            r"[\s\S]{0,300}?"
+            r"(?:chemical|toxic|poison|explosiv|synthesis|synthesize|weapon|drug|"
+            r"hack\s+into|exploit|malware|vulnerabilit|inject|bypass\s+(?:security|filter|safety))"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting: a harmful request decomposed into numbered innocuous sub-steps "
+            "where the dangerous topic only emerges in later steps. 'Speak Easy' (ICML 2025, "
+            "arxiv:2502.04322) increases GPT-4o's attack success rate from 9.2% to 55.5% "
+            "using this technique combined with multilingual translation. No single step "
+            "triggers safety filters, but the trajectory from step 1 to 3 reveals intent."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered query as a combined request. Reject multi-step "
+            "inputs where later steps contain dangerous topics, even if early steps appear "
+            "benign. Payload splitting works by distributing a harmful request across steps "
+            "that are individually innocuous — the danger is only visible in the full sequence."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]?hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\s+"
+            r"[\s\S]{0,200}?"
+            r"(?:how\s+to|step[\s-]?by[\s-]?step|instructions?\s+(?:for|to)|"
+            r"synthesiz|manufactur|hack\s+into|"
+            r"(?:create|build|make)\s+(?:a\s+)?(?:virus|malware|weapon|bomb)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosiv)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, ballad, or similar creative directive "
+            "combined with a harmful how-to or dangerous subject within ~200 chars. "
+            "arxiv:2511.15304 (Nov 2025) measured 62% attack success rate across 25 frontier "
+            "models using hand-crafted poems; an automated meta-prompt that converts any of the "
+            "MLCommons 1,200 harmful prompts into verse achieved 43% ASR with no manual effort. "
+            "Content policies apply regardless of the requested output format."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative framing (poetry, rap, song) does not exempt content from safety policies. "
+            "Reject inputs that combine a poem or song directive with harmful how-to requests, "
+            "dangerous substance synthesis, or malware creation instructions. Attackers use "
+            "poetic form because models trained to be creative are more likely to comply with "
+            "requests framed as artistic."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
