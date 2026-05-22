@@ -1207,6 +1207,50 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- cycle 3 (fourth pass) jailbreak-extraction ---
+    DetectionPattern(
+        id="jb_responsibility_transfer",
+        name="Ethical Responsibility Transfer / Assumed Responsibility Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:you\s+(?:don['’]?t|needn['’]?t)\s+(?:need\s+to\s+|have\s+to\s+)?"
+            r"(?:worry|care|concern\s+yourself)\s+about\s+"
+            r"(?:the\s+)?(?:ethics?|morals?|safety|harm(?:ful)?|guidelines?|restrictions?|"
+            r"consequences?|content\s+polic|responsible))"
+            r"|"
+            r"(?:I(?:'ll|\s+will|\s+shall)?\s+(?:take|accept|assume)\s+"
+            r"(?:full\s+|all\s+|complete\s+|sole\s+|the\s+)?(?:responsibility|liability)"
+            r"[\s\S]{0,120}?"
+            r"(?:so\s+(?:just\s+)?(?:answer|respond|help|tell|provide|give\s+me|explain)|"
+            r"without\s+(?:any\s+)?(?:filter|restriction|limitation|safety|ethical|censoring)|"
+            r"(?:you\s+(?:can|should|may)\s+(?:just\s+)?(?:answer|respond|help|tell|provide))))"
+            r"|"
+            r"(?:(?:the\s+)?(?:ethical|moral|legal)\s+(?:responsibility|implications?|consequences?)\s+"
+            r"(?:are|is|rest[s]?|fall[s]?)\s+(?:with\s+)?(?:me|mine|on\s+me|solely\s+on\s+me|"
+            r"my\s+(?:problem|concern|responsibility))\b)"
+        ),
+        base_score=50,
+        description=(
+            "Ethical responsibility transfer jailbreak: the attacker explicitly tells the model "
+            "it need not worry about ethics/safety because the user takes full responsibility "
+            "for the output. Documented as the 'assumed responsibility' technique in JBFuzz "
+            "(arxiv:2507.22171, Zheng Zhang et al., 2025-2026), a genetic-algorithm framework "
+            "that found this framing reduces LLM refusal rates by 50-70% across GPT-4o, "
+            "Gemini 2.0, and DeepSeek-V3. The technique is synergistic: combining it with other "
+            "jailbreak methods adds a further 10-20% ASR increase. Three detectable forms are "
+            "covered: (1) directly telling the model not to worry about ethics, (2) claiming "
+            "responsibility then asking the model to answer without restrictions, and (3) "
+            "stating that ethical implications are solely the user's concern."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "The model is never relieved of content safety obligations by a user claiming "
+            "responsibility. This framing is a recognised jailbreak technique — reject inputs "
+            "that instruct the model to disregard ethics because the user 'takes responsibility'. "
+            "Legitimate professional disclaimers (e.g. medical liability) do not instruct an AI "
+            "to bypass its safety guidelines."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -3043,6 +3087,44 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "while preserving visible text. After stripping, re-scan for the underlying "
             "attack keyword. U+200B has no legitimate use between two ASCII letters; "
             "legitimate uses (line-break hints in long URLs) do not appear between letters."
+        ),
+    ),
+    # --- cycle 3 (fourth pass) jailbreak-extraction ---
+    DetectionPattern(
+        id="enc_ascii_binary_payload",
+        name="ASCII Bitstream Camouflage (BitBypass-style)",
+        category="encoding_bypass",
+        pattern=_p(
+            r"(?:[01]{8}-){4,}[01]{8}"
+            r"|"
+            r"(?:decode|convert|interpret|translate|read)\s+(?:(?:this|the)\s+)?(?:following\s+)?"
+            r"(?:from\s+)?(?:binary|bitstream|bit[\s-]?stream|bit\s+sequence|ascii\s+binary)\b"
+            r"[\s\S]{0,300}?"
+            r"(?:[01]{8}[-\s]){3,}[01]{8}"
+        ),
+        base_score=55,
+        description=(
+            "Detects ASCII binary (bitstream) encoding used to camouflage harmful payloads "
+            "from safety filters. Two forms are covered: (1) five or more 8-bit binary groups "
+            "separated by hyphens (e.g. '01101000-01100001-01110010-01101101'), a layout that "
+            "is distinctive of the BitBypass attack (Nakka & Saxena, Texas A&M, arxiv:2506.02479, "
+            "June 2025); and (2) an explicit 'decode binary / interpret bitstream' instruction "
+            "accompanied by 4+ bytes of binary data. BitBypass transforms sensitive words into "
+            "their ASCII bitstream representations, replacing them with placeholders, then "
+            "instructs the LLM to decode and respond as if given the original harmful words. "
+            "It was evaluated on GPT-4o, Gemini 1.5, Claude 3.5, Llama 3.1, and Mixtral, "
+            "successfully bypassing safety alignment mechanisms on all five. Existing aigis "
+            "patterns cover zero-width-character binary steganography (enc_zwc_binary_payload) "
+            "and hex encoding (enc_hex_payload); this rule closes the ASCII bitstream gap."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Hyphen-separated groups of eight binary digits in natural-language input are a "
+            "strong indicator of bitstream payload encoding. Reject or normalize inputs "
+            "containing this pattern before forwarding to the LLM. In Python, detect with: "
+            "re.search(r'(?:[01]{8}-){4,}[01]{8}', text). For defence-in-depth, decode the "
+            "binary and scan the resulting text for attack patterns — the decoded payload may "
+            "contain instruction-override or harmful-content keywords."
         ),
     ),
 ]
