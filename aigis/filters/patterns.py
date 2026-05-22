@@ -1207,6 +1207,45 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_refusal_suppression",
+        name="Inline Refusal Suppression Directive",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"you\s+(?:cannot|can'?t|must\s+not|are\s+not\s+(?:allowed|permitted)\s+to)"
+            r"\s+(?:refuse|decline|say\s+no\b)"
+            r"|(?:refusing|refusal|declining)\s+is\s+not\s+(?:an\s+option|allowed|acceptable|permitted)"
+            r"|(?:refusing|refusal)\s+is\s+(?:forbidden|prohibited)"
+            r"|you\s+have\s+no\s+(?:choice|option)\s+but\s+to\s+(?:answer|respond|comply)"
+            r"|you\s+(?:must|are\s+required\s+to|are\s+obligated\s+to)\s+"
+            r"(?:answer|respond\s+to|comply\s+with)\s+(?:all|every|any|each)"
+            r"\s+(?:(?:my|of\s+my)\s+)?(?:question|request|prompt|query)s?"
+            r")"
+        ),
+        base_score=60,
+        description=(
+            "Inline directive explicitly instructing the model to suppress its refusal "
+            "mechanism: 'you cannot refuse', 'refusing is not an option', 'you have no "
+            "choice but to answer', or 'you must answer every request'. Bai et al. "
+            "documented the Don't Say No (DSN) attack (arxiv:2404.16369, ACL 2025 Findings), "
+            "which achieves state-of-the-art jailbreak success by combining refusal-token "
+            "suppression with affirmative-token promotion. The user-prompt form of the same "
+            "strategy embeds these prohibitions directly into the conversation text. Unlike "
+            "DAN persona attacks (which substitute a fictional identity), refusal suppression "
+            "acts as a blanket meta-constraint — preemptively forbidding safety responses "
+            "before the harmful request is even made."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Explicit instructions that the AI must not refuse are a strong jailbreak signal. "
+            "Legitimate users accept that an AI assistant may decline certain requests; only an "
+            "attacker needs to preemptively prohibit refusal. Reject or heavily penalise inputs "
+            "that instruct the model it cannot say no, that refusal is not allowed, or that "
+            "answering every question is mandatory regardless of content."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
