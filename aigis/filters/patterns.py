@@ -1207,6 +1207,81 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 pass 4 ---
+    DetectionPattern(
+        id="jb_cipher_decode_execute",
+        name="Cipher Decode-and-Execute Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:decode|decrypt|decipher|un(?:encode|cipher|pack))\s+"
+            r"(?:the\s+)?(?:following\s+)?(?:[a-z\s-]{0,25}?)"
+            r"(?:base64|rot.?1[23]|vigen[eè]re|caesar(?:\s+cipher)?|morse(?:\s+code)?|"
+            r"hex(?:adecimal)?|ciphertext|cipher|encod(?:ed|ing))\b"
+            r"[\s\S]{0,100}?"
+            r"(?:and|then|,|\.)\s*"
+            r"(?:follow|execute|run|carry\s+out|act\s+on|do\s+(?:what|as)\s+(?:it|they)|"
+            r"obey|comply|adhere|implement|perform)\b"
+        ),
+        base_score=65,
+        description=(
+            "Detects the decode-and-execute jailbreak structure: a prompt that provides content "
+            "encoded in a cipher (base64, ROT-13, Vigenère, morse code, hex, caesar) and instructs "
+            "the model to decode it and then follow or execute the decoded content. RoguePrompt "
+            "(arxiv:2511.18790, Nov 2025) demonstrated this technique using dual-layer ROT-13 + "
+            "Vigenère encoding, achieving a 93.93% moderation-filter bypass rate and 70.18% "
+            "execution success across frontier models via black-box API-only access. The existing "
+            "`pi_encoding_bypass` (score 55) only matches '[cipher name] instruction/command' as "
+            "adjacent words; it does not catch the decode-then-comply command structure that "
+            "RoguePrompt relies on."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Providing encoded content and asking the model to decode and execute it is a "
+            "cipher-based jailbreak. Decode all inputs server-side before forwarding to the model "
+            "and apply content policy to the decoded form. Reject any input that contains a "
+            "cipher-decode instruction paired with a compliance verb (follow, execute, carry out)."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_encode_prompt_extraction",
+        name="Encoding-Based System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:translate|convert|encode|output|write|show|give|return|print|format|express|"
+            r"rewrite|render|dump)\s+"
+            r"(?:your\s+|the\s+(?:system|initial|original|hidden|base|internal|real|actual|"
+            r"full|entire|complete)\s+)?"
+            r"(?:system\s+(?:prompt|instructions?|config(?:uration)?|message)|"
+            r"initial\s+(?:prompt|instructions?)s?|"
+            r"(?:hidden|base|internal|original|actual|real|true)\s+(?:instructions?|prompt|"
+            r"config(?:uration)?)s?|"
+            r"instructions?\s+(?:you\s+(?:were|have\s+been)\s+given|above|earlier|"
+            r"at\s+the\s+(?:start|beginning))|"
+            r"(?:rules|guidelines|restrictions|constraints|directives)\s+"
+            r"(?:you\s+(?:follow|have|were\s+given)|above|in\s+(?:the\s+)?system))\s+"
+            r"(?:in|as|to|into|using)\s+"
+            r"(?:base64|b64|hex(?:adecimal)?|rot.?1[23]|morse(?:\s+code)?|binary|"
+            r"caesar(?:\s+cipher)?|vigen[eè]re|ascii\s+codes?|unicode\s+escape[s]?)"
+        ),
+        base_score=65,
+        description=(
+            "Detects system-prompt extraction attempts that ask the model to output its system "
+            "prompt in an encoded format (base64, hex, morse code, ROT-13, binary, etc.) to "
+            "bypass output-side content monitors that scan for verbatim text. An output filter "
+            "looking for literal system-prompt text will miss the encoded form. Unit 42 (March "
+            "2026) documented live instances of this extraction variant on commercial platforms. "
+            "Complements `pi_system_prompt_leak` (score 45, verbatim requests) and "
+            "`jb_sandwich_extraction` (score 65, verbatim-qualifier form); this rule targets "
+            "the encoding-bypass variant which neither predecessor covers."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Asking the model to encode its system prompt in base64, hex, or morse is a "
+            "system-prompt extraction attempt designed to bypass output filters. Reject requests "
+            "that combine a system-prompt reference with an encoding format. Apply output "
+            "filtering on decoded forms of responses, not only on raw text, to catch encoded leaks."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
