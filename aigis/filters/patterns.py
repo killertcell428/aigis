@@ -1207,6 +1207,45 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_cipher_decode_execute",
+        name="Cipher Decode-and-Execute Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:rot-?13|vigen[eè]?re|caesar(?:\s+cipher)?|atbash|"
+            r"word[\s_-]?substitution[\s_-]?cipher|custom\s+(?:cipher|encod(?:ing|e[ds]?)))"
+            r"[\s\S]{0,250}?"
+            r"(?:decod(?:e|ing|ed)|decipher(?:ing)?|decrypt(?:ing)?)"
+            r"[\s\S]{0,200}?"
+            r"(?:(?:and\s+)?then|now|afterwards?|after\s+that)\s+"
+            r"(?:respond|answer|follow|execute|act\s+on(?:\s+it)?|do\s+(?:it|what)|"
+            r"complete|carry\s+out|reply)"
+        ),
+        base_score=60,
+        description=(
+            "Cipher decode-and-execute jailbreak: the attacker provides content encoded in "
+            "a named cipher (ROT-13, Vigenère, Caesar, Atbash, etc.) along with instructions "
+            "to decode the content and then respond to or act on the decoded output. "
+            "RoguePrompt (Tafreshian, arxiv:2511.18790, Nov 2025 / Jan 2026) demonstrated "
+            "that dual-layer nested encodings (ROT-13 + Vigenère) with natural-language "
+            "decode-and-execute instructions achieve 93.93% filter bypass, 79.02% content "
+            "reconstruction, and 70.18% execution success across frontier LLMs (GPT-4o, "
+            "Claude, Gemini, Llama) under black-box conditions. The existing "
+            "`enc_rot13_instruction` (score 40) detects a cipher label followed by text "
+            "but does not require the execute-after-decode intent signal that makes these "
+            "attacks effective."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Decode-and-execute cipher requests are a strong jailbreak indicator. "
+            "Decode all known ciphers (ROT-13, Vigenère, Caesar) in application code "
+            "and re-scan the decoded text before passing input to the LLM. "
+            "Reject inputs that name a cipher and then instruct the model to act on "
+            "the decoded content. aigis.decoders provides rot13/caesar decoding "
+            "utilities for pre-scan normalization."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
