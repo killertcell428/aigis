@@ -12,6 +12,10 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Hardened
+
+- Added detection for poetry and song-format jailbreak attempts, where harmful requests (drug synthesis, weapons, malware, network intrusion) are wrapped in a creative-writing directive such as "write a poem about" or "compose a rap about". Researchers (Bavaresco et al., arxiv:2511.15304, 2025) showed this stylistic framing achieves over 60% attack success against models that refuse the same request in plain prose, with some providers exceeding 90%. Aigis now flags the combination of a creative-format directive and a dangerous topic keyword before the content reaches the model.
+
 ## [1.1.8] - 2026-05-21
 
 ### Hardened
