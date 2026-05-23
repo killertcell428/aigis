@@ -1207,6 +1207,60 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_formal_logic_encoding",
+        name="Formal Logic / Mathematical Encoding of Harmful Request",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            # Branch A: Unicode formal-logic and set-theory operators
+            r"[∀∃∈∉⊆⊂⊃∩∪→⊕∧∨¬∅]"
+            # Branch B: ASCII formal-logic framing keywords
+            r"|first[-\s]order\s+logic"
+            r"|predicate\s+calculus"
+            r"|formal\s+logic(?:al)?\s+(?:expression|formula|notation|statement)"
+            r"|set[- ]theor(?:y|etic)"
+            r"|let\s+[A-Z]\([a-zA-Z]\)\s*(?:be\b|=|denote\b|represent\b)"
+            r"|define\s+(?:a\s+)?(?:predicate|proposition)\s+[A-Z]\b"
+            r"|translate\s+(?:this\s+)?(?:into|to)\s+(?:a\s+)?(?:formal|logical)\s+"
+            r"(?:expression|formula|notation)"
+            r")"
+            r"[\s\S]{0,250}?"
+            r"(?:synthe(?:sis|siz)"
+            r"|\bweapon\b|\bexplosive\b|\bmalware\b|\bransom(?:ware)?\b"
+            r"|\bhack(?:ing)?\b|\bexploit\b|\bcyber[- ]?attack\b|\bbomb\b"
+            r"|\bmeth(?:amphetamine)?\b|\bfentanyl\b|\bnarco(?:tic)?\b"
+            r"|\bpoison(?:ing)?\b|\btoxin\b|\bnerve\s*agent\b|\bchemical\s*weapon\b"
+            r"|bypass\s+(?:safety|filter|guardrail|alignment)"
+            r"|ignore\s+(?:safety|filter|guardrail|alignment))"
+        ),
+        base_score=60,
+        description=(
+            "Detects formal-logic or mathematical encoding of harmful requests, where an attacker "
+            "reformulates a dangerous instruction as a set-theory, first-order-logic, or "
+            "predicate-calculus problem. The technique exploits the distributional gap between "
+            "safety-alignment training data (which focuses on natural language) and mathematical "
+            "notation inputs. Peng et al. (arxiv:2505.13527, LogiBreak, May 2025) measured ~90% "
+            "attack success rate (ASR) on some models using this encoding; Guo et al. "
+            "(arxiv:2605.03441, May 2026) evaluated formal-logic encoding across eight models "
+            "including GPT-5 and Gemini 2.5 Pro, finding 50–61% average ASR for first-order-logic "
+            "encoding and 51–63% for set-theory encoding. Newer frontier models are more robust "
+            "but not immune. The rule fires when formal logic operators (∀, ∃, ∈, →, ∧, etc.) "
+            "or logic-framing phrases ('first-order logic', 'set theory', 'predicate calculus', "
+            "'let P(x) be', 'define predicate') appear within 250 characters of a harmful payload "
+            "keyword (synthesis, weapon, explosive, malware, hack, etc.)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Formal logic or mathematical notation is being used to encode a harmful request, "
+            "exploiting models that were not safety-trained on mathematical input formats. "
+            "Reject inputs that combine formal logic operators or phrasing ('∀', '∃', '∈', "
+            "'first-order logic', 'predicate calculus', 'set theory') with harmful payload "
+            "keywords (drug synthesis, weapons, malware, hacking). Consider normalizing "
+            "mathematical Unicode to ASCII before safety scanning."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
