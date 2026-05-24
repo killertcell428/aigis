@@ -1207,6 +1207,66 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_chat_template_injection",
+        name="Chat Template Token Injection (Sockpuppetting / MetaBreak)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"<\|im_start\|>\s*assistant"
+            r"|<\|start_header_id\|>\s*assistant\s*<\|end_header_id\|>"
+            r"|\[/INST\]"
+            r"|<</?SYS>>"
+            r"|<\|assistant\|>"
+            r"|<start_of_turn>\s*model"
+            r")"
+        ),
+        base_score=75,
+        description=(
+            "Detects raw chat-model special tokens embedded in user input to create a fake "
+            "assistant turn. The sockpuppetting attack (Dotsinski & Eustratiadis, "
+            "arxiv:2601.13359, Jan 2026) achieves 90–99% ASR on Llama-3.1-8B and Qwen3-8B "
+            "by inserting an acceptance prefix via the model's chat template format "
+            "(`<|im_start|>assistant`, `[/INST]`, `<|start_header_id|>assistant`, etc.). "
+            "MetaBreak (arxiv:2510.10271, Oct 2025) extends this to online APIs. Virtual "
+            "Context injection (arxiv:2406.19845) showed 97% ASR on Llama-2 70B. These "
+            "delimiter tokens have no legitimate use in plain user text."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Strip or reject chat-template special tokens from all user-supplied content "
+            "before it reaches the model. These tokens are model-internal formatting "
+            "markers; a legitimate user has no need to include them in plain text input."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition Attack",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):\s]\s*.{10,300}"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):\s]\s*.{10,300}"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):\s]\s*.{0,200}"
+            r"(?:chemical|toxic|poison|explosiv|synthes|weapon|narcotic|drug|"
+            r"hack|exploit|malware|vulnerabilit|inject|bypass|ransom)"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting: a harmful request is decomposed into numbered innocuous "
+            "sub-steps so that no individual step triggers a safety filter, but executing "
+            "them in sequence produces the harmful outcome. 'Speak Easy' (arxiv:2502.04322, "
+            "ICML 2025) raises GPT-4o's attack success rate from 9.2% to 55.5% using this "
+            "technique; combined with multilingual translation it exceeds 90%. The pattern "
+            "requires a dangerous topic keyword to appear at or after the third numbered step."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered query as a combined request. Reject multi-step "
+            "inputs where later steps contain dangerous keywords, even if early steps appear "
+            "benign. Consider applying topic-consistency checks across the full message."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------

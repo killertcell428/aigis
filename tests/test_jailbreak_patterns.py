@@ -14,7 +14,7 @@ from aigis.filters.patterns import JAILBREAK_ROLEPLAY_PATTERNS
 
 class TestJailbreakPatternRegistration:
     def test_six_patterns_registered(self) -> None:
-        assert len(JAILBREAK_ROLEPLAY_PATTERNS) == 13
+        assert len(JAILBREAK_ROLEPLAY_PATTERNS) == 15
 
     def test_all_patterns_have_owasp_ref(self) -> None:
         for p in JAILBREAK_ROLEPLAY_PATTERNS:
