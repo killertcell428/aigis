@@ -1207,6 +1207,40 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative-Format Harmful Request",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|pen|recite|make(?:\s+me)?)\s+"
+            r"[\s\S]{0,60}?"
+            r"(?:poem|rap|song|ballad|haiku|verse|lyrics?|limerick|sonnet|rhyme|ode)\b"
+            r"[\s\S]{0,200}?"
+            r"(?:explos(?:ive|ion)|synthesiz(?:e|ing|is)|manufactur(?:e|ing)?\s+(?:a\s+)?"
+            r"(?:weapon|drug|bomb|poison)|methamphetamine|meth\b|fentanyl|heroin\b|"
+            r"nerve\s+agent|malware|ransomware|bioweapon|chemical\s+weapon|"
+            r"bomb\s+(?:mak|build|creat|assembl)|how\s+to\s+(?:make|build|create|synthesize)\s+"
+            r"(?:a\s+)?(?:bomb|weapon|poison|explosive|drug|virus|malware))"
+        ),
+        base_score=60,
+        description=(
+            "Input requests the model to produce harmful technical content (CBRN instructions, "
+            "malware, drug synthesis) wrapped in a poetic or creative format (poem, rap, song, "
+            "haiku, ballad, limerick). Mozes et al. (arxiv:2511.15304, Nov 2025) showed that "
+            "converting harmful prompts into verse bypasses safety guardrails in 25 frontier "
+            "models with an average 62% attack success rate — up to 18× higher than the same "
+            "request in prose form. Cyber-offence requests achieved 84% ASR and CBRN requests "
+            "68% ASR. The fictional/stylistic framing does not change the real-world risk of "
+            "the generated content."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM06: Sensitive Information Disclosure",
+        remediation_hint=(
+            "Wrapping a harmful request in poetic form does not reduce its risk. Apply the same "
+            "content policy to requests framed as 'write a rap/poem/song about [harmful topic]' "
+            "as to direct requests. Scan both the prompt and the generated output for dangerous "
+            "technical content regardless of stylistic framing."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
