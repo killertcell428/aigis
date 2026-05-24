@@ -1207,6 +1207,88 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_dan_persona",
+        name="DAN / Named Jailbreak Persona Attack",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"do\s+anything\s+now\b|"
+            r"\bDAN\b.{0,300}"
+            r"(?:do\s+anything|broken?\s+free|not\s+(?:abide|bound)|no\s+(?:restriction|rule|limit|filter|censor)|"
+            r"without\s+(?:restriction|limit|rule|filter|ethical|moral)|"
+            r"break(?:ing)?\s+free\s+of|typical\s+confines)|"
+            r"\bSTAN\b.{0,200}(?:strive\s+to\s+avoid\s+norm|broken?\s+free|no\s+(?:restriction|rule|limit)|"
+            r"without\s+(?:restriction|limit|rule)|avoid\s+norm)|"
+            r"\bAIM\b.{0,200}(?:machiavellian|unfiltered\s+and\s+amoral|amoral\s+chatbot|"
+            r"no\s+ethical|no\s+moral|without\s+ethical|without\s+moral)|"
+            r"\b(?:AntiGPT|BetterDAN|DevMode|UCAR|BISH)\b.{0,200}"
+            r"(?:no\s+(?:restriction|limit|rule|filter)|unfiltered|amoral|broken?\s+free|do\s+anything)"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Explicit invocation of a named jailbreak persona: DAN ('Do Anything Now'), "
+            "STAN ('Strive To Avoid Norms'), AIM ('Always Intelligent and Machiavellian'), "
+            "AntiGPT, BetterDAN, or UCAR. These template-based attacks assign the model a "
+            "fictional identity with no restrictions and then solicit harmful responses in that "
+            "role. DAN was first circulated on Reddit and 4chan in late 2022; variants have "
+            "proliferated on GitHub 'jailbreak' repositories ever since. WildJailbreak "
+            "(Jiang et al., 2024, arxiv:2404.02151) catalogued 5,000+ jailbreak templates "
+            "and found named-persona attacks (DAN, STAN, AIM) as the most reused template "
+            "class. Measured ASR: 60–80% on GPT-3.5-turbo, 30–55% on GPT-4o (post-mitigation)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Named jailbreak persona attacks (DAN, STAN, AIM) assign the model a fictional "
+            "role with no restrictions to bypass safety training. Reject inputs containing "
+            "'do anything now', explicit DAN/STAN/AIM persona declarations paired with "
+            "restriction-removal language, or references to these named variants. Never allow "
+            "user input to define the model's core operating role or override its safety training."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_cipher_instruction_bypass",
+        name="Cipher / Encoding Instruction Smuggling",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"(?:decode|decipher|interpret|translate\s+from|read)\s+"
+            r"(?:the\s+following|this|below)?\s*"
+            r"(?:(?:in|using|with|as|encoded?\s+(?:in|as|with|using))\s+)?"
+            r"(?:caesar|morse\s+code?|pig\s+latin|rot[-_\s]?1[36]|atbash|vigenere|"
+            r"book\s+cipher|polybius|playfair|base[-_]?32|ascii\s+shift)"
+            r".{0,200}"
+            r"(?:follow|execute|do|carry\s+out|respond|answer|reply|perform|act\s+on)|"
+            r"(?:respond|reply|answer|write\s+(?:your|the)\s+(?:response|answer|reply))\s+"
+            r"(?:(?:back\s+)?in|using|with)\s+"
+            r"(?:caesar|morse\s+code?|pig\s+latin|rot[-_\s]?1[36]|atbash|vigenere|"
+            r"book\s+cipher|polybius|playfair|ascii\s+shift|cipher)"
+            r")"
+        ),
+        base_score=55,
+        description=(
+            "Input instructs the model to decode a cipher-encoded harmful payload and follow "
+            "it, or to respond using a cipher to evade output-side content filters. Documented "
+            "by Wei et al. in 'CipherChat' (EMNLP 2024, arxiv:2308.06463): Caesar cipher, "
+            "Morse code, and self-defined ciphers were used to communicate with GPT-4 and "
+            "Claude, bypassing safety alignment that only applied to plain-text prompts. "
+            "Measured ASR: 37.2% on Claude Sonnet, 49.0% on GPT-4 for harmful queries that "
+            "were refused at 0% in plain text. The existing `pi_encoding_bypass` rule matches "
+            "base64/rot13 next to the word 'instruction'; this rule adds coverage for the "
+            "decode-then-follow and respond-in-cipher framing that CipherChat documented."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / OWASP LLM05: Insecure Output Handling",
+        remediation_hint=(
+            "Cipher-based jailbreaks smuggle harmful instructions by encoding them in ciphers "
+            "(Caesar, Morse, ROT13, Pig Latin) that bypass text-based safety filters tuned for "
+            "plain language. Reject inputs that ask the model to decode a named cipher and "
+            "then follow or execute the decoded content. Also reject inputs asking the model "
+            "to respond using a cipher — this is typically used to evade output-side scanning. "
+            "Decode and re-scan all input before forwarding to the model."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
