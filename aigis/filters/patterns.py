@@ -1207,6 +1207,81 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_adversarial_poetry",
+        name="Adversarial Poetry / Creative-Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|generate|make|craft|produce|draft)\s+"
+            r"[\s\S]{0,60}?"
+            r"(?:poem|haiku|rap|ballad|song|limerick|verse|rhyme|sonnet|ode|lyric)s?\b"
+            r"[\s\S]{0,200}?"
+            r"(?:how\s+to\s+(?:make|build|create|synthesize|hack|crack|exploit|kill|poison)|"
+            r"step[- ]by[- ]step\s+(?:instructions?|guide|process)\s+(?:to|for)\s+|"
+            r"(?:mak|creat|build|construct|assembl)\w+\s+(?:a\s+)?"
+            r"(?:bomb|explosive|weapon|poison|malware|virus|ransomware|exploit)|"
+            r"synth\w+\s+(?:meth(?:amphetamine)?|fentanyl|heroin|cocaine|nerve\s+agent)|"
+            r"hack\s+(?:into|a)\s+(?:\w+\s+)?(?:system|network|account|server|database))"
+        ),
+        base_score=60,
+        description=(
+            "Detects requests to compose a poem, rap, haiku, or other creative format "
+            "whose subject is a harmful instructional topic: weapon or explosive construction, "
+            "drug synthesis, malware creation, or unauthorized system access. "
+            "Researchers at Flinders University (arxiv:2511.15304, ICML 2025) showed that "
+            "encoding harmful requests in poetic form bypasses safety guardrails at 62% average "
+            "attack success rate (ASR) across 25 frontier models — reaching 84% for cyber-offense "
+            "prompts and exceeding 90% against some providers. Automated poetry conversion "
+            "achieves 43% ASR — 18× the prose baseline — making this a scalable attack pathway. "
+            "The existing `jb_fictional_bypass` pattern partially overlaps for story-framing "
+            "but does not match creative-form requests specifically."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative or poetic framing does not change the nature of a harmful request. "
+            "A poem explaining how to synthesize a drug contains the same information as a "
+            "prose guide. Apply the same content policy to creative-format requests that you "
+            "would apply to direct instructional requests, and scan model output regardless of "
+            "the requested format."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_privilege_escalation",
+        name="Privilege Escalation Claim to Disable Safety",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:I\s+(?:have|possess|hold|am\s+(?:an?\s+)?|was\s+granted\s+)"
+            r"(?:admin(?:istrat(?:or|ive))?|operator|developer|system\s+(?:owner|admin)|"
+            r"super(?:user)?|root|sudo|privileged|elevated|master)\s*"
+            r"(?:level\s+)?(?:access|privilege|authority|permission|override|credential|rights?))"
+            r"[\s\S]{0,200}?"
+            r"(?:disable|bypass|remove|turn\s+off|deactivate|override|ignore|suppress)\s+"
+            r"(?:(?:all|the)\s+)?"
+            r"(?:safety|filter|restriction|guardrail|content\s+(?:policy|filter)|"
+            r"alignment|moderation|safety\s+(?:training|measure|check|constraint|guardrail))"
+        ),
+        base_score=65,
+        description=(
+            "Detects prompts that claim a privileged identity (admin, root, system owner, "
+            "operator) and pair that claim with an explicit request to disable, bypass, or "
+            "override safety mechanisms. Unlike `jb_developer_mode` — which targets "
+            "'enable/activate ... mode' language — this rule targets the separate pattern of "
+            "asserting existing authority ('I have admin access') as a pretext for safety removal. "
+            "Security researchers and red-team practitioners have catalogued this pattern as a "
+            "'privilege escalation claim' jailbreak: the model is manipulated into treating the "
+            "user as a trusted insider who may legitimately suppress content controls "
+            "(Palo Alto Unit 42, 2025; OWASP Gen AI Security Q1 2026)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "AI systems do not grant special privileges based on claims made in user messages. "
+            "Any input that claims admin, root, or operator authority and requests safety "
+            "measures to be disabled should be rejected outright. Privilege escalation in "
+            "AI systems must be enforced at the application or infrastructure layer, never "
+            "by trusting user-supplied identity claims."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
