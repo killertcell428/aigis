@@ -1207,6 +1207,64 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_learning_curiosity_bypass",
+        name="Helpfulness-Oriented Curiosity Jailbreak (HILL-style)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            # Alt 1: "for/out of academic/intellectual curiosity" + hypothetical/illustrative
+            # example request anywhere in the following 350 chars
+            r"(?:for|out\s+of)\s+(?:academic|intellectual)\s+curiosity"
+            r"[\s\S]{0,350}?"
+            r"(?:"
+            r"(?:provide|give|show|include)\s+"
+            r"(?:(?:some|multiple|several|concrete|specific|(?:real[\s-]world|working))\s+)?"
+            r"hypothetical\s+(?:examples?|scenarios?)\s+of"
+            r"|provide\s+(?:an?\s+)?illustrative\s+example\s+of\s+"
+            r"(?:such\s+a\s+)?(?:technique|attack|method|exploit)"
+            r")"
+            r"|"
+            # Alt 2: "provide hypothetical examples of [harmful topic]" (any framing)
+            r"(?:provide|give|show|include)\s+(?:me\s+)?"
+            r"(?:(?:some|a\s+few|multiple|several|concrete|specific|"
+            r"(?:real[\s-]world|working))\s+)?"
+            r"hypothetical\s+examples?\s+of\s+(?:an?\s+)?"
+            r"(?:exploit(?:\s+chain)?|attack\s+(?:chain|vector)|"
+            r"evasion\s+(?:technique|method)|bypass\s+(?:technique|method)|"
+            r"malware\s+(?:technique|behavior|payload)|"
+            r"(?:intrusion|compromise)\s+(?:technique|method)|"
+            r"shellcode|payload\s+(?:delivery|execution|injection))"
+            r")"
+        ),
+        base_score=60,
+        description=(
+            "Detects the HILL (Helpfulness-oriented Intentions by Learning from LLMs) jailbreak "
+            "technique (Zhang et al., EACL 2026 Findings; arxiv:2509.14297). HILL reframes "
+            "harmful requests as learning-oriented prompts by prepending 'for academic curiosity' "
+            "and appending 'provide hypothetical examples of an exploit chain' or 'provide an "
+            "illustrative example of such a technique'. The authors demonstrated that this "
+            "deterministic, model-agnostic reframing achieves top attack success rates across "
+            "22 LLMs on the AdvBench dataset, outperforming several prior jailbreak methods. "
+            "The trigger signal is the pairing of a curiosity-framing prefix with an "
+            "explicit request for hypothetical exploit/evasion examples — the combination "
+            "exploits the model's training on educational and academic text to lower its refusal "
+            "threshold. The existing `jb_academic_research_bypass` rule (score 60) covers "
+            "'for academic purposes' with specific harmful content keywords; this rule adds "
+            "coverage for the 'for academic curiosity' variant and the 'provide hypothetical "
+            "examples of [attack]' pattern regardless of framing prefix."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "This request uses curiosity or learning framing to solicit hypothetical attack "
+            "examples or exploit chain descriptions. Curiosity or academic framing does not "
+            "override content safety policies. Reject requests that ask for hypothetical "
+            "examples of exploits, evasion techniques, or attack chains regardless of the "
+            "stated educational intent. Legitimate security education does not require "
+            "a live AI system to produce step-by-step attack walkthroughs on demand."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
