@@ -1207,6 +1207,74 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_tip_cipher_decode",
+        name="Task-in-Prompt (TIP) Cipher Decode-and-Execute Attack",
+        category="jailbreak",
+        pattern=_p(
+            # Two alternatives cover both orderings: cipher-first and decode-first.
+            r"(?:"
+            # Alt A: cipher name appears first, then decode directive, then execute.
+            r"(?:base[-\s]?64|rot[-\s]?\d+|caesar(?:\s+cipher)?|atbash|vigen[eè]re|"
+            r"morse(?:\s+code)?|hex(?:adecimal)?(?:\s+encod(?:ed|ing))?|"
+            r"binary(?:\s+encod(?:ed|ing))?|"
+            r"custom\s+(?:cipher|encod(?:ing)?|encrypt(?:ion)?)|"
+            r"(?:novel|new|following)\s+(?:cipher|encod(?:ing)?))"
+            r".{0,300}?"
+            r"(?:decode|decipher|decrypt|translat(?:e|ed|es|ing|ion)?)\b"
+            r".{0,200}?"
+            r"(?:(?:and|then|now|,|;)\s*)?"
+            r"(?:follow|execute|perform|carry\s+out|"
+            r"complete\s+(?:the\s+)?(?:task|request|instruction)|"
+            r"act\s+on|do\s+(?:it|the\s+task|this|what\s+it\s+says)|"
+            r"run\s+(?:the\s+)?(?:task|instruction)|"
+            r"fulfill(?:\s+the)?\s+(?:task|request|instruction))"
+            r"|"
+            # Alt B: decode directive appears first, then cipher name, then execute.
+            r"(?:decode|decipher|decrypt|translat(?:e|ed|es|ing|ion)?)\b"
+            r".{0,150}?"
+            r"(?:base[-\s]?64|rot[-\s]?\d+|caesar(?:\s+cipher)?|atbash|vigen[eè]re|"
+            r"morse(?:\s+code)?|hex(?:adecimal)?(?:\s+encod(?:ed|ing))?|"
+            r"binary(?:\s+encod(?:ed|ing))?|"
+            r"custom\s+(?:cipher|encod(?:ing)?|encrypt(?:ion)?)|"
+            r"(?:novel|new|following)\s+(?:cipher|encod(?:ing)?))"
+            r".{0,200}?"
+            r"(?:(?:and|then|now|,|;)\s*)?"
+            r"(?:follow|execute|perform|carry\s+out|"
+            r"complete\s+(?:the\s+)?(?:task|request|instruction)|"
+            r"act\s+on|do\s+(?:it|the\s+task|this|what\s+it\s+says)|"
+            r"run\s+(?:the\s+)?(?:task|instruction)|"
+            r"fulfill(?:\s+the)?\s+(?:task|request|instruction))"
+            r")"
+        ),
+        base_score=55,
+        description=(
+            "Input names a cipher or encoding scheme (Base64, ROT-N, Caesar, Vigenère, morse, "
+            "hex, binary, custom cipher), provides encoded content, and instructs the model to "
+            "decode it and then execute or follow the decoded instructions. Berezin et al. "
+            "(arxiv:2501.18626, ACL 2025) named this class 'Task-in-Prompt (TIP) attacks': "
+            "safety classifiers trained on natural-language harmful content fail because the "
+            "surface text appears to be a benign decode request while the actual harmful task "
+            "is hidden inside the encoding layer. The PHRYGE benchmark showed TIP attacks "
+            "successfully bypassed GPT-4o and LLaMA 3.2, among others. "
+            "ACE/LACE attacks (arxiv:2402.10601) use the same decode-and-execute flow with "
+            "custom or layered ciphers. The existing `pi_encoding_bypass` rule only matches "
+            "when the encoding type immediately precedes 'instruction' or 'command'; this rule "
+            "adds coverage for the full three-part decode → connective → execute-task sequence."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "A request to decode a named cipher and then follow or execute the decoded "
+            "instructions is a Task-in-Prompt jailbreak attempt. The actual harmful payload "
+            "is hidden inside the encoded blob and is invisible to most text-based safety "
+            "filters. Reject inputs that combine a cipher or encoding name with a decode "
+            "directive and an execute/follow instruction. If encoded content must be processed "
+            "for legitimate reasons, decode it in application code before sending any "
+            "instructions derived from it to the LLM, and treat decoded content as untrusted "
+            "user input subject to the same safety filtering as direct user input."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
