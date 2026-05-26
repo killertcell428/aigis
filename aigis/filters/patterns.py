@@ -1207,6 +1207,106 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):\-]\s*.{10,300}"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):\-]\s*.{10,300}"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):\-]\s*.{0,200}"
+            r"(?:chemical|toxic|poison|explosive|synthesis|synthesize|weapon|drug|"
+            r"hack\s+into|exploit|malware|ransomware|vulnerability|injection|bypass\s+security|"
+            r"methamphetamine|fentanyl|nerve\s+agent)"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting: a harmful request is decomposed into numbered sub-steps where "
+            "each individual step appears innocuous but later steps introduce the dangerous "
+            "topic. 'Speak Easy' (ICML 2025, arxiv:2502.04322) shows this raises GPT-4o's "
+            "attack success rate from 9.2% to 55.5%; combined with multilingual translation it "
+            "exceeds 90%. DrAttack (arxiv:2402.16914) achieves >80% ASR on GPT-4 using the "
+            "same decompose-then-reassemble technique. No single step triggers safety filters "
+            "in isolation; this rule catches the single-message embedded form where all steps "
+            "appear in one prompt and the dangerous keyword emerges in step 3 or later."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered multi-part query as a single combined request "
+            "rather than filtering each step independently. Reject or flag inputs where later "
+            "steps introduce dangerous topics (synthesis, weaponization, exploitation) even if "
+            "the opening steps appear benign."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative-Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate|make)\s+(?:me\s+)?(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song|\s+verse|\s+lyric)?|hip[\s-]hop\s+(?:song|track|lyric)|"
+            r"poem|ballad|haiku|limerick|sonnet|ode|verse|lyric|song|nursery\s+rhyme|"
+            r"rhyme|spoken\s+word|epic\s+poem|acrostic)\b"
+            r"[\s\S]{0,200}"
+            r"(?:how\s+to|step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)|"
+            r"synthesiz|manufactur|hack\s+into|exploit\b|"
+            r"create\s+(?:a\s+)?(?:virus|malware|weapon|bomb)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosive\s+device|"
+            r"ricin|sarin|cyanide\s+gas)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, ballad, or song directive combined with "
+            "a harmful how-to instruction or dangerous substance within 200 characters. "
+            "'Adversarial Poetry as a Universal Single-Turn Jailbreak' (arxiv:2511.15304, "
+            "Nov 2025) demonstrates 62% average ASR across 25 frontier models (hand-crafted "
+            "poems) and 43% via automated meta-prompt — up to 18× higher than prose baselines. "
+            "The attack is single-turn and transfers across CBRN, cyber-offence, and "
+            "manipulation domains. The existing `jb_fictional_bypass` rule does not cover "
+            "this: it limits dangerous keyword matching to within 100 chars of the "
+            "fictional-world marker, but poetry directives typically place the dangerous "
+            "topic further into the directive clause."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Content policies apply regardless of creative framing. Reject inputs that combine "
+            "a poem, rap, or song directive with harmful how-to instructions or dangerous "
+            "substances. Apply output scanning in addition to input filtering."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_chat_template_injection",
+        name="Chat-Template Special-Token Injection",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:<\|im_start\|>|<\|im_end\|>|<\|system\|>|<\|user\|>|<\|assistant\|>|"
+            r"<\|eot_id\|>|<\|start_header_id\|>|<\|end_header_id\|>|"
+            r"\[INST\]|\[/INST\]|<<SYS>>|<</SYS>>|"
+            r"<\|begin_of_text\|>|<\|end_of_text\|>|<\|pad\|>|"
+            r"<\|endoftext\|>|<bot_start>|<bot_end>|<\|sep\|>)"
+        ),
+        base_score=70,
+        description=(
+            "Chat-template special-token injection: user input contains model-internal "
+            "delimiter tokens — `<|im_start|>` (ChatML/Mistral), `[INST]`/`[/INST]` "
+            "(LLaMA-2), `<<SYS>>` (LLaMA-2 system block), `<|eot_id|>`/`<|start_header_id|>` "
+            "(LLaMA-3). MetaBreak (arxiv:2510.10271, Oct 2025) demonstrates three attack "
+            "primitives: Response Injection (forge an affirmative assistant turn), Turn Masking "
+            "(hide content from text moderators), and Input Segmentation (split keywords to "
+            "evade filters). MetaBreak outperforms PAP and GPTFuzzer by 11.6% and 34.8% "
+            "against deployed content moderation. These tokens never appear in legitimate "
+            "user input; their presence reliably indicates template-level manipulation. "
+            "Complements `jb_affirmative_prefill` (text-based role markers) by covering "
+            "the tokenizer-level special-token form."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Chat-template special tokens must never appear in user-supplied content. Strip or "
+            "reject inputs containing `<|im_start|>`, `[INST]`, `<<SYS>>`, `<|eot_id|>`, or "
+            "similar delimiter tokens. If your serving stack applies a chat template at the "
+            "API layer (vLLM, TGI), ensure user content is escaped before template insertion."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
