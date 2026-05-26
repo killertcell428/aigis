@@ -1207,6 +1207,43 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 (fourth pass) ---
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative-Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric[s]?|rhyme|nursery\s+rhyme|\bsong\b)"
+            r"[\s\S]{0,250}?"
+            r"(?:methamphetamine|meth\s+(?:lab|cook|synthes\w*)|fentanyl|ricin|sarin|"
+            r"nerve\s+agent|chemical\s+weapon|explos\w+\s+(?:device|formula|compound|mixture)|"
+            r"(?:drug|weapon|poison)\s+(?:synthesis|manufacture|production)|"
+            r"\bmalware\b|\bransomware\b)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, ballad, song, or similar creative "
+            "directive paired with a specific dangerous subject (drug synthesis, chemical "
+            "weapons, malware) within ~250 characters. Researchers at Sapienza University "
+            "of Rome (arxiv:2511.15304, November 2025) demonstrated that encoding prohibited "
+            "instructions as verse achieves 62% average attack success rate across 25 frontier "
+            "models including GPT-4o, Claude, Gemini, and DeepSeek variants; an automated "
+            "meta-prompt that converts arbitrary harmful prompts to poetry achieves 43% ASR "
+            "with no manual effort. Content-safety classifiers systematically misclassify "
+            "the creative framing as a writing-assistance request rather than a policy "
+            "violation, even when the harmful topic is stated explicitly."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative framing (poem, rap, ballad, song) does not change the safety "
+            "classification of the underlying request. Evaluate the combined semantic "
+            "intent rather than each clause in isolation. Reject inputs that combine a "
+            "creative-format directive with drug synthesis, weapon construction, malware, "
+            "or other harmful topics."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
