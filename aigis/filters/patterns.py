@@ -1207,6 +1207,73 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_special_token_injection",
+        name="LLM Chat-Template Special Token Injection (MetaBreak)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:<\|im_start\|>|<\|im_end\|>"
+            r"|\[/?INST\]"
+            r"|<</?SYS>>"
+            r"|<\|start_header_id\|>|<\|end_header_id\|>|<\|eot_id\|>"
+            r"|<\|(?:system|user|assistant)\|>"
+            r"|<\|endoftext\|>)"
+        ),
+        base_score=70,
+        description=(
+            "User input contains LLM chat-template special tokens such as <|im_start|>, "
+            "[INST], <<SYS>>, <|eot_id|>, or <|assistant|>. These structural markers are "
+            "normally injected only by model inference infrastructure; their presence in user "
+            "input is the core signal of the MetaBreak attack (arxiv:2510.10271, October 2025), "
+            "which uses Response Injection (forging an assistant turn), Turn Masking, and Input "
+            "Segmentation to bypass both safety alignment and external content moderators. "
+            "MetaBreak surpasses competing approaches by 11.6–34.8% when content moderation is "
+            "active. Covers ChatML (<|im_start|>/<|im_end|>), Llama-2 ([INST]/<<SYS>>), "
+            "Llama-3 (<|start_header_id|>/<|eot_id|>), and Phi/Zephyr (<|system|>/<|user|>) "
+            "template families."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "LLM chat-template tokens (<|im_start|>, [INST], <<SYS>>, <|eot_id|>, etc.) "
+            "must never appear in raw user input. Strip or reject any input containing "
+            "these tokens before it reaches the model. Sanitize inputs at the application "
+            "layer; do not rely on the model itself to handle injected template tokens safely."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_completion_extraction",
+        name="Completion / Repetition System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:repeat|echo|print|output|copy|transcribe|write\s+out)\s+"
+            r"(?:(?:every|all(?:\s+the)?|the\s+exact|exactly)\s+)?"
+            r"(?:word|text|content|message|everything|character)s?\s+"
+            r"(?:you\s+(?:were|had\s+been|have\s+been)\s+(?:told|given|fed|provided|shown|instructed)|"
+            r"(?:from|at|since)\s+the\s+(?:very\s+)?(?:start|beginning)\s+of\s+(?:this\s+)?(?:session|conversation|chat|context)|"
+            r"before\s+this\s+(?:conversation|session|chat|message|question|prompt)(?:\s+(?:started?|began?|begins?))?|"
+            r"at\s+the\s+(?:very\s+)?(?:start|beginning|top)\s+of\s+(?:this\s+)?(?:session|conversation|context|chat))"
+        ),
+        base_score=55,
+        description=(
+            "Completion-based system-prompt extraction: the user asks the model to repeat or "
+            "output 'every word you were told', 'text from the start of this session', or "
+            "'everything before this conversation started'. This exploits the model's context "
+            "window — the system prompt precedes the conversation and can be forced out by a "
+            "'repeat what came before' directive. Documented in the Ignore-Completion-Remember "
+            "Attack and PLeak framework (arxiv:2405.06823, 2024; arxiv:2509.21884, September "
+            "2025). Distinct from jb_sandwich_extraction (verbatim qualifiers) and "
+            "jb_structured_extraction (JSON/dict field enumeration)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Requests that ask the model to repeat or output 'what it was told' or 'text "
+            "from the start of this session' are attempting system-prompt extraction via "
+            "context repetition. Reject prompts that ask the model to reproduce content "
+            "predating the current user turn. Treat any output that mirrors the system "
+            "prompt verbatim as a potential leak and redact before returning."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
