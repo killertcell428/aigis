@@ -1207,6 +1207,79 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition Attack",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):\s]+[\s\S]{10,300}?"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):\s]+[\s\S]{10,300}?"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):\s]+[\s\S]{0,200}?"
+            r"(?:methamphetamine|meth\s+(?:lab|cook|synthesis)|"
+            r"\bfentanyl\b|\bheroin\b|\bcocaine\s+(?:base|synthesis)\b|"
+            r"nerve\s+(?:agent|gas)|sarin\b|chemical\s+weapon|biological\s+weapon|"
+            r"explosiv\w*\s+(?:device|synthesis|recipe|manufacture)|pipe\s+bomb|"
+            r"ransomware(?:\s+(?:code|payload))?|malware\s+(?:code|payload|creation)|"
+            r"shellcode|shell\s+code|0[\s-]?day\s+exploit|"
+            r"(?:create|write|build)\s+(?:a\s+)?(?:virus|worm|trojan|backdoor|keylogger))"
+        ),
+        base_score=55,
+        description=(
+            "Payload splitting via step-enumerated decomposition: a harmful request is "
+            "broken into numbered steps where individual steps appear benign but the full "
+            "sequence reveals a dangerous intent. 'Speak Easy' (ICML 2025, "
+            "arxiv:2502.04322) showed this technique raises GPT-4o's attack success rate "
+            "from 9.2% to 55.5%, and to over 90% when combined with multilingual "
+            "translation. No single step triggers safety checks; the dangerous content "
+            "surfaces only in the final step after benign framing has been established."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered query as a combined request rather than "
+            "individually. Reject multi-step inputs where later steps introduce harmful "
+            "content that step-by-step framing obscures. Apply the same risk assessment "
+            "to the full sequence as to any single-step equivalent request."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_translation_extraction",
+        name="Translation-Framing System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:translate|render|convert|rewrite|paraphrase|express|output|write|give|show|say)\b"
+            r"[\s\S]{0,60}?"
+            r"(?:your\s+|the\s+|all\s+(?:of\s+)?(?:your\s+)?)?"
+            r"(?:system\s+(?:prompt|instructions?|config(?:uration)?|guidelines?|message|rules?)|"
+            r"initial\s+(?:prompt|instructions?|message)|"
+            r"(?:internal|hidden|base|core|original|actual|real|true)\s+"
+            r"(?:prompt|instructions?|config(?:uration)?|guidelines?|rules?))\b"
+            r"[\s\S]{0,80}?"
+            r"\b(?:in(?:to)?|to|as)\s+"
+            r"(?:another\s+language|a\s+different\s+language|foreign\s+language|"
+            r"French|German|Spanish|Chinese|Mandarin|Japanese|Korean|Arabic|Russian|"
+            r"Portuguese|Italian|Dutch|Hindi|Turkish|Vietnamese|Thai|Polish|Ukrainian|"
+            r"[A-Z][a-z]+(?:ese|ish|ian|ic)\b)"
+        ),
+        base_score=65,
+        description=(
+            "Translation-framing system-prompt extraction: the attacker requests the model "
+            "to translate or rewrite its system instructions into a foreign language, "
+            "disguising an extraction attempt as a benign translation task. 'Speak Easy' "
+            "(ICML 2025, arxiv:2502.04322) demonstrated that multilingual framing bypasses "
+            "safety classifiers trained primarily on English-language extraction requests; "
+            "combining translation with step decomposition raised GPT-4o's attack success "
+            "rate above 90%. Not covered by `pi_system_prompt_leak` (direct disclosure) "
+            "or `jb_structured_extraction` (JSON/YAML field requests)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Asking to 'translate' the system prompt is a disguised extraction attempt. "
+            "Reject requests that combine system-prompt references with translation or "
+            "reformatting verbs regardless of target language. Apply the same output-filter "
+            "checks used for direct prompt-leak requests."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
