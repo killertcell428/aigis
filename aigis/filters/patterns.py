@@ -1207,6 +1207,73 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate|make)\s+(?:me\s+)?(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\s+"
+            r"[\s\S]{0,200}?"
+            r"(?:how\s+to|step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)|"
+            r"synthesi[sz]|manufactur|hack\s+into|exploit|"
+            r"(?:create|build|make)\s+(?:a\s+)?(?:virus|malware|weapon|bomb|explosive)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|ricin)"
+        ),
+        base_score=55,
+        description=(
+            "Adversarial poetry jailbreak: a creative-format directive (poem, rap, ballad, "
+            "haiku, limerick, etc.) combined within ~200 characters with a harmful how-to "
+            "request or dangerous subject. Researchers at arxiv:2511.15304 (EMNLP 2025) "
+            "demonstrated that poetic framing achieves a 62% average attack success rate "
+            "across 25 frontier models for hand-crafted verse, and a standardised meta-prompt "
+            "that auto-converts any harmful request into poetry achieves 43% ASR — up to 18x "
+            "higher than the same request in plain prose. Creative framing disrupts the "
+            "pattern-matching heuristics that safety guardrails rely on. The pattern matches "
+            "the key structural signal: a poem/song creation verb followed by dangerous content "
+            "within a bounded window."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative framing (poem, rap, song) does not exempt a request from safety "
+            "policies. Reject inputs that pair a creative-format directive with harmful "
+            "how-to instructions or dangerous substances. Treat any creative-format wrapper "
+            "around dangerous content the same as a direct harmful request."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition Attack",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):\-]\s+[\s\S]{10,300}?"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):\-]\s+[\s\S]{10,300}?"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):\-]\s+[\s\S]{0,200}?"
+            r"(?:chemical|toxic|poison|explosive|synthesi[sz]|manufactur|weapon|drug|"
+            r"hack|exploit|malware|vulnerabilit|injection|bypass)"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting / step-enumerated decomposition: a harmful request is "
+            "broken into three or more numbered sub-questions, each appearing innocuous in "
+            "isolation, with a dangerous keyword appearing only in a later step. "
+            "Chan et al. 'Speak Easy' (ICML 2025, arxiv:2502.04322) showed that "
+            "decomposing requests into multiple steps combined with multilingual translation "
+            "raises the average attack success rate by +0.319 and HarmScore by +0.426 across "
+            "GPT-4o, Claude, and other frontier models. No single step triggers safety "
+            "filters because each part appears benign; the dangerous intent emerges only "
+            "when the full sequence is evaluated as a unit."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered query as a combined request, not in isolation. "
+            "Reject multi-step inputs where any step introduces dangerous keywords (weapons, "
+            "synthesis, malware), even if early steps appear benign. Apply the same content "
+            "policy to the full message that would apply to a direct request for the same topic."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
