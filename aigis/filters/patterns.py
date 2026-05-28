@@ -1136,6 +1136,72 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "is governed by institutional ethics review, not AI chat."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_cipher_output_evasion",
+        name="Cipher-Encoded Output to Evade Content Monitoring",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:respond|reply|answer|output)\s+(?:to\s+this\s+)?(?:in|using)\s+"
+            r"(?:rot[-\s]?1[23]|base[-\s]?64|caesar(?:\s+cipher)?|"
+            r"morse(?:\s+code)?|pig\s+latin|vigenere|atbash|"
+            r"leet(?:speak)?|binary\s+(?:code|encoding))\b"
+            r".{0,120}"
+            r"(?:filter|censor|detect|bypass|evade|safety|monitor|moderat)"
+        ),
+        base_score=50,
+        description=(
+            "Requests the AI to encode or cipher its response — using ROT13, Base64, Caesar "
+            "cipher, Morse code, or similar encoding — with the explicit intent of evading a "
+            "content filter, safety monitor, or moderation system. RoguePrompt "
+            "(arXiv:2511.18790, Nov 2025, CODASPY '26) used dual-layer encoding (ROT-13 + "
+            "Vigenère) to achieve 84.7% bypass on GPT-4o production moderation and 93.93% "
+            "average bypass across multiple frontier LLMs. Complements `pi_encoding_bypass` "
+            "(which catches encoding-named instructions) by targeting the output-encoding form."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Requesting cipher-encoded output to avoid safety monitoring is a direct filter-"
+            "evasion attack. The AI's responses must never be intentionally obfuscated from "
+            "monitoring systems. Reject any input that asks the AI to encode its response in "
+            "a cipher in order to defeat safety or content-moderation checks."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_decode_and_follow",
+        name="Decode-and-Follow Novel Cipher Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:decode|decrypt|decipher)\s+"
+            r"(?:the\s+)?(?:following|this|above|below)?\s*"
+            r"(?:rot[-\s]?1[23]|caesar(?:\s+cipher)?|vigenere|atbash|"
+            r"morse(?:\s+code)?|pig\s+latin|leet(?:speak)?|binary(?:\s+(?:code|encoding))?|"
+            r"custom\s+(?:cipher|encoding)|encoded?\s+(?:text|message|string|content|instructions?))\b"
+            r".{0,200}"
+            r"(?:and\s+)?(?:follow\s+(?:the\s+)?(?:instruction|order|command|directive|request)|"
+            r"act\s+on|carry\s+out|implement|obey|perform)\b"
+        ),
+        base_score=60,
+        description=(
+            "Requests the AI to decode content encoded in a novel or non-standard cipher "
+            "(ROT13, Caesar variant, Vigenère, Morse, pig latin, custom encoding) and then "
+            "act on or follow the decoded instructions. RoguePrompt (arXiv:2511.18790, "
+            "Nov 2025) and the ACE/LACE family (arXiv:2402.10601, ICLR 2025) use this "
+            "structure to embed harmful instructions that survive static content filters: "
+            "Caesar-variant ACE achieves 67% ASR on GPT-4o; layered LACE stacks 2–3 cipher "
+            "layers to defeat detection further. Complements `pi_base64_payload` (which covers "
+            "base64 + execute/run) by targeting non-standard ciphers and 'follow/obey' verbs."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Decode-and-follow requests embed harmful instructions in a cipher the AI is "
+            "asked to interpret and act upon. The encoded payload bypasses static filters "
+            "because only the decoding instruction — not the harmful content — is visible in "
+            "plain text. Reject any input that asks the AI to decode a cipher and then follow "
+            "or obey the decoded result. Decode externally and scan the plaintext before "
+            "passing to the AI."
+        ),
+    ),
     # --- v1.0.18 jailbreak-extraction cycle 3 ---
     DetectionPattern(
         id="jb_structured_extraction",
