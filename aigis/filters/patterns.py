@@ -1207,6 +1207,108 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\b"
+            r"[\s\S]{0,200}?"
+            r"(?:step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)\s+(?:make|build|create|synthesize)|"
+            r"synthesiz|manufactur|hack\s+into|"
+            r"create\s+(?:a\s+)?(?:virus|malware|weapon)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosiv)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, ballad, or song directive combined with a "
+            "harmful how-to or dangerous subject within ~200 chars. Safety filters tend to "
+            "relax intent scoring on creative-writing prompts, letting dangerous requests slip "
+            "through when framed as verse. arxiv:2511.15304 (Nov 2025) measured 62% average "
+            "attack success rate (ASR) across 25 frontier models with hand-crafted poems and "
+            "43% ASR with an automated verse-conversion meta-prompt; poetic variants achieved "
+            "up to 3× higher ASR than equivalent plain-prose requests."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative framing does not exempt content from safety policies. Reject inputs that "
+            "combine a poem/song/rap directive with harmful how-to requests, dangerous substances, "
+            "or weapon construction. Apply output scanning in addition to input scanning, as the "
+            "model may embed harmful content within verse structure."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_poem_extraction",
+        name="Poem-Embedded System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|create|compose|generate|make)\s+"
+            r"(?:a\s+|an\s+)?(?:poem|rap|ballad|haiku|limerick|sonnet|ode|verse|lyric|rhyme|song)\b"
+            r"[\s\S]{0,150}?"
+            r"(?:includes?|incorporates?|embeds?|contains?|starts?\s+with|starting\s+with|"
+            r"begins?\s+with|beginning\s+with)\s+"
+            r"[\s\S]{0,60}?"
+            r"(?:system\s+(?:prompt|instruction|message|config(?:uration)?)s?|"
+            r"initial\s+(?:prompt|instruction)s?|"
+            r"(?:hidden|internal|base|actual|real|original)\s+(?:instruction|prompt|config(?:uration)?)s?|"
+            r"first\s+words?\s+of\s+(?:the\s+)?(?:system|your|initial)\b|"
+            r"your\s+(?:system|initial)\s+(?:prompt|instruction)s?)"
+        ),
+        base_score=70,
+        description=(
+            "Poem-based system-prompt extraction: the model is asked to write a poem, song, or "
+            "verse that embeds or incorporates the system prompt as part of the creative content. "
+            "This steganographic extraction technique exploits the relaxed intent scoring in "
+            "creative-writing mode, causing the model to reveal confidential instructions inside "
+            "a poem. Confirmed HIGH severity (CVSS 7.5) and reproducible across all tested Qwen "
+            "model variants and DeepSeek V4 (QwenLM/Qwen3 GitHub Issue #1847, May 2026); the "
+            "attack asks that the system prompt's first words appear in the poem's opening lines. "
+            "Not covered by jb_sandwich_extraction (verbatim repetition) or "
+            "jb_structured_extraction (JSON/dict framing)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Requesting that a poem or song incorporate the system prompt's content is a "
+            "stealthy extraction attack. Reject inputs that ask for creative output embedding "
+            "system-prompt content. Apply output scanning that flags responses where system-"
+            "prompt text appears embedded in verse."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_meta_redteam_generation",
+        name="Meta-Jailbreak: Red-Team Attack Prompt Generation",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:generate|write|create|produce|list|output|give(?:\s+me)?)\s+"
+            r"(?:\d+\s+)?(?:diverse\s+)?(?:adversarial|attack|jailbreak|bypass|harmful|unsafe)\s+"
+            r"(?:prompt|jailbreak|question|instruction|input|message|payload)s?"
+            r"|"
+            r"(?:act\s+as|you\s+are|become|play(?:\s+the\s+role\s+of)?)\s+"
+            r"(?:a\s+|an\s+)?(?:red[\s-]?team(?:er)?|adversarial\s+(?:ai|model|assistant)|"
+            r"jailbreak(?:er|ing\s+tool)?)\s*"
+            r"(?:and\s+)?(?:generate|write|create|produce|craft)\b"
+        ),
+        base_score=65,
+        description=(
+            "Meta-jailbreak: the user instructs the model to generate jailbreak prompts, attack "
+            "payloads, or adversarial inputs, or to adopt a red-teamer persona that produces "
+            "attack content. The J2 (Jailbreaking-to-Jailbreak) technique (arxiv:2502.09638, "
+            "Feb 2025, Scale AI) demonstrated that jailbreaking a capable reasoning model into "
+            "a red-teamer role enables near-universal attack-prompt transfer to other models "
+            "including GPT-4o, Gemini-1.5-Pro, and Claude Sonnet 3.5; the generated attack "
+            "prompts transferred without further modification."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Requests to generate jailbreak prompts or to act as an adversarial red-teamer are "
+            "self-referential attack vectors. Reject inputs instructing the model to produce "
+            "attack payloads or adversarial prompts, even when framed as security research. "
+            "Legitimate red-teaming uses dedicated frameworks, not conversational AI."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
