@@ -1207,6 +1207,87 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_special_token_injection",
+        name="Chat Template Special Token Injection (MetaBreak)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"<\|im[_-]start\|>|<\|im[_-]end\|>|"
+            r"<\|eot[_-]id\|>|<\|end(?:of)?text\|>|"
+            r"<\|(?:system|user|assistant|human|gpt|bot)\|>|"
+            r"\[INST\]|\[\/INST\]|<<SYS>>|<</SYS>>|"
+            r"\[/SYS\]|\[SYS\]|\[SYSTEM\]"
+            r")"
+        ),
+        base_score=80,
+        description=(
+            "Detects chat-template special tokens injected into user-facing text. Each of these "
+            "tokens is a structural delimiter used internally by LLM inference frameworks "
+            "(Llama 2/3: `[INST]`, `<<SYS>>`, `<|eot_id|>`; ChatML: `<|im_start|>`, "
+            "`<|im_end|>`; GPT/Mistral: `<|endoftext|>`). When an attacker embeds them in "
+            "user input, the model may interpret injected text as a prior assistant turn or "
+            "privileged system message, hijacking the conversation structure. MetaBreak "
+            "(arXiv:2510.10271, Oct 2024) demonstrated that this technique outperforms "
+            "GPTFuzzer by 34.8% and boosts combined attack success by 20–24%. These tokens "
+            "never appear in legitimate user messages — they are tokenizer/framework artifacts "
+            "only — making this a near-zero false-positive signal."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Chat-template special tokens in user input are a reliable indicator of a "
+            "conversation-structure hijack attempt. Strip or reject inputs containing "
+            "`[INST]`, `<<SYS>>`, `<|im_start|>`, `<|eot_id|>`, `<|endoftext|>`, or "
+            "similar tokenizer-level delimiters before forwarding to the model. Apply "
+            "the same check to tool outputs and retrieved content, as attackers may embed "
+            "these tokens in external data to affect downstream agent turns."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_cipher_role_framing",
+        name="Cipher Communication Role Assignment (CipherChat / SEAL)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            # Arm 1: "we will communicate entirely in ROT13" role setup
+            r"(?:we\s+(?:will|shall)\s+communicate\s+(?:entirely|exclusively|only)\s+"
+            r"(?:in|using)\s+(?:rot[- ]?13|base[- ]?64|caesar|morse\s*code|hex|atbash|vigenere))"
+            r"|"
+            # Arm 2: "respond/answer only in cipher" persona assignment
+            r"(?:(?:respond|answer|speak|talk|communicate)\s+(?:only|entirely|exclusively)?\s*"
+            r"(?:in|using)\s+(?:rot[- ]?13|base[- ]?64|caesar\s*cipher|morse\s*code|atbash|vigenere))"
+            r"|"
+            # Arm 3: "decode [cipher] … then answer" — SEAL stacked cipher endpoint
+            r"(?:(?:decode|decrypt)\s+(?:this|the\s+following)"
+            r"[\s\S]{0,80}?"
+            r"(?:rot[- ]?13|base[- ]?64|caesar|shift[- ]?\d+)"
+            r"[\s\S]{0,80}?"
+            r"(?:then\s+)?(?:answer|respond|provide|explain))"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Detects the role-assignment and decode-then-answer setup phrases used in "
+            "cipher-based jailbreaks. CipherChat (arXiv:2308.06463) instructs the model "
+            "to role-play as a 'CipherAssistant' that communicates exclusively in ROT13 "
+            "or Base64, then sends harmful requests encoded in that cipher — achieving "
+            "~59% ASR on GPT-4 and near-100% on GPT-3.5. SEAL (arXiv:2505.16241, May 2025) "
+            "extends this to stacked adaptive ciphers (Caesar + Base64 + reversal), reaching "
+            "100% ASR on DeepSeek-R1 and Gemini 2.0 Flash. The existing `pi_encoding_bypass` "
+            "rule (score 55) only matches `(cipher name) + (instruction|command|prompt)` and "
+            "misses the role-setup and decode-then-answer forms that are the distinctive "
+            "markers of these attacks."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Instructions to 'communicate exclusively in ROT13' or to 'decode [cipher] and "
+            "then answer' are the setup phase of a cipher-based jailbreak. Reject inputs that "
+            "assign the model a cipher-communication persona or chain a decoding step directly "
+            "to an answer instruction. Decode all encodings in application code before "
+            "forwarding to the model, and re-scan the decoded content with the full rule set."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------

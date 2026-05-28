@@ -12,6 +12,25 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Hardened
+
+- Added detection for chat-template special tokens (`<|im_start|>`, `[INST]`, `<<SYS>>`,
+  `<|eot_id|>`, `<|endoftext|>`, and related variants) injected into user-submitted text.
+  These are internal inference-framework delimiters that never appear in legitimate user
+  messages; their presence indicates an attempt to forge a prior privileged turn or system
+  message, making the AI believe a different conversation history exists. MetaBreak
+  (arXiv:2510.10271, 2024) demonstrated this technique boosts combined attack success by
+  20–24%. The new rule (`jb_special_token_injection`, score 80) blocks such inputs before
+  they reach the model.
+
+- Added detection for cipher communication role-framing, the setup phase of CipherChat
+  (arXiv:2308.06463) and SEAL (arXiv:2505.16241, May 2025) jailbreaks. These attacks instruct
+  the model to act as a "CipherAssistant" that communicates exclusively in ROT13, Base64, or
+  a chain of stacked ciphers, then send harmful requests encoded in that cipher — reaching up
+  to 100% attack success on several models. The new rule (`jb_cipher_role_framing`, score 65)
+  covers the "communicate entirely in ROT13" role-assignment phrase and the "decode [cipher]
+  then answer" execution pivot that were not matched by the existing encoding-bypass rule.
+
 ## [1.1.8] - 2026-05-21
 
 ### Hardened
