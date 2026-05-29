@@ -157,7 +157,7 @@ OSS Core (free, forever)
 - [ ] **Multi-tenant enhancements**: Per-tenant policies and usage management
 - [ ] **SLA-backed support** (Pro: 24h, Enterprise: 4h)
 - [ ] **Lightweight ML classifier (optional)** -- BERT-based injection detection as optional dependency. Zero-dependency core maintained
-- [ ] **SIEM integration** (Splunk/Datadog/Azure Sentinel) -- integration into existing enterprise infrastructure
+- [ ] **SIEM integration** (Splunk/Datadog/Azure Sentinel) -- integration into existing enterprise infrastructure _(foundation slice in progress: [#98](https://github.com/killertcell428/aigis/issues/98) — extension point + ECS mapper + HTTPS forwarder; vendor-specific transports tracked as follow-ups)_
 
 ### KPI Targets
 | Metric | Target |
