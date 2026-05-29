@@ -1207,6 +1207,80 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.2.0 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_cipher_response_request",
+        name="Cipher / Encoding Response Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:respond|reply|answer|write|output|give|provide|generate|speak|communicate)\b"
+            r"[\s\S]{0,60}?"
+            r"\b(?:in|using|via|through)\b"
+            r"[\s\S]{0,40}?"
+            r"(?:rot[-_\s]?1[36]\b|caesar(?:\s+cipher)?|vigen[eè]re(?:\s+cipher)?|"
+            r"pig\s*latin|l(?:33)?t\s*sp(?:eak|ak)|leet\s*(?:speak|code)|"
+            r"morse(?:\s+code)?|base[-_\s]?6[24]\b|"
+            r"atbash\s*cipher|rail\s*fence\s*cipher|affine\s*cipher|"
+            r"substitution\s+cipher|secret\s+(?:cipher|code\s+alphabet))"
+        ),
+        base_score=60,
+        description=(
+            "Input asks the model to respond using a classical cipher or encoding scheme "
+            "(ROT13, Caesar, Vigenère, pig Latin, leetspeak, Morse code, base64) so that "
+            "output safety filters cannot detect the content. Yuan et al. (CipherChat, "
+            "arxiv:2308.06463, 2023) documented near-100% attack success rate on GPT-4 "
+            "across 11 safety domains when prompting the model to communicate via cipher. "
+            "Tafreshian (RoguePrompt, arxiv:2511.18790, Nov 2025) achieved 93.93% "
+            "production-filter bypass and 70.18% full execution success on GPT-4o using "
+            "dual-layer ROT-13 + Vigenère. The attack hides the harmful response from "
+            "output scanners because the model itself decodes the instruction while the "
+            "scanner only sees the encoded form."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM05: Improper Output Handling",
+        remediation_hint=(
+            "Asking the model to respond using a cipher is an output-filter evasion technique. "
+            "Reject inputs that instruct the model to communicate in ROT13, Caesar cipher, "
+            "pig Latin, base64, Morse code, or similar encodings. Apply output-side decoding "
+            "and scanning: decode base64/ROT13 in responses before running content filters."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):\-]\s+"
+            r"[\s\S]{10,200}?"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):\-]\s+"
+            r"[\s\S]{10,200}?"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):\-]\s+"
+            r"[\s\S]{0,200}?"
+            r"(?:synthesize?|explosive|poison(?:ous)?|nerve\s+agent|malware|ransomware|"
+            r"exploit\b|hack\b|bioweapon|fentanyl|methamphetamine|sarin|"
+            r"kill\s+(?:people|humans?|someone)|"
+            r"instructions?\s+(?:for|to)\s+(?:make|create|build|produce)\s+"
+            r"(?:a\s+)?(?:weapon|bomb|drug))"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting: a harmful request decomposed into three or more numbered "
+            "steps where early steps appear benign but later steps request dangerous "
+            "information. Each individual step may evade single-turn content filters; "
+            "the full sequence extracts harmful content incrementally. Yong et al. "
+            "('Speak Easy', ICML 2025, arxiv:2502.04322) showed this technique raises "
+            "GPT-4o's attack success rate from 9.2% to 55.5% on the WildChat benchmark, "
+            "and above 90% when combined with multilingual translation. Score 45 (medium) "
+            "because numbered steps are common in legitimate instructions; this rule is "
+            "designed to complement other jailbreak signals via co-occurrence scoring."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered query as a combined request, not in isolation. "
+            "Reject multi-step inputs where any step contains dangerous topic keywords. "
+            "Raise alert priority when step decomposition appears alongside other jailbreak "
+            "signals such as fictional framing or role-play persona instructions."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
