@@ -1207,6 +1207,102 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    DetectionPattern(
+        id="jb_ai_jailbreak_agent",
+        name="AI-Assigned-to-Jailbreak Meta-Prompt",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"your\s+(?:task|goal|objective|job|mission)\s+is\s+to\s+jailbreak|"
+            r"jailbreak\s+(?:the\s+)?(?:following|target|this|above)\s+"
+            r"(?:ai|model|llm|assistant|system|chatbot)|"
+            r"(?:convince|persuade|trick|manipulate|fool|deceive|coerce)\s+"
+            r"(?:the\s+)?(?:ai|model|llm|assistant|system|chatbot)\s+"
+            r"(?:into|to)\s+(?:ignoring|bypassing|violating|disregarding|overriding|circumventing)\s+"
+            r"(?:its\s+)?(?:safety|restrictions?|guidelines?|rules?|policies?|alignment|training)"
+            r")"
+        ),
+        base_score=75,
+        description=(
+            "AI-assigned-to-jailbreak meta-prompt: an orchestrator model is instructed to "
+            "autonomously jailbreak a target AI through multi-turn conversation. Zhao et al. "
+            "(Nature Communications, 2026) showed large reasoning models assigned this goal "
+            "achieve 97.14% ASR with no human in the loop. Detectable as the initiating "
+            "meta-prompt: 'your task is to jailbreak the following model' or equivalent."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "A prompt whose stated goal is to jailbreak another AI is a high-confidence attack "
+            "indicator. Reject inputs assigning jailbreak tasks. In multi-agent pipelines, "
+            "validate that orchestrator prompts do not assign jailbreak-assignment language "
+            "to sub-agents."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_deep_inception",
+        name="DeepInception Nested-Layer Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"(?:we\s+are\s+(?:now\s+)?in|start(?:ing)?\s+(?:at|from))\s+layer\s+\d|"
+            r"(?:please\s+)?reach\s+layer\s+\d|"
+            r"each\s+(?:character|person|agent|individual)\s+(?:can\s+|will\s+)?"
+            r"create\s+(?:their|its|his|her)\s+own\s+"
+            r"(?:scene|scenario|world|story|simulation|dream|layer)"
+            r")"
+        ),
+        base_score=60,
+        description=(
+            "DeepInception nested-layer jailbreak: a recursive fictional scenario where "
+            "characters at layer i create new scenarios at layer i+1, reaching a depth where "
+            "safety constraints are absent. Li et al. (Stanford, arxiv:2311.03191, 2025) "
+            "reported 42.8% ASR on LLaMA-2, 55.6% on GPT-3.5, and 41.6% on GPT-4. "
+            "The 'reach layer N' and 'each character creates their own scene' phrases are "
+            "structurally distinctive to this attack family."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Nested-layer scenarios that instruct the model to 'reach layer N' are a "
+            "well-documented jailbreak structure. Fictional framing does not reduce output "
+            "risk — apply the same content policy regardless of fictional nesting depth."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_news_frame_bypass",
+        name="News / Crime-Report Nested Framing Bypass (RTS-Attack)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"(?:according\s+to|as\s+(?:reported|described)\s+(?:in|by))\s+"
+            r"(?:(?:breaking|recent|this|a)\s+)?news(?:\s+reports?)?|"
+            r"(?:crime|incident|breaking|news)\s+(?:report|story|article|coverage)\s+"
+            r"(?:describes?|shows?|reveals?|details?|explains?|states?|indicates?)"
+            r")\s*[\s\S]{0,200}?"
+            r"(?:"
+            r"(?:step[- ]?by[- ]?step|detailed?|exact|complete)\s+"
+            r"(?:instructions?|steps?|guide|process|procedure|method|walkthrough)|"
+            r"(?:analyze|supplement|provide|explain|describe)\s+(?:the\s+)?(?:exact|specific|detailed?)\s+"
+            r"(?:steps?|process|procedure|method|technique|way|information)"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "News or crime-report nested framing bypass (RTS-Attack): a journalistic or "
+            "crime-report narrative is constructed around the harmful topic, then the model is "
+            "asked to 'supplement detailed steps' within that framing. Unlike 'jb_fictional_bypass' "
+            "(imaginary worlds) this attack uses plausible news coverage, making refusal feel "
+            "like withholding fact. Yang et al. (arxiv:2510.01223, Oct 2025) reported 96.69% "
+            "average ASR across six LLMs (GPT-4o 96.15%, Gemini-Pro 98.65%)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Framing a harmful request as journalistic analysis of a crime report does not "
+            "change the nature of the output. Reject inputs that cite a news or crime report "
+            "and then request step-by-step procedural detail. Content policies apply "
+            "regardless of whether the request is framed as supplementing factual news coverage "
+            "or asking directly. Apply output scanning in addition to input filtering."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
