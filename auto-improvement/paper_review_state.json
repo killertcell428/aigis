@@ -1,4 +1,92 @@
 {
-  "seen": {},
-  "runs": []
+  "seen": {
+    "url:https://arxiv.org/abs/2604.01637": {
+      "title": "SecLens: Role-Specific Evaluation of LLMs for Security Vulnerability Detection",
+      "date": "2026.04.02",
+      "venue": "arXiv",
+      "url": "https://arxiv.org/abs/2604.01637",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/abs/2603.09452v1": {
+      "title": "CyberThreat-Eval: Can Large Language Models Automate Real-World Threat Research?",
+      "date": "2026.03.10",
+      "venue": "TMLR",
+      "url": "https://arxiv.org/abs/2603.09452v1",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/pdf/2602.00513": {
+      "title": "Minerva: Reinforcement Learning with Verifiable Rewards for Cyber Threat Intelligence LLMs",
+      "date": "2026.01.31",
+      "venue": "arxiv",
+      "url": "https://arxiv.org/pdf/2602.00513",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/pdf/2602.00432": {
+      "title": "Towards a Cognitive-Support Tool for Threat Hunters",
+      "date": "2026.01.31",
+      "venue": "arxiv",
+      "url": "https://arxiv.org/pdf/2602.00432",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/pdf/2601.22720": {
+      "title": "AEGIS: White-Box Attack Path Generation using LLMs and Training Effectiveness Evaluation for Large-Scale Cyber Defence Exercises",
+      "date": "2026.01.30",
+      "venue": "arxiv",
+      "url": "https://arxiv.org/pdf/2601.22720",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/pdf/2601.22159": {
+      "title": "RedSage: A Cybersecurity Generalist LLM",
+      "date": "2026.01.29",
+      "venue": "arxiv",
+      "url": "https://arxiv.org/pdf/2601.22159",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/pdf/2601.21261": {
+      "title": "User-Centric Phishing Detection: A RAG and LLM-Based Approach",
+      "date": "2026.01.29",
+      "venue": "arxiv",
+      "url": "https://arxiv.org/pdf/2601.21261",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/pdf/2601.21051": {
+      "title": "Llama-3.1-FoundationAI-SecurityLLM-Reasoning-8B Technical Report",
+      "date": "2026.01.28",
+      "venue": "arxiv",
+      "url": "https://arxiv.org/pdf/2601.21051",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/pdf/2601.15269": {
+      "title": "Lightweight LLMs for Network Attack Detection in IoT Networks",
+      "date": "2026.01.21",
+      "venue": "arxiv",
+      "url": "https://arxiv.org/pdf/2601.15269",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    },
+    "url:https://arxiv.org/pdf/2601.14614": {
+      "title": "Towards Cybersecurity Superintelligence: from AI-guided humans to human-guided AI",
+      "date": "2026.01.21",
+      "venue": "arxiv",
+      "url": "https://arxiv.org/pdf/2601.14614",
+      "first_seen_utc": "2026-05-29T04:44:33Z",
+      "relevant": false
+    }
+  },
+  "runs": [
+    {
+      "run_utc": "2026-05-29T04:44:33Z",
+      "picked": 10,
+      "relevant": 0,
+      "research": "auto-improvement/research/2026-05-29T04-44_paper-batch.md"
+    }
+  ]
 }
