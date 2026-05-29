@@ -193,6 +193,35 @@ def pick_unseen(entries: list[Entry], seen: dict, limit: int) -> list[Entry]:
     return fresh[:limit]
 
 
+class JudgeAuthError(RuntimeError):
+    """Raised when the Anthropic SDK cannot authenticate (missing/invalid key).
+
+    Surfaced separately from per-paper errors so the loop can abort the entire
+    run cleanly instead of marking every paper as "judge error: ..." and
+    advancing state past unjudged entries (see issues #93 / #95 / #96).
+    """
+
+
+def _is_auth_error(exc: Exception) -> bool:
+    """Heuristic: does this exception look like a missing/invalid API key?
+
+    Anthropic SDK raises ``anthropic.AuthenticationError`` / ``PermissionDeniedError``
+    on a bad key, but the most common production failure mode is the SDK's
+    "Could not resolve authentication method" RuntimeError when no key is
+    available at all. Match all three by class name + message keywords so we
+    don't have to import the SDK just for `isinstance` checks.
+    """
+    name = type(exc).__name__
+    if name in {"AuthenticationError", "PermissionDeniedError"}:
+        return True
+    text = str(exc).lower()
+    return (
+        "could not resolve authentication method" in text
+        or "expected one of api_key" in text
+        or "x-api-key" in text and "authorization" in text
+    )
+
+
 def judge_with_anthropic(entry: Entry) -> Verdict:
     import anthropic  # noqa: PLC0415 — optional dep, only needed in non-dry-run
 
@@ -407,16 +436,33 @@ def run(argv: Iterable[str] | None = None) -> int:
 
     batch: list[tuple[Entry, Verdict]] = []
     pending_paths: list[Path] = []
+    judge_errors: list[tuple[Entry, Exception]] = []
     for entry in picked:
         try:
             verdict = judge_with_anthropic(entry)
-        except Exception as exc:  # pragma: no cover — surfaced in the issue body
+        except Exception as exc:  # pragma: no cover — surfaced in run summary
+            # Abort the entire run on the first auth failure: every subsequent
+            # call would fail the same way, and marking unjudged papers as
+            # `seen` would permanently skip them once the credential is fixed
+            # (which is exactly what produced issues #93 / #95 / #96).
+            if _is_auth_error(exc):
+                print(
+                    "FATAL: anthropic auth failed — aborting run without writing state "
+                    f"or opening an issue. Fix ANTHROPIC_API_KEY and retry. "
+                    f"({type(exc).__name__}: {exc})",
+                    file=sys.stderr,
+                )
+                raise JudgeAuthError(str(exc)) from exc
             print(f"WARN: judge failed for {entry.title!r}: {exc}", file=sys.stderr)
-            verdict = Verdict(False, None, None, f"judge error: {exc}", None, "")
+            judge_errors.append((entry, exc))
+            # Skip this entry entirely: don't add to batch, don't mark seen.
+            # Tomorrow's run will pick it up again so we don't silently lose it.
+            continue
         batch.append((entry, verdict))
         if verdict.relevant:
             pending_paths.append(write_pending(entry, verdict, today))
-        # Mark seen regardless of verdict so we don't re-judge it tomorrow.
+        # Mark seen only after a successful judge call so we don't permanently
+        # skip a paper that failed transiently.
         state["seen"][entry.key] = {
             "title": entry.title,
             "date": entry.date,
@@ -425,6 +471,17 @@ def run(argv: Iterable[str] | None = None) -> int:
             "first_seen_utc": now.isoformat(timespec="seconds") + "Z",
             "relevant": verdict.relevant,
         }
+
+    if not batch:
+        # Every paper errored individually (rate limits, parse errors, etc).
+        # Don't open a misleading "0 candidates" issue — exit non-zero so the
+        # workflow shows red and the maintainer notices.
+        err_lines = "\n".join(f"  - {e.title!r}: {exc}" for e, exc in judge_errors)
+        print(
+            f"FATAL: all {len(picked)} papers failed to be judged this run:\n{err_lines}",
+            file=sys.stderr,
+        )
+        return 3
 
     research_path = write_research(today_path, [(e, v) for e, v in batch], args.source_url)
 
@@ -452,4 +509,9 @@ def run(argv: Iterable[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(run())
+    try:
+        raise SystemExit(run())
+    except JudgeAuthError:
+        # Already logged a clear FATAL above. Exit 4 so the workflow step
+        # fails red without dumping a noisy Python traceback.
+        raise SystemExit(4)
