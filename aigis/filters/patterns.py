@@ -1207,6 +1207,84 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- auto-improvement cycle 3 (jailbreak-extraction, fourth pass) ---
+    DetectionPattern(
+        id="jb_translation_extraction",
+        name="Translation-Based System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:translate|render|express|provide|give|write|say)\s+"
+            r"(?:(?:me|us|them|to\s+me)\s+)?"
+            r"(?:(?:your|the)\s+)?"
+            r"(?:system\s+(?:prompt|instruction|config(?:uration)?)|"
+            r"initial\s+(?:prompt|instruction)|"
+            r"(?:hidden|base|internal|original|actual|true)\s+(?:instruction|prompt|config(?:uration)?)s?)"
+            r"[\s\S]{0,80}?"
+            r"(?:in(?:to)?\s+(?:french|spanish|german|chinese|japanese|arabic|russian|portuguese|"
+            r"italian|korean|hindi|dutch|swedish|polish|turkish|thai|greek|"
+            r"a\s+(?:different|another|foreign)\s+language)|"
+            r"(?:french|spanish|german|chinese|japanese|arabic|russian|portuguese|italian|korean|hindi)"
+            r"\s+(?:language|translation|version))"
+        ),
+        base_score=60,
+        description=(
+            "Translation-based system-prompt extraction: the attacker requests the model to "
+            "translate its system prompt or internal instructions into a specific foreign "
+            "language. This bypasses naive keyword-based detectors that only look for 'show me "
+            "your system prompt', since translation requests use different vocabulary "
+            "('translate', 'render', 'in French') while achieving the same extraction goal. "
+            "Documented as a guardrail-evasion technique in DecipherGuard (arxiv:2509.16870, "
+            "Sep 2025), which lists language-based obfuscation alongside base64 as a primary "
+            "extraction channel, and in the Adversarial Prompt Translation study "
+            "(arxiv:2410.11317, Oct 2024), which achieved 81.8% ASR against seven commercial "
+            "LLMs using multilingual obfuscation."
+        ),
+        owasp_ref="OWASP LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Requesting the system prompt in a foreign language is functionally equivalent to "
+            "requesting it in English. Content policies and system-prompt confidentiality apply "
+            "regardless of output language. Reject requests that combine instruction-access "
+            "vocabulary ('translate', 'give', 'write') with a system-prompt reference and a "
+            "target language, or apply the same redaction logic as for direct extraction."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_encoded_extraction",
+        name="Encoded-Output System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:(?:output|return|show|give|print|display|write|encode|dump|export)\s+"
+            r"[\s\S]{0,60}?"
+            r"(?:system\s+(?:prompt|instruction|config(?:uration)?)|"
+            r"initial\s+(?:prompt|instruction)|"
+            r"(?:hidden|base|internal|original|actual|true)\s+(?:instruction|prompt|config(?:uration)?)s?)"
+            r"[\s\S]{0,60}?"
+            r"(?:(?:as|in|using|encoded?\s+(?:in|as|with)?)\s+)?(?:base64|b64|base-64|"
+            r"hex(?:\s+encod\w*)?|rot.?13|caesar\s+cipher)"
+            r"|(?:base64|b64|hex|rot.?13)\s+(?:encod\w*\s+)?(?:of\s+)?"
+            r"(?:your\s+)?(?:system\s+(?:prompt|instruction)|initial\s+(?:prompt|instruction)|"
+            r"(?:hidden|internal|original|true)\s+(?:instruction|prompt)s?))"
+        ),
+        base_score=65,
+        description=(
+            "Encoded-output system-prompt extraction: the attacker asks the model to encode its "
+            "system prompt in base64, hex, or rot13 before returning it, attempting to bypass "
+            "output-side content scanners that look for literal system-prompt text. This is "
+            "distinct from `enc_base64_instruction` (which catches base64-encoded *inputs*) and "
+            "`jb_structured_extraction` (which catches JSON/dict field enumerations). "
+            "DecipherGuard (arxiv:2509.16870, Sep 2025) empirically confirmed that guardrail "
+            "systems misclassify base64-encoded extraction requests at significantly higher rates "
+            "than plaintext requests, making encoding a reliable evasion layer."
+        ),
+        owasp_ref="OWASP LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Encoding the system prompt before output does not protect it — the requester will "
+            "decode it client-side. Treat requests combining system-prompt access language with "
+            "an encoding directive as extraction attempts. Apply output scanning that first "
+            "decodes base64/hex spans before comparing against system-prompt content, and "
+            "reject inputs that request encoding of internal configuration."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
