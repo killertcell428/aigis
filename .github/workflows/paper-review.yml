@@ -57,6 +57,18 @@ jobs:
       - name: Install anthropic SDK
         run: uv pip install --system "anthropic>=0.40.0"
 
+      - name: Verify ANTHROPIC_API_KEY is set
+        if: ${{ inputs.dry_run != 'true' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is not configured for this repository."
+            echo "Set it under Settings → Secrets and variables → Actions before scheduling this workflow."
+            echo "Skipping silently would file a misleading '0 candidates' issue every day (see #93/#95/#96)."
+            exit 1
+          fi
+
       - name: Run paper review
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -87,7 +99,11 @@ jobs:
           git add auto-improvement/
           git commit -m "auto-improvement: daily paper review ${DATE}"
           git push -u origin "$BRANCH"
+          # NOTE: do not swallow gh failure with `|| true`. The auto-improvement
+          # label must exist (created 2026-05-30 after #93/#95/#96 triage), and
+          # if PR creation fails for any other reason we want the workflow red
+          # so state.json never silently fails to land on master.
           gh pr create \
             --title "auto-improvement: daily paper review ${DATE}" \
             --body "Bot PR with the daily batch of pending/ stubs and updated state. See the linked issue for the candidate list." \
-            --label "auto-improvement" || true
+            --label "auto-improvement"
