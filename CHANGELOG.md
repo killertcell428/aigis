@@ -12,6 +12,28 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Added
+
+- **LangGraph two-position guard example and walkthrough** (issue #31) — Adds a
+  runnable end-to-end example (`examples/langgraph_guarded_agent.py`) that wires
+  `AigisGuardNode` into a `StateGraph` at both the **pre-LLM** (input scan) and
+  **post-LLM** (output scan) positions, with a shared conditional edge that
+  routes either block to a `human_review` node. The example runs without an API
+  key — `llm_node` is a deterministic fake — so the three demo invocations
+  (safe, blocked-input jailbreak, blocked-output leaked API key) are
+  reproducible in CI. Paired with a 5-minute walkthrough at
+  `docs/integrations/langgraph.md` that covers why single-sided guarding fails
+  open against the second half of the OWASP LLM Top 10, the conditional-edge
+  recipe, and five common pitfalls (swallowing `GuardianBlockedError`,
+  guarding only one side, missing audit log on the review node, retry loops
+  re-entering the input guard, and policy=`permissive` in production). The
+  README Integrations section now links directly to both files.
+
+- **`AigisGuardNode` alias** (`aigis/middleware/langgraph.py`) — Exports
+  `AigisGuardNode` as a backwards-compatible alias of `GuardNode` so the name
+  used in the README and example code resolves at import time. Both names
+  point at the same class; pick whichever reads better in your graph.
+
 ## [1.1.8] - 2026-05-21
 
 ### Hardened

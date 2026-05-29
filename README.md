@@ -330,9 +330,16 @@ from aigis.middleware import AigisLangChainCallback, AigisGuardNode
 # LangChain
 chain.invoke(input, config={"callbacks": [AigisLangChainCallback()]})
 
-# LangGraph
-graph.add_node("guard", AigisGuardNode())
+# LangGraph — guard input AND output, route both to human review
+graph.add_node("input_guard", AigisGuardNode(raise_on_block=False))
+graph.add_node("output_guard", AigisGuardNode(raise_on_block=False))
 ```
+
+Full two-position recipe (pre-LLM input check + post-LLM output check + conditional
+edge to a `human_review` node):
+
+- Runnable example: [`examples/langgraph_guarded_agent.py`](examples/langgraph_guarded_agent.py)
+- 5-minute walkthrough: [`docs/integrations/langgraph.md`](docs/integrations/langgraph.md)
 </details>
 
 <details>

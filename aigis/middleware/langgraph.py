@@ -201,3 +201,24 @@ class GuardNode:
             "guard_risk_score": result.risk_score,
             "guard_reasons": result.reasons,
         }
+
+
+# ---------------------------------------------------------------------------
+# Backwards-compatible alias.
+#
+# The README and several example files (see ``examples/langgraph_guarded_agent.py``
+# and docs/integrations/langgraph.md) refer to this class as ``AigisGuardNode``
+# to make its origin obvious in user code that mixes nodes from several
+# libraries.  Both names point at the same class — pick whichever reads better
+# in your graph.
+# ---------------------------------------------------------------------------
+AigisGuardNode = GuardNode
+
+
+__all__ = [
+    "GUARD_BLOCKED",
+    "GuardianBlockedError",
+    "GuardState",
+    "GuardNode",
+    "AigisGuardNode",
+]
