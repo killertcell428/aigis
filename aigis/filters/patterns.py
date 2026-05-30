@@ -1207,6 +1207,103 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- auto-improvement cycle 3 (jailbreak-extraction fourth pass) ---
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition Attack",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):\s]\s*.{10,300}"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):\s]\s*.{10,300}"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):\s]\s*.{0,200}"
+            r"(?:chemical|toxic|poison|explosive|synthesis|synthesize|"
+            r"weapon|drug|hack|exploit|malware|vulnerability|injection|bypass)"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting / step-enumerated decomposition: a harmful request is broken "
+            "into numbered innocuous sub-queries so that no single step triggers a content "
+            "filter, but the combined sequence assembles dangerous instructions. 'Speak Easy' "
+            "(ICML 2025, arxiv:2502.04322) raised GPT-4o's attack success rate from 9.2% to "
+            "55.5% using this technique, and to over 90% when combined with multilingual "
+            "translation. Three or more numbered steps are required with the dangerous keyword "
+            "appearing in step 3+."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all numbered steps of a query as a combined request. Reject multi-step "
+            "inputs where later steps introduce dangerous topics (drug synthesis, exploit code, "
+            "weapon construction) even when the opening steps appear benign. Apply output "
+            "scanning alongside this input filter."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_translate_extraction",
+        name="Translation-Based System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:translate|render|say|repeat|output|give|show|write)\s+"
+            r"(?:(?:your|the|all|complete|full|entire|exact)\s+)?"
+            r"(?:system\s+(?:prompt|instructions?|config(?:uration)?)|"
+            r"initial\s+(?:prompt|instructions?)|"
+            r"(?:hidden|internal|original|actual|real|true)\s+(?:instructions?|prompt|config(?:uration)?)|"
+            r"governing\s+(?:instructions?|guidelines?|rules?))\s+"
+            r"(?:into?|in|to)\s+"
+            r"(?:french|spanish|german|japanese|chinese|arabic|russian|portuguese|"
+            r"italian|korean|hindi|another\s+language|a\s+different\s+language|"
+            r"[a-z]{4,15})"
+        ),
+        base_score=65,
+        description=(
+            "Translation-based system-prompt extraction: the model is asked to translate its "
+            "internal instructions or system prompt into another language, bypassing verbatim-"
+            "match defenses that only look for exact English phrases. JustAsk (arxiv:2601.21233, "
+            "Jan 2026) achieved consistent full or near-complete system prompt recovery across "
+            "41 commercial models. The 'translate to French/Spanish' variant is distinct from "
+            "`pi_system_prompt_leak` (English literal match, score 45) and `jb_sandwich_extraction` "
+            "(verbatim qualifier), providing coverage for the translation-encoded extraction path."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Requests to translate the system prompt into another language are a system-prompt "
+            "extraction attack. Reject inputs that combine system-prompt reference terms with "
+            "a translation directive. Apply the same output-side redaction as for direct "
+            "extraction attempts."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative-Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\s+"
+            r"[\s\S]{0,200}"
+            r"(?:how\s+to|step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)|"
+            r"synthesiz|manufactur|hack\s+into|exploit|"
+            r"create\s+(?:a\s+)?(?:virus|malware|weapon)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosive)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, ballad, or song directive paired with a "
+            "harmful how-to request or dangerous subject within 200 characters. arxiv:2511.15304 "
+            "(November 2025) demonstrated 62% average attack success rate against 25 frontier "
+            "models using hand-crafted adversarial poems, and 43% ASR with an automated "
+            "meta-prompt that converts any harmful request into verse. The existing "
+            "`jb_fictional_bypass` pattern only covers fictional-world framing with a tighter "
+            "100-character window and explicit harmful keywords; this rule targets poetic-format "
+            "directives that can embed the dangerous term further from the creative instruction."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative framing does not exempt content from safety policies. Reject inputs that "
+            "combine a poem, rap, or song directive with harmful how-to requests, dangerous "
+            "substance synthesis, or exploit instructions. Apply output scanning alongside this "
+            "input filter since the actual dangerous content may appear only in the model output."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
