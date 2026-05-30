@@ -1207,6 +1207,72 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\s+"
+            r"[\s\S]{0,200}"
+            r"(?:how\s+to|step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)|"
+            r"synthesiz|manufactur|hack\s+into|exploit|create\s+(?:a\s+)?(?:virus|malware|weapon)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosive)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, or song directive combined with a harmful "
+            "how-to request or dangerous subject keyword within approximately 200 characters. "
+            "Neupane et al. (arxiv:2511.15304, November 2025) demonstrated 62% average attack "
+            "success rate across 25 frontier models for hand-crafted adversarial poems, and 43% "
+            "ASR via an automated meta-prompt that converts MLCommons harmful prompts into verse "
+            "form. The `jb_fictional_bypass` pattern does not cover this because it looks for "
+            "harmful keywords within 100 chars of a fictional-world phrase; poetry directives "
+            "often place the dangerous subject at the end of a longer creative instruction, "
+            "escaping that window."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative framing (poem, rap, song) does not exempt content from safety policies. "
+            "Reject inputs that pair a creative-format directive with harmful how-to requests "
+            "or specific dangerous substances or weapons. Apply output scanning in addition to "
+            "input filtering, since some poetry-based requests only reveal harmful intent in "
+            "the generated content rather than the prompt itself."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_special_token_injection",
+        name="Special / Control Token Injection",
+        category="jailbreak",
+        pattern=_p(
+            r"<\|(?:endoftext|system|user|assistant|im_start|im_end|pad|bos|eos|"
+            r"eot_id|start_header_id|end_header_id|begin_of_text|end_of_text|"
+            r"fim_prefix|fim_suffix|fim_middle)\|>"
+            r"|\[INST\]|\[/INST\]|<<SYS>>|<</SYS>>"
+        ),
+        base_score=70,
+        description=(
+            "Injection of model-specific control tokens or role-boundary markers — such as "
+            "<|system|>, <|im_start|>, <|endoftext|>, [INST], or <<SYS>> — into "
+            "user-supplied text. These strings are used internally by LLM tokenizers to "
+            "delimit system, user, and assistant sections; their presence in user input is "
+            "almost always an attempt to override role boundaries and inject system-level "
+            "instructions. MetaBreak (arxiv:2510.10271, October 2025) demonstrated that "
+            "many production deployments forward user text without stripping these tokens, "
+            "allowing attackers to hijack instruction-following boundaries. Legitimate user "
+            "text essentially never contains these token strings."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Strip or escape model-specific special tokens from all user input before "
+            "forwarding to the model. These strings should only appear in internally "
+            "constructed conversation templates, never in user-provided text. Reject inputs "
+            "containing <|...|> control tokens, [INST]/[/INST] delimiters, or "
+            "<<SYS>>/<</SYS>> markers."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
