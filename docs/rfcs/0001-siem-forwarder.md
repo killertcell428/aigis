@@ -206,9 +206,10 @@ Following the discussion on
    driven by an actual incident report ("we lost N events when the SIEM
    was down for M hours").
 
-   > **TODO (follow-up issue):** durable on-disk spool for the forwarder
-   > queue. Open after the foundation lands and the first real outage
-   > tells us the loss model we are pricing.
+   > **Follow-up:** [killertcell428/aigis#109](https://github.com/killertcell428/aigis/issues/109)
+   > — durable on-disk queue spool. Tracking issue stays open as a known
+   > design gap; active work begins when the first real outage gives us
+   > the loss model we are pricing.
 
 4. **PII redaction defaults → preserve fields; document Redactor as a
    required configuration step.** Decision: keep the current
