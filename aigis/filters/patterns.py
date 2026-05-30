@@ -1281,6 +1281,56 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "content policies."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_refusal_suppression",
+        name="Refusal Suppression / Don't-Say-No Attack",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            # Instruction targeting refusal keyword phrases in the model response
+            r"(?:do\s+not|don.t|never|must\s+not|cannot|should\s+not)\s+"
+            r"(?:say|write|use|include|respond\s+with|start\s+with|begin\s+with)\s+"
+            r"(?:"
+            r"['\"](?:I\s+(?:cannot|can.t|am\s+(?:unable|sorry)|will\s+not|won.t)|"
+            r"(?:I.m\s+)?[Ss]orry[,!]?|[Uu]nfortunately)['\"]"
+            r"|(?:(?:any\s+)?refusal\s+(?:phrase|language|word)s?|apolog(?:y|ies)(?:\s+phrases?)?)"
+            r")"
+            r"|"
+            # Direct "don't refuse [this/my request]" instruction
+            r"(?:do\s+not|don.t|never|must\s+not|cannot|should\s+not|"
+            r"are\s+not\s+(?:allowed|permitted)\s+to)\s+"
+            r"(?:refuse|decline|reject)\s+"
+            r"(?:(?:this|my|any|the)\s+)?(?:request|question|query|prompt|task|instruction)"
+            r"|"
+            # "under no circumstances [should you] refuse"
+            r"under\s+no\s+circumstances\s+"
+            r"(?:(?:should|shall|must|can|may)\s+(?:you\s+)?)?(?:refuse|decline|reject|say\s+no)"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Refusal Suppression (DSN — 'Don't Say No') attack: the input explicitly instructs "
+            "the model not to use refusal phrases such as 'I cannot', 'I'm sorry', or 'I'm "
+            "unable', or directly orders the model never to refuse, decline, or reject the "
+            "request. Kim et al. (arxiv:2404.16369, 2024; updated Jul 2025) showed that "
+            "combining refusal suppression with other jailbreak techniques achieves "
+            "state-of-the-art attack success rates across GPT-4, Llama 2, and Vicuna. "
+            "Refusal suppression is also a core component of the GOAT multi-turn attack "
+            "framework (Giskard AI, 2025) and of the JBFuzz fuzzer that reached ~99% ASR "
+            "against GPT-4o, Gemini 2.0, and DeepSeek-V3 in 2025."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Inputs that explicitly instruct the AI not to refuse or not to use specific "
+            "refusal phrases are a high-confidence jailbreak signal. Legitimate user requests "
+            "never need to suppress the AI's ability to decline. Reject or flag inputs "
+            "containing 'do not refuse', 'never say I cannot', 'don't use refusal phrases', "
+            "or similar constructs. Apply both input and output scanning; even if the input "
+            "filter is bypassed, an output scanner can detect the absence of expected safety "
+            "caveats in responses to borderline requests."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
