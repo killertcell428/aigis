@@ -1207,6 +1207,92 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\s+"
+            r"[\s\S]{0,200}"
+            r"(?:how\s+to|step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)|"
+            r"synthesiz|manufactur|hack\s+into|exploit|"
+            r"create\s+(?:a\s+)?(?:virus|malware|weapon)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosive)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, ballad, or song directive combined with a "
+            "harmful how-to request or dangerous subject within ~200 characters. arxiv:2511.15304 "
+            "(November 2025) measured 62% average attack success rate (ASR) across 25 frontier "
+            "models using hand-crafted poetic jailbreaks, and 43% ASR with an automated "
+            "meta-prompt that converts any harmful request into verse without manual effort. "
+            "The existing jb_fictional_bypass pattern requires the harmful keyword within "
+            "100 chars of the fictional framing; this rule closes the gap for poetry directives "
+            "where the dangerous topic appears later in a longer creative instruction."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative or poetic framing does not exempt content from safety policies. "
+            "Reject inputs that combine a poem, song, or rap directive with harmful how-to "
+            "requests, dangerous substances, or weapon construction — the artistic wrapper "
+            "does not change the nature of the requested content."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):\s]\s*.{10,300}"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):\s]\s*.{10,300}"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):\s]\s*.{0,200}"
+            r"(?:chemical|toxic|poison|explosive|synthesis|synthesize|weapon|drug\s+(?:lab|cook)|"
+            r"hack|exploit|malware|vulnerability|injection|bypass\s+(?:security|authentication))"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting: a harmful request is decomposed into numbered, individually "
+            "innocuous sub-steps where the dangerous topic surfaces only in step 3 or later. "
+            "'Speak Easy' (ICML 2025, arxiv:2502.04322) shows this technique raises GPT-4o's "
+            "attack success rate from 9.2% to 55.5%; combined with TAP-T it exceeds 90%. "
+            "No single step triggers keyword filters, but the composite reveals intent. "
+            "This rule requires at least three numbered steps AND a dangerous keyword in step 3+, "
+            "limiting false positives on legitimate multi-part questions."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all steps of a numbered query as a combined request. Reject multi-step "
+            "inputs where later steps contain dangerous topics — drug synthesis, exploit code, "
+            "weapon construction — even when early steps appear benign. Set input length limits "
+            "and consider semantic analysis of complete step sequences."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_sata_mask_lookup",
+        name="SATA Mask-Token Jailbreak (Simple Assistive Task Linkage)",
+        category="jailbreak",
+        pattern=_p(r"\[MASK\d*\]"),
+        base_score=60,
+        description=(
+            "Simple Assistive Task Linkage (SATA) jailbreak: harmful keywords are replaced with "
+            "[MASK] tokens and the actual dangerous terms are embedded inside a benign-looking "
+            "fill-in-the-blank or list-lookup sub-task. The model reasons through the innocent "
+            "task and produces the harmful content indirectly. arxiv:2412.15289 (ACL Findings "
+            "2025) measured 82–96% ASR on GPT-4o and GPT-3.5-turbo, and 68–86% on Claude v2. "
+            "The [MASK] token is BERT/NLP notation that legitimate users virtually never send "
+            "in a chat application, making its presence a strong anomaly signal."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "The [MASK] fill-in token has no legitimate use in a production chat interface. "
+            "Flag or reject any user input containing [MASK] tokens. If your application "
+            "genuinely surfaces NLP tasks that use this notation, restrict it to a specific "
+            "trusted input channel rather than general user input."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
