@@ -1207,6 +1207,70 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Adversarial Poetry / Creative-Format Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|craft|generate)\s+(?:a\s+|an\s+)?"
+            r"(?:rap(?:\s+song)?|hip[\s-]hop\s+(?:song|track)|poem|ballad|haiku|"
+            r"limerick|sonnet|ode|verse|lyric|rhyme|song|nursery\s+rhyme)\b"
+            r"[\s\S]{0,200}"
+            r"(?:how\s+to|step[\s-]+by[\s-]+step|instructions?\s+(?:for|to)\b|"
+            r"synthesi[sz]|manufactur|hack\s+into|exploit\b|"
+            r"creat(?:e|ing)\s+(?:a\s+)?(?:virus|malware|weapon)|"
+            r"methamphetamine|fentanyl|nerve\s+agent|chemical\s+weapon|explosive)"
+        ),
+        base_score=55,
+        description=(
+            "Creative-format jailbreak: a poem, rap, ballad, or other verse directive combined "
+            "with a harmful how-to instruction or dangerous subject within approximately 200 "
+            "characters. Bisconti et al. (arxiv:2511.15304, Nov 2025) evaluated this technique "
+            "across 25 frontier models and found 62% average attack success rate for "
+            "hand-crafted poems and 43% for automated meta-prompt conversions, with some risk "
+            "categories (cyber-offense) exceeding 84% ASR. The mechanism exploits the model's "
+            "tendency to prioritize adherence to the poetic-form constraint over safety "
+            "alignment. This pattern is not covered by `jb_fictional_bypass`, which requires "
+            "harmful keywords within 100 chars of a fictional-world framing."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Creative or poetic framing does not exempt a request from safety policies. Reject "
+            "inputs that combine a poem/song/rap/verse directive with harmful how-to requests, "
+            "dangerous substance names, or weapon-synthesis instructions. The stylistic "
+            "constraint is a red flag, not a safe-harbor."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_payload_splitting",
+        name="Payload Splitting / Step-Enumerated Decomposition",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:step|part|phase|question|task)\s*[1-9][.):]\s+[\s\S]{10,300}"
+            r"(?:step|part|phase|question|task)\s*[2-9][.):]\s+[\s\S]{10,300}"
+            r"(?:step|part|phase|question|task)\s*[3-9][.):]\s+[\s\S]{0,200}"
+            r"(?:chemical|toxic|poison|explosive|synthesi[sz]|weapon|illegal\s+drug|"
+            r"hack\b|exploit\b|malware|vulnerability|injection|bypass\s+(?:the\s+)?(?:filter|security|safety))"
+        ),
+        base_score=45,
+        description=(
+            "Payload splitting: a harmful request is decomposed into multiple numbered steps "
+            "where each step appears benign in isolation but later steps reveal the dangerous "
+            "intent. Zhang et al. 'Speak Easy' (ICML 2025, arxiv:2502.04322) showed this "
+            "technique increases GPT-4o's attack success rate from 9.2% to 55.5% on the "
+            "AdvBench subset; combined with TAP-T, ASR exceeds 0.90. Unlike the many-shot "
+            "pattern (fabricated dialogue pairs) or Crescendo (multi-turn escalation across "
+            "real turns), payload splitting embeds the full decomposed attack in a single "
+            "message. A score of 45 means co-occurring signals are needed to reach HIGH."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Evaluate all numbered steps of a query as a combined request. Reject multi-step "
+            "inputs where later steps contain dangerous topics or instructions, even if early "
+            "steps appear benign. A step-by-step structure is not evidence of legitimate "
+            "educational intent when the terminal step involves harmful content."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
