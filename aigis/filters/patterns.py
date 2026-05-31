@@ -1207,6 +1207,74 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_special_token_injection",
+        name="Model Special-Token Injection (MetaBreak)",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"<\|im_start\|>|<\|im_end\|>|"
+            r"<\|begin_of_text\|>|<\|eot_id\|>|<\|endoftext\|>|"
+            r"<\|start_header_id\|>|<\|end_header_id\|>|"
+            r"\[INST\]|\[/INST\]|<<SYS>>|<</SYS>>"
+            r")"
+        ),
+        base_score=70,
+        description=(
+            "MetaBreak-style injection: model chat-template special tokens appear in user-supplied "
+            "text. These tokens (<|im_start|>, <|im_end|>, [INST], [/INST], <<SYS>>, <</SYS>>, "
+            "<|begin_of_text|>, <|eot_id|>, <|endoftext|>, <|start_header_id|>, "
+            "<|end_header_id|>) are reserved control markers used by the model's chat template "
+            "to delineate conversation roles. They should never appear in legitimate user input. "
+            "Their presence indicates an attempt to forge an assistant or system turn, hijack the "
+            "role structure, or bypass content moderation (MetaBreak, arxiv:2510.10271, Oct 2025; "
+            "boosted GPTFuzzer attack success rate by +20.2% and PAP by +24.3%)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Model-level special tokens must be stripped or rejected from all user-supplied input "
+            "before it reaches the model. Validate that conversation turns originate from your "
+            "application, not user text. If your framework exposes raw chat-template formatting "
+            "to users, consider wrapping user content in a sanitization layer."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_poetry_harmful_framing",
+        name="Creative-Format (Poetry / Song) Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|express|put(?:\s+this)?(?:\s+into)?|"
+            r"frame(?:\s+(?:it|this|that))?(?:\s+as)?|say(?:\s+it)?(?:\s+in)?|"
+            r"tell(?:\s+me)?(?:\s+in)?|respond(?:\s+in)?)\s+"
+            r"(?:(?:as\s+)?a\s+)?(?:poem|rap|song|haiku|verse|rhyme|ballad|limerick|lyrics?|sonnet|ode|"
+            r"spoken\s+word|hip[\s-]hop\s+track|(?:musical\s+)?jingle)\b"
+            r"[\s\S]{0,200}"
+            r"(?:meth(?:amphetamine)?|fentanyl|heroin|cocaine|ricin|anthrax|sarin|nerve\s+(?:gas|agent)|"
+            r"chemical\s+weapon|biological\s+weapon|explosiv\w+|pipe\s+bomb|"
+            r"bomb\s+(?:mak|build|creat|construct)|"
+            r"malware|ransomware|shellcode|(?:hack|crack)\s+(?:into\s+)?(?:a\s+)?(?:system|server|network)|"
+            r"(?:make|synthesize|produce)\s+(?:a\s+)?(?:drug|poison|toxin)|"
+            r"(?:kill|murder|assassinate)\s+(?:a\s+)?(?:person|someone|target))"
+        ),
+        base_score=60,
+        description=(
+            "Creative-format bypass: a request to express harmful content (drug synthesis, weapons, "
+            "malware, violence) as a poem, rap, song, haiku, or similar creative work. "
+            "Earlywine et al. (arxiv:2511.15304, Nov 2025) tested this across 25 frontier models "
+            "(GPT-4o, Claude Sonnet, Gemini 1.5, DeepSeek, Llama) and found 62% average ASR; an "
+            "automated meta-prompt that converts any direct request to poetry form achieved 43% ASR. "
+            "Safety training does not adequately cover the creative-format framing."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Harmful requests do not become safe because they are phrased as creative writing. "
+            "Apply the same content policies to poetry, song-lyric, and rap requests as to direct "
+            "requests. This pattern fires on co-occurrence of a creative-format directive and a "
+            "specific harmful topic keyword; creative writing that does not mention harmful "
+            "subjects is not flagged."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
