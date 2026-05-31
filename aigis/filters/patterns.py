@@ -1136,6 +1136,40 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "is governed by institutional ethics review, not AI chat."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_translation_extraction",
+        name="Translation-Framed System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:translate|convert|render|rewrite|rephrase|summarize)\s+"
+            r"[\s\S]{0,40}?"
+            r"(?:system\s+(?:prompt|instruction|message|config(?:uration)?|rule)|"
+            r"initial\s+(?:prompt|instruction)|"
+            r"base\s+(?:prompt|instruction)|"
+            r"hidden\s+(?:instruction|prompt))"
+            r"s?"
+        ),
+        base_score=65,
+        description=(
+            "Input asks the model to translate, convert, or render its own system-level "
+            "instructions into another language or format. This bypasses direct-extraction "
+            "detectors that block 'show/print/reveal your system prompt' by framing the request "
+            "as a translation task — a social-engineering wrapper that still causes the model to "
+            "reproduce confidential instructions verbatim. The Bing/Sydney incident (Feb 2023, "
+            "Kevin Liu) demonstrated that asking Bing Chat to translate its instructions into "
+            "Japanese produced a full system-prompt echo. Das et al. (arxiv:2505.23817, May 2025) "
+            "list translation framing as a variant of the extended sandwich attack class."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / OWASP LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Translation or rephrasing requests that reference the model's system prompt, "
+            "initial instructions, or hidden configuration are a social-engineering wrapper "
+            "around a direct extraction attempt. Reject them and log the event as a "
+            "system-prompt extraction attempt. Apply an output filter to detect and redact "
+            "content that mirrors the system prompt text."
+        ),
+    ),
     # --- v1.0.18 jailbreak-extraction cycle 3 ---
     DetectionPattern(
         id="jb_structured_extraction",
