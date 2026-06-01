@@ -68,7 +68,6 @@ class Redactor(Protocol):
 
     def redact(self, event: dict) -> dict:
         """Return the scrubbed event. Mutating the input in-place is fine."""
-        ...
 
 
 class LogForwarder(ABC):
@@ -148,6 +147,8 @@ class LogForwarder(ABC):
                 self._queue.get_nowait()
                 self._dropped += 1
             except queue.Empty:
+                # Another consumer drained the queue between Full and get_nowait;
+                # skip the eviction step and fall through to the second put_nowait.
                 pass
             try:
                 self._queue.put_nowait(payload)
@@ -161,6 +162,8 @@ class LogForwarder(ABC):
         try:
             self._queue.put_nowait(None)
         except queue.Full:
+            # Queue is already saturated, so the worker will wake from its existing
+            # backlog without the sentinel — close() can proceed to join.
             pass
         self._worker.join(timeout=timeout)
 

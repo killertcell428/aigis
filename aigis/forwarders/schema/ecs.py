@@ -57,7 +57,6 @@ class EventMapper(Protocol):
 
     def map(self, event: dict) -> dict:
         """Return the mapped wire-format event. Must not mutate ``event``."""
-        ...
 
 
 class ECSMapper:

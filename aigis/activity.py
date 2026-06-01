@@ -183,6 +183,7 @@ class ActivityStream:
         try:
             self._forwarders.remove(forwarder)
         except ValueError:
+            # remove_forwarder is idempotent — caller need not track registration state.
             pass
 
     def close_forwarders(self, timeout: float = 5.0) -> None:

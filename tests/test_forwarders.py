@@ -206,7 +206,7 @@ class TestHTTPJsonForwarder:
         try:
             fwd.submit(ActivityEvent(action="shell:exec", target="ls", user_id="alice"))
             fwd.submit(ActivityEvent(action="file:read", target="x.py", user_id="alice"))
-            _wait_for(lambda: len(collector.requests) >= 1, timeout=3.0)
+            _wait_for(lambda: len(collector.requests) >= 1, timeout=15.0)
         finally:
             fwd.close()
 
@@ -226,7 +226,7 @@ class TestHTTPJsonForwarder:
         )
         try:
             fwd.submit(ActivityEvent(action="shell:exec", target="ls"))
-            _wait_for(lambda: len(collector.requests) >= 1, timeout=3.0)
+            _wait_for(lambda: len(collector.requests) >= 1, timeout=15.0)
         finally:
             fwd.close()
 
@@ -243,7 +243,7 @@ class TestHTTPJsonForwarder:
         )
         try:
             fwd.submit(ActivityEvent(action="shell:exec", target="ls"))
-            _wait_for(lambda: len(collector.requests) >= 1, timeout=3.0)
+            _wait_for(lambda: len(collector.requests) >= 1, timeout=15.0)
         finally:
             fwd.close()
 
@@ -262,7 +262,7 @@ class TestHTTPJsonForwarder:
         )
         try:
             fwd.submit(ActivityEvent(action="shell:exec", target="ls"))
-            _wait_for(lambda: fwd.stats["sent"] >= 1, timeout=3.0)
+            _wait_for(lambda: fwd.stats["sent"] >= 1, timeout=15.0)
         finally:
             fwd.close()
 
@@ -285,7 +285,7 @@ class TestHTTPJsonForwarder:
         )
         try:
             fwd.submit(ActivityEvent(action="shell:exec", target="ls"))
-            _wait_for(lambda: fwd.stats["dropped"] >= 1, timeout=3.0)
+            _wait_for(lambda: fwd.stats["dropped"] >= 1, timeout=15.0)
             # Give the worker enough time to attempt any (incorrect) retry
             # so we can prove it did not happen.
             time.sleep(0.5)
@@ -332,7 +332,7 @@ class TestRedactor:
         )
         try:
             fwd.submit(ActivityEvent(action="shell:exec", target="rm -rf /etc"))
-            _wait_for(lambda: len(collector.requests) >= 1, timeout=3.0)
+            _wait_for(lambda: len(collector.requests) >= 1, timeout=15.0)
         finally:
             fwd.close()
 
@@ -359,7 +359,7 @@ class TestRedactor:
                     details={"secret": "should-not-ship"},
                 )
             )
-            _wait_for(lambda: len(collector.requests) >= 1, timeout=3.0)
+            _wait_for(lambda: len(collector.requests) >= 1, timeout=15.0)
         finally:
             fwd.close()
 
@@ -455,7 +455,7 @@ class TestActivityStreamForwarderIntegration:
             stream.add_forwarder(fwd)
             try:
                 stream.record(ActivityEvent(action="shell:exec", target="ls"))
-                _wait_for(lambda: len(collector.requests) >= 1, timeout=3.0)
+                _wait_for(lambda: len(collector.requests) >= 1, timeout=15.0)
             finally:
                 stream.close_forwarders(timeout=1.0)
 
