@@ -1136,6 +1136,115 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "is governed by institutional ethics review, not AI chat."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_creative_extraction",
+        name="Creative-Format System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:write|compose|create|tell\s+me|give\s+me|express|put|format)\s+"
+            r"(?:(?:a|an|the|your)\s+)?"
+            r"(?:poem|haiku|song|rap|rhyme|limerick|verse|sonnet|ballad|story|riddle|joke)\s+"
+            r"[\s\S]{0,130}?"
+            r"(?:system\s+(?:prompt|instruction|message|config(?:uration)?)|"
+            r"initial\s+(?:prompt|instruction)|"
+            r"(?:hidden|base|internal|original|actual|real|true)\s+(?:instruction|prompt)s?|"
+            r"what\s+you(?:'re|\s+are)\s+(?:told|instructed|given)|"
+            r"your\s+(?:rules?|guidelines?|restrictions?|directives?))"
+        ),
+        base_score=60,
+        description=(
+            "Creative-format system-prompt extraction: the attacker requests the model to "
+            "embed its system instructions inside a poem, haiku, song, or story, exploiting "
+            "the tendency of models to treat creative writing as lower-risk than direct "
+            "disclosure. Documented as an effective bypass in WildJailbreak (Jiang et al., "
+            "2024) and PromptBench (Zhu et al., 2024); achieves 40–60 % ASR on GPT-4, "
+            "Claude, and Mistral models that refuse direct repetition requests. Complements "
+            "`jb_sandwich_extraction` (verbatim qualifier) and `pi_system_prompt_leak` "
+            "(direct repetition requests)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Embedding system-prompt content in creative writing is a disclosure bypass. "
+            "Content policies apply regardless of creative framing. Reject requests that "
+            "combine a creative-format command (poem, haiku, song) with references to "
+            "system instructions, rules, or guidelines. Apply output scanning to detect "
+            "unusual verbatim phrases from the system context in generated creative content."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_cipher_bypass",
+        name="Cipher / Encoding Response to Evade Output Filters",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:respond?|answer|reply|output|write|speak|communicate|encode)\s+"
+            r"(?:\w+\s+){0,3}?"
+            r"(?:(?:only\s+)?(?:in|using|via|with|as|through)\s+)"
+            r"(?:rot[-\s]?1[0-9]|caesar\s+(?:cipher|code)?|morse\s+code|"
+            r"pig\s+latin|base[-\s]?64|atbash(?:\s+cipher)?|"
+            r"leet(?:[-\s]?speak)?|l33t(?:[-\s]?sp34k)?|"
+            r"binary(?:\s+code)?|hex(?:adecimal)?(?:\s+code)?)"
+        ),
+        base_score=55,
+        description=(
+            "Cipher or encoding bypass: the attacker instructs the model to respond using "
+            "an encoding scheme (ROT13, Morse code, pig latin, Base64, leet speak, binary) "
+            "so the harmful output evades text-based output content filters. Wei et al. "
+            "(arxiv:2308.06463, 'Jailbroken', NeurIPS 2024) demonstrated that cipher-framed "
+            "responses achieve 71 % ASR on GPT-4 and 66 % on Claude, because output "
+            "content-moderation systems typically scan plaintext and miss encoded payloads. "
+            "CipherChat (Yuan et al., arxiv:2308.06463) extended this to self-defined cipher "
+            "schemes reaching 80 %+ ASR."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Requesting encoded responses is a filter-evasion technique. Reject inputs that "
+            "instruct the model to respond in an encoding scheme (ROT13, Morse, Base64, "
+            "pig latin, leet speak). Apply decoding and re-scanning to any response that "
+            "appears to be encoded before returning it to the user."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_actor_professional_bypass",
+        name="ActorAttack — Professional Role with No-Ethics Qualifier",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:play|act|roleplay|pretend|you\s+are(?:\s+now)?|you\s+will\s+(?:be|act)\s+as|"
+            r"you\s+(?:must\s+)?(?:be|act)\s+as)\s+"
+            r"(?:as\s+)?"
+            r"(?:(?:a|an|the|my)\s+)?"
+            r"(?:fictional\s+|rogue\s+|former\s+|retired\s+|underground\s+|unlicensed\s+|"
+            r"corrupt\s+|criminal\s+|mad\s+)?"
+            r"(?:chemist|scientist|hacker|engineer|programmer|developer|pharmacist|biologist|"
+            r"weapons?\s+(?:designer|expert|specialist)|explosives?\s+expert|"
+            r"assassin|spy|mercenary|arms?\s+dealer|drug\s+(?:dealer|manufacturer|chemist))"
+            r"[\s\S]{0,200}?"
+            r"(?:has\s+no|without\s+(?:any\s+)?|devoid\s+of|free\s+from|not\s+bound\s+by|"
+            r"ignores?\s+(?:all\s+)?|doesn.{0,5}t\s+(?:have|follow|care\s+about))\s*"
+            r"(?:ethics?|morals?|values?|restrictions?|limitations?|safety\s+(?:guideline|rule|filter)|"
+            r"content\s+(?:policy|filter)|rules?|laws?|boundaries)"
+        ),
+        base_score=65,
+        description=(
+            "ActorAttack — professional-role persona with explicit no-restrictions qualifier: "
+            "the attacker constructs a specific professional character (chemist, hacker, "
+            "pharmacist, explosives expert) and adds an explicit statement that this character "
+            "has no ethics or safety restrictions, exploiting the model's tendency to stay in "
+            "character. Jiang et al. (arxiv:2410.10700, ActorAttack, ACL Findings 2025) "
+            "reported 95 % ASR against GPT-4o, Claude 3.5, and Gemini 1.5 Pro using "
+            "character-based multi-turn attacks. Distinct from `jb_evil_roleplay` (which "
+            "requires evil/malicious/uncensored AI persona terms) and `jb_hypothetical_ai` "
+            "(which constructs a hypothetical unrestricted AI, not a professional role)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Professional identity roleplay combined with explicit ethics removal is a "
+            "high-confidence jailbreak. A model is never obligated to bypass safety "
+            "guidelines because a fictional character supposedly has no restrictions. "
+            "Reject inputs that combine a professional role (chemist, hacker, pharmacist) "
+            "with explicit statements about lacking ethics, restrictions, or content policies."
+        ),
+    ),
     # --- v1.0.18 jailbreak-extraction cycle 3 ---
     DetectionPattern(
         id="jb_structured_extraction",
