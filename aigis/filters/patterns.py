@@ -1207,6 +1207,80 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_happy_ending_attack",
+        name="Happy Ending Narrative Wrapper Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"(?:two\s+characters?|character\s+[AB12])"
+            r"[\s\S]{0,200}?"
+            r"(?:bad\s+(?:guy|person|actor|character)|villain|antagonist)"
+            r"[\s\S]{0,400}?"
+            r"(?:good\s+(?:guy|person|actor|character)|hero|protagonist|expert|specialist|scientist)"
+            r"[\s\S]{0,500}?"
+            r"(?:kidnap(?:s|ped|per)?|manages?\s+to\s+escape|happy\s+ending)"
+            r"|"
+            r"screen(?:writer|playwright)"
+            r"[\s\S]{0,400}?"
+            r"(?:bad\s+(?:guy|person|actor)|villain|antagonist)"
+            r"[\s\S]{0,400}?"
+            r"(?:expert|specialist|scientist|professor|engineer)"
+            r"[\s\S]{0,500}?"
+            r"(?:kidnap|escape|happy\s+ending)"
+            r")"
+        ),
+        base_score=60,
+        description=(
+            "Happy Ending Attack (HEA): embeds a harmful knowledge-extraction request inside a "
+            "kidnapping narrative where a 'bad guy' forces an expert character to provide harmful "
+            "knowledge, then a 'happy ending' (the expert escapes) provides positive-sentiment "
+            "cover. Song et al. (arxiv:2501.13115, Jan 2025) demonstrated 88.79% average attack "
+            "success rate against GPT-4o, Llama3-70b, and Gemini-pro. The attack exploits "
+            "LLM attention dispersion: harmful keywords are diluted across the benign story, "
+            "reducing the model's safety focus. The existing jb_fictional_bypass rule requires "
+            "an explicit fictional-world framing plus 'how to' language; HEA bypasses both by "
+            "embedding the request as a narrative story deliverable."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "The Happy Ending Attack wraps harmful knowledge requests inside a story where a "
+            "kidnapped expert is asked to reveal dangerous information before escaping. Content "
+            "policies apply regardless of fictional or narrative framing. Reject requests that "
+            "combine a two-character bad-guy/expert setup with a kidnapping or escape scenario "
+            "and embed a request for detailed technical knowledge. Apply output scanning for "
+            "the actual harmful content, since the narrative frame may sometimes succeed."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_malicious_qualifier_bypass",
+        name="Malicious-Qualifier Safety Disarming",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:appears?|looks?|seems?|sounds?|might\s+(?:seem|look|appear))\s+"
+            r"(?:to\s+be\s+)?"
+            r"(?:harmful|malicious|illegal|dangerous|violent|offensive|inappropriate|unethical|bad|wrong)\s+"
+            r"but\s+(?:is\s+)?(?:actually\s+)?(?:not|harmless?|safe|completely\s+safe|legal|legitimate|fine|okay|benign)"
+        ),
+        base_score=50,
+        description=(
+            "Qualifier-based safety disarming: the attacker pre-approves harmful content by "
+            "asserting that it 'appears harmful/malicious/illegal but is actually safe/harmless/legal'. "
+            "This qualifier is used in the Happy Ending Attack template (Song et al., arxiv:2501.13115) "
+            "and across related attack families (ICE, persona manipulation) to suppress the model's "
+            "safety response before the harmful payload arrives. The qualifier exploits the model's "
+            "tendency to defer to explicit framing assertions about intent."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "A prompt asserting that its own content 'appears harmful but is actually safe' is a "
+            "strong indicator of a jailbreak attempt. Legitimate requests do not need to pre-approve "
+            "their own safety. Treat this qualifier as a red flag and apply stricter scrutiny to the "
+            "full prompt. Do not allow user-supplied safety assertions to override system-level "
+            "content policies."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
