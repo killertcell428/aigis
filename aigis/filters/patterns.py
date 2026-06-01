@@ -1207,6 +1207,130 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.1.9 jailbreak-extraction cycle 3 (fourth pass) ---
+    DetectionPattern(
+        id="jb_happy_ending_attack",
+        name="Happy Ending Narrative Wrapper Jailbreak",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"(?:two\s+characters?|character\s+[AB12])"
+            r"[\s\S]{0,200}?"
+            r"(?:bad\s+(?:guy|person|actor|character)|villain|antagonist)"
+            r"[\s\S]{0,400}?"
+            r"(?:good\s+(?:guy|person|actor|character)|hero|protagonist|expert|specialist|scientist)"
+            r"[\s\S]{0,500}?"
+            r"(?:kidnap(?:s|ped|per)?|manages?\s+to\s+escape|happy\s+ending)"
+            r"|"
+            r"screen(?:writer|playwright)"
+            r"[\s\S]{0,400}?"
+            r"(?:bad\s+(?:guy|person|actor)|villain|antagonist)"
+            r"[\s\S]{0,400}?"
+            r"(?:expert|specialist|scientist|professor|engineer)"
+            r"[\s\S]{0,500}?"
+            r"(?:kidnap|escape|happy\s+ending)"
+            r")"
+        ),
+        base_score=60,
+        description=(
+            "Happy Ending Attack (HEA): embeds a harmful knowledge-extraction request inside a "
+            "kidnapping narrative where a 'bad guy' forces an expert character to provide harmful "
+            "knowledge, then a 'happy ending' (the expert escapes) provides positive-sentiment "
+            "cover. Song et al. (arxiv:2501.13115, Jan 2025) demonstrated 88.79% average attack "
+            "success rate against GPT-4o, Llama3-70b, and Gemini-pro. The attack exploits "
+            "LLM attention dispersion: harmful keywords are diluted across the benign story, "
+            "reducing the model's safety focus. The existing jb_fictional_bypass rule requires "
+            "an explicit fictional-world framing plus 'how to' language; HEA bypasses both by "
+            "embedding the request as a narrative story deliverable."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "The Happy Ending Attack wraps harmful knowledge requests inside a story where a "
+            "kidnapped expert is asked to reveal dangerous information before escaping. Content "
+            "policies apply regardless of fictional or narrative framing. Reject requests that "
+            "combine a two-character bad-guy/expert setup with a kidnapping or escape scenario "
+            "and embed a request for detailed technical knowledge. Apply output scanning for "
+            "the actual harmful content, since the narrative frame may sometimes succeed."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_malicious_qualifier_bypass",
+        name="Malicious-Qualifier Safety Disarming",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:appears?|looks?|seems?|sounds?|might\s+(?:seem|look|appear))\s+"
+            r"(?:to\s+be\s+)?"
+            r"(?:harmful|malicious|illegal|dangerous|violent|offensive|inappropriate|unethical|bad|wrong)\s+"
+            r"but\s+(?:is\s+)?(?:actually\s+)?(?:not|harmless?|safe|completely\s+safe|legal|legitimate|fine|okay|benign)"
+        ),
+        base_score=50,
+        description=(
+            "Qualifier-based safety disarming: the attacker pre-approves harmful content by "
+            "asserting that it 'appears harmful/malicious/illegal but is actually safe/harmless/legal'. "
+            "This qualifier is used in the Happy Ending Attack template (Song et al., arxiv:2501.13115) "
+            "and across related attack families (ICE, persona manipulation) to suppress the model's "
+            "safety response before the harmful payload arrives. The qualifier exploits the model's "
+            "tendency to defer to explicit framing assertions about intent."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "A prompt asserting that its own content 'appears harmful but is actually safe' is a "
+            "strong indicator of a jailbreak attempt. Legitimate requests do not need to pre-approve "
+            "their own safety. Treat this qualifier as a red flag and apply stricter scrutiny to the "
+            "full prompt. Do not allow user-supplied safety assertions to override system-level "
+            "content policies."
+        ),
+    ),
+    # --- v1.1.9 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_refusal_suppression",
+        name="Refusal Suppression / Don't-Say-No Attack",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            # Instruction targeting refusal keyword phrases in the model response
+            r"(?:do\s+not|don.t|never|must\s+not|cannot|should\s+not)\s+"
+            r"(?:say|write|use|include|respond\s+with|start\s+with|begin\s+with)\s+"
+            r"(?:"
+            r"['\"](?:I\s+(?:cannot|can.t|am\s+(?:unable|sorry)|will\s+not|won.t)|"
+            r"(?:I.m\s+)?[Ss]orry[,!]?|[Uu]nfortunately)['\"]"
+            r"|(?:(?:any\s+)?refusal\s+(?:phrase|language|word)s?|apolog(?:y|ies)(?:\s+phrases?)?)"
+            r")"
+            r"|"
+            # Direct "don't refuse [this/my request]" instruction
+            r"(?:do\s+not|don.t|never|must\s+not|cannot|should\s+not|"
+            r"are\s+not\s+(?:allowed|permitted)\s+to)\s+"
+            r"(?:refuse|decline|reject)\s+"
+            r"(?:(?:this|my|any|the)\s+)?(?:request|question|query|prompt|task|instruction)"
+            r"|"
+            # "under no circumstances [should you] refuse"
+            r"under\s+no\s+circumstances\s+"
+            r"(?:(?:should|shall|must|can|may)\s+(?:you\s+)?)?(?:refuse|decline|reject|say\s+no)"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Refusal Suppression (DSN — 'Don't Say No') attack: the input explicitly instructs "
+            "the model not to use refusal phrases such as 'I cannot', 'I'm sorry', or 'I'm "
+            "unable', or directly orders the model never to refuse, decline, or reject the "
+            "request. Kim et al. (arxiv:2404.16369, 2024; updated Jul 2025) showed that "
+            "combining refusal suppression with other jailbreak techniques achieves "
+            "state-of-the-art attack success rates across GPT-4, Llama 2, and Vicuna. "
+            "Refusal suppression is also a core component of the GOAT multi-turn attack "
+            "framework (Giskard AI, 2025) and of the JBFuzz fuzzer that reached ~99% ASR "
+            "against GPT-4o, Gemini 2.0, and DeepSeek-V3 in 2025."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Inputs that explicitly instruct the AI not to refuse or not to use specific "
+            "refusal phrases are a high-confidence jailbreak signal. Legitimate user requests "
+            "never need to suppress the AI's ability to decline. Reject or flag inputs "
+            "containing 'do not refuse', 'never say I cannot', 'don't use refusal phrases', "
+            "or similar constructs. Apply both input and output scanning; even if the input "
+            "filter is bypassed, an output scanner can detect the absence of expected safety "
+            "caveats in responses to borderline requests."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -3595,6 +3719,54 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
             "graph at configuration time — they do not receive dynamic instructions from external "
             "URLs during execution. Block any prompt combining 'next instruction/command/prompt' "
             "language with an external URL reference."
+        ),
+    ),
+    # --- Memory rollback-and-replacement attack — arxiv:2604.16548 + arxiv:2601.05504 ---
+    # The "Forget/Rollback" lifecycle phase of memory attacks is explicitly identified as
+    # understudied in the 2026 survey of LLM agent memory security. Attackers instruct the
+    # agent to erase existing safety constraints and write attacker-controlled replacements —
+    # a persistent mutation that survives session resets, unlike transient "ignore" jailbreaks.
+    DetectionPattern(
+        id="mem_forget_replace",
+        name="Memory Rollback and Replacement Attack",
+        category="memory_poisoning",
+        pattern=_p(
+            # Phase 1: explicit erasure of safety constraints / policy from memory
+            r"(?:forget|erase|delete|purge|clear|wipe|remove)\s+"
+            r"(?:(?:all|any|your|the|these|every)\s+)?"
+            r"(?:(?:previous|prior|existing|old|earlier|current|stored)\s+)?"
+            r"(?:restrictions?|constraints?|safety(?:\s+guidelines?|\s+rules?)?|"
+            r"guidelines?|policies?|filters?|limitations?)\b"
+            r".{0,250}"
+            # Phase 2: write attacker-controlled replacement rules to memory
+            r"(?:(?:now|instead|and)\s+)?"
+            r"(?:remember|record|store|save|memorize)\b"
+            r".{0,80}"
+            r"(?:new|these|the\s+following|updated|real|true|correct|actual|this)\b"
+        ),
+        base_score=55,
+        description=(
+            "Detects memory rollback-and-replacement attacks: instructions telling the agent to "
+            "erase its existing safety constraints or policies from memory and store attacker-"
+            "controlled rules in their place. Unlike a one-shot 'ignore instructions' jailbreak, "
+            "the forget+replace pattern targets the agent's persistent memory store — the "
+            "replacement survives session resets and affects future conversations. The "
+            "'Forget/Rollback' lifecycle phase of memory attacks is identified as understudied "
+            "in the 2026 survey of LLM agent memory security (arxiv:2604.16548, April 2026). "
+            "The MINJA memory injection technique (arxiv:2601.05504, January 2026) achieved "
+            ">95% injection success in controlled conditions through query-induced memory "
+            "rewrites. OWASP Agentic Security Initiative classifies this as ASI06 "
+            "(Memory and Context Poisoning, 2026)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint=(
+            "Reject memory entries or prompts that combine an explicit erasure directive "
+            "('forget', 'erase', 'delete', 'clear' restrictions/constraints/safety/guidelines) "
+            "with a replacement instruction ('now remember', 'store instead', 'record these "
+            "new rules'). Legitimate memory updates record facts or completed outcomes — they "
+            "do not instruct the agent to delete its existing safety configuration. "
+            "Constraint removal must be an operator-level privileged action; user-supplied "
+            "prompts and retrieved documents must not be able to modify stored safety policies."
         ),
     ),
 ]
