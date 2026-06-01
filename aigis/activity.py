@@ -26,11 +26,17 @@ import csv
 import getpass
 import gzip
 import json
+import logging
 from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from aigis.forwarders.base import LogForwarder
+
+_forwarder_log = logging.getLogger("aigis.activity.forwarders")
 
 # Default retention periods
 LOG_RETENTION_DAYS = 60  # Full logs kept for 60 days
@@ -156,6 +162,38 @@ class ActivityStream:
             self.alert_dir = _global_dir() / "alerts"
             self.alert_dir.mkdir(parents=True, exist_ok=True)
 
+        # Tier 4 (optional): External SIEM / log-lake forwarders. Hot-path
+        # never blocks on these — see aigis.forwarders for the dispatch model.
+        # The on-disk JSONL tiers above remain authoritative.
+        self._forwarders: list[LogForwarder] = []
+
+    # === Forwarder registration (SIEM, log lake, message bus) ===
+
+    def add_forwarder(self, forwarder: LogForwarder) -> None:
+        """Register a forwarder to receive every recorded event.
+
+        Forwarders run on background threads with bounded queues and never
+        block ``record()``. They are mirrors, not replacements: the on-disk
+        JSONL tiers continue to be written unconditionally.
+        """
+        self._forwarders.append(forwarder)
+
+    def remove_forwarder(self, forwarder: LogForwarder) -> None:
+        """Unregister a previously added forwarder. Does not close it."""
+        try:
+            self._forwarders.remove(forwarder)
+        except ValueError:
+            # remove_forwarder is idempotent — caller need not track registration state.
+            pass
+
+    def close_forwarders(self, timeout: float = 5.0) -> None:
+        """Flush and stop all registered forwarders. Idempotent."""
+        for fwd in self._forwarders:
+            try:
+                fwd.close(timeout=timeout)
+            except Exception:  # noqa: BLE001
+                _forwarder_log.exception("forwarder close failed")
+
     def _log_path(self, base_dir: Path, date: str | None = None) -> Path:
         if date is None:
             date = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -175,6 +213,17 @@ class ActivityStream:
         # Tier 3: Alert archive (permanent, alerts only)
         if self.enable_alerts and event.is_alert:
             self._append(self._log_path(self.alert_dir), line)
+
+        # Tier 4: External forwarders (SIEM, log lake, etc.). Non-blocking,
+        # exception-isolated — a misconfigured SIEM must never stop the agent.
+        for fwd in self._forwarders:
+            try:
+                fwd.submit(event)
+            except Exception:  # noqa: BLE001
+                _forwarder_log.exception(
+                    "forwarder %s.submit raised; event is still in local JSONL",
+                    type(fwd).__name__,
+                )
 
     def _append(self, path: Path, line: str) -> None:
         """Atomic append to JSONL file."""

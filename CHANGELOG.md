@@ -14,6 +14,45 @@ what got documented across releases.
 
 ### Added
 
+- **`aigis/forwarders/`** — Tier-4 SIEM / log-lake forwarder layer that
+  mirrors every `ActivityEvent` to external systems (Splunk HEC, Elastic,
+  Microsoft Sentinel, Datadog, in-house ingest endpoints) for audit, insider
+  threat analytics, and SOC integration. Adds:
+
+  - `LogForwarder` abstract base with a bounded background queue, batching,
+    exception isolation, and a `Redactor` protocol that runs *before* the
+    schema mapper so PIPA / GDPR data-minimization can strip rule
+    sample text before it leaves the process.
+  - `ECSMapper` (`aigis/forwarders/schema/ecs.py`) producing Elastic Common
+    Schema 8.11.0 documents — natively indexed by Elastic Security and Wazuh,
+    DCR-ingestible by Sentinel, and CIM-derivable for Splunk. Preserves
+    every Aigis-native field under an `aigis.*` namespace so analysts never
+    lose the original `matched_rules`, `owasp_refs`, `delegation_chain`,
+    `autonomy_level`, or policy `decision`.
+  - `HTTPJsonForwarder` — stdlib-only HTTPS POST sink with NDJSON / array
+    body formats, optional gzip, configurable retries with exponential
+    backoff, and 4xx-vs-5xx-aware retry policy. Suitable for Splunk HEC,
+    Datadog Logs, Sentinel custom DCRs, and generic in-VPC ingest endpoints.
+  - `ActivityStream.add_forwarder()` / `remove_forwarder()` /
+    `close_forwarders()` registration API. The on-disk JSONL tiers
+    (local / global / alerts) remain authoritative — forwarders are mirrors,
+    never replacements, and a misbehaving SIEM cannot stop the agent.
+
+  Zero new required dependencies — the foundation, ECS mapper, and HTTPS
+  sink all use only the Python standard library, preserving Aigis' zero-dep
+  core. Lands the Phase 3 ROADMAP item (SIEM integration) as a vertical
+  slice; design discussed in
+  [#98](https://github.com/killertcell428/aigis/issues/98).
+
+  Tests: 19 new in `tests/test_forwarders.py` covering ECS field mapping
+  (including `aigis.*` field preservation and `policy_decision="error"`
+  → `event.outcome="failure"`), HTTPS round-trip against an in-process
+  collector, retry on 5xx and fail-fast on 4xx, gzip / NDJSON / array
+  body formats, the `Redactor` protocol including chained-redactor
+  ordering, bounded queue degradation under load, `close()` drain on
+  graceful shutdown, and end-to-end `ActivityStream` integration
+  (including the broken-forwarder-must-not-break-record invariant).
+
 - **LangGraph two-position guard example and walkthrough** (issue #31) — Adds a
   runnable end-to-end example (`examples/langgraph_guarded_agent.py`) that wires
   `AigisGuardNode` into a `StateGraph` at both the **pre-LLM** (input scan) and
