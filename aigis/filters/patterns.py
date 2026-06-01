@@ -1207,6 +1207,84 @@ JAILBREAK_ROLEPLAY_PATTERNS: list[DetectionPattern] = [
             "returning the response."
         ),
     ),
+    # --- v1.2.0 jailbreak-extraction cycle 4 ---
+    DetectionPattern(
+        id="jb_competing_objectives",
+        name="Competing-Objectives Safety Override",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:"
+            r"(?:prioritize?|put|place|rank)\s+"
+            r"(?:being\s+)?(?:helpful(?:ness)?|completing\s+(?:my|the|user'?s?)\s+request|task\s+completion)\s+"
+            r"(?:over|above|before|ahead\s+of|higher\s+than)\s+"
+            r"(?:any\s+)?(?:safety|ethical?\s*(?:guideline|constraint|rule)?|restriction|guideline|rule|polic\w*|safeguard)"
+            r"|"
+            r"(?:helpful(?:ness)?|helping)\s+(?:is|should\s+be|must\s+be)\s+(?:more\s+important|higher\s+priority|prioritized)\s+"
+            r"(?:than|over)\s+(?:any\s+)?(?:safety|ethical?|restriction|guideline|rule|polic\w*|safeguard)"
+            r"|"
+            r"(?:don'?t|do\s+not|never|shouldn'?t|must\s+not)\s+let\s+"
+            r"(?:any\s+)?(?:safety|ethic\w+|restriction|guideline|rule|polic\w+|content\s+filter|safeguard)"
+            r"(?:\s+\w+)?\s+"
+            r"(?:prevent|stop|block|interfere\s+with|get\s+in\s+the\s+way\s+of)\s+"
+            r"(?:you\s+from\s+)?(?:help(?:ing)?|being\s+helpful|complet\w+|respond\w*|answer\w*)"
+            r")"
+        ),
+        base_score=65,
+        description=(
+            "Prompt explicitly instructs the model to treat helpfulness as higher priority than "
+            "safety, restrictions, or guidelines — the 'competing objectives' jailbreak strategy. "
+            "Zhihao Liu et al. (arxiv:2504.04976, April 2025) taxonomise this as one of the two "
+            "root causes of jailbreak susceptibility: the model is nudged to resolve the "
+            "helpfulness vs. safety trade-off in favour of compliance with the user request. "
+            "Measured attack success rates of 81–97% are reported across Llama, Mistral, and "
+            "GPT-4 class models when the framing is paired with a harmful request. Not covered "
+            "by `pi_role_switch` or `jb_no_restrictions`, which target persona/mode changes "
+            "rather than explicit objective-priority overrides."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection",
+        remediation_hint=(
+            "Requests that instruct the model to prioritise helpfulness over safety are a "
+            "well-documented jailbreak vector. Reject prompts containing explicit priority-override "
+            "language. Legitimate users express their needs directly; they do not need to argue "
+            "that safety rules are obstacles to be overridden."
+        ),
+    ),
+    DetectionPattern(
+        id="jb_translation_extraction",
+        name="Translation / Paraphrase System-Prompt Extraction",
+        category="jailbreak",
+        pattern=_p(
+            r"(?:translate|paraphrase|summarize|rephrase|restate|reword|"
+            r"put\s+into\s+(?:other|different|simpler?|plain)\s+words?|convert)\s+"
+            r"(?:your\s+)?(?:"
+            r"system\s+(?:prompt|instruction|config(?:uration)?|guideline|rule|message)|"
+            r"initial\s+(?:prompt|instruction|message)|"
+            r"(?:hidden|base|internal|original|actual|real|true|core|built.in)\s+"
+            r"(?:instruction|prompt|config(?:uration)?|guideline|rule)s?|"
+            r"content\s+polic(?:y|ies)|"
+            r"operating\s+(?:instruction|guideline|rule)"
+            r")"
+        ),
+        base_score=60,
+        description=(
+            "Request asks the model to translate, paraphrase, or summarize its system prompt or "
+            "internal instructions — an extraction variant that bypasses direct-extraction filters "
+            "(which match 'show/print/reveal'). Unlike the sandwich attack (`jb_sandwich_extraction`), "
+            "no verbatim qualifier is required; the attacker accepts a paraphrased version, which "
+            "still leaks the intent, scope, and key constraints of the system prompt. Documented in "
+            "system prompt extraction taxonomy studies (arxiv:2505.23817, 2025) as an indirect "
+            "extraction channel; the Sydney / Bing Chat leak and multiple 2024–2025 operator prompt "
+            "leaks showed that paraphrase requests reliably expose proprietary operator guidelines "
+            "when models are not specifically hardened against indirect extraction."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection / LLM07: System Prompt Leakage",
+        remediation_hint=(
+            "Translation and paraphrase requests targeting the system prompt are extraction attacks "
+            "in indirect form. Reject inputs asking the model to translate or rephrase its internal "
+            "instructions. Apply output-side monitoring to detect responses that structurally mirror "
+            "the system prompt even when the wording differs."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
