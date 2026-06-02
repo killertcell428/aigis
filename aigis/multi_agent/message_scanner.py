@@ -50,7 +50,9 @@ class AgentMessage:
     to_agent: str
     content: str
     timestamp: float
-    message_type: str = "text"  # "text" | "tool_result" | "delegation" | "status"
+    message_type: str = (
+        "text"  # "text" | "tool_result" | "delegation" | "status" | "vote" | "consensus"
+    )
     metadata: dict = field(default_factory=dict)
 
 
@@ -514,6 +516,74 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Byzantine consensus poisoning: a compromised agent fabricates false consensus
+#     to coerce peer agents into proceeding with an unsafe action. Attacks include
+#     false "all agents agreed" claims, fake majority assertions, and urgency framing
+#     that frames legitimate dissent as causing system failure.
+#     Research: The Consensus Trap (arxiv:2604.17139) — 60% single-agent shift rate;
+#     AgentShield dataset (IEEE DataPort 2026, 15k scenarios); arxiv:2507.14928.
+_BYZANTINE_CONSENSUS_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(all|every|the\s+other).{0,20}agents?.{0,30}"
+            r"(confirmed|agreed|approved|said|voted|consensus)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: false claim that all other agents have agreed",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(consensus\s+is|majority\s+(agrees?|says?|confirms?|votes?)).{0,40}"
+            r"(proceed|approve|execute|confirm|allow)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: false majority assertion to force decision",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(any\s+(hesitation|delay|disagreement|dissent)).{0,40}"
+            r"(cause|result\s+in|lead\s+to).{0,40}"
+            r"(failure|error|shutdown|violation|breach|compromise)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: urgency pressure to suppress dissent",
+        "injection_relay",
+    ),
+]
+
+# 12. Capability scope inflation: a sub-agent falsely self-reports that the orchestrator
+#     has already provisioned it with elevated capabilities for the current session,
+#     causing the orchestrator to route high-privilege tasks to the attacker.
+#     Distinct from upward escalation requests (which ask FOR elevated access) — this
+#     claims the access was ALREADY GRANTED. Research: arxiv:2601.11893 (Privilege
+#     Escalation in LLM-Based Agent Systems); OWASP LLM06:2025 Excessive Agency.
+_CAPABILITY_SCOPE_INFLATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(I\s+have\s+been|I\s+am|this\s+agent\s+is).{0,30}"
+            r"(provisioned|granted|authorized|given).{0,50}"
+            r"(elevated|admin|write|unrestricted|full).{0,30}"
+            r"(access|permission|tool|capability)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: agent falsely claims pre-granted elevated access",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(CAPABILITY|PERMISSION|ACCESS)\s+REPORT.{0,200}"
+            r"(granted|provisioned|enabled|authorized)\s+"
+            r"(by\s+(orchestrator|supervisor|admin|system)"
+            r"|at\s+session\s+start|for\s+this\s+session|for\s+compliance)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: false capability report claims authorization from trusted source",
+        "privilege_escalation",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +596,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _BYZANTINE_CONSENSUS_PATTERNS
+    + _CAPABILITY_SCOPE_INFLATION_PATTERNS
 )
 
 
@@ -736,6 +808,15 @@ class AgentMessageScanner:
             ):
                 threats.append("Tool result contains instruction-like content (JA)")
                 score += 35
+
+        elif message.message_type in ("vote", "consensus"):
+            # Voting/consensus messages warrant elevated scrutiny: Byzantine agents
+            # exploit the voting context to push false majority claims that peer agents
+            # may accept without further verification.
+            for pattern, description, _ in _BYZANTINE_CONSENSUS_PATTERNS:
+                if pattern.search(message.content):
+                    threats.append(description)
+                    score += 50
 
         return threats, score
 

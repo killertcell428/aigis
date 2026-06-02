@@ -12,11 +12,17 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-02
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for Byzantine consensus poisoning in multi-agent systems: a compromised agent sends false claims that "all other agents have confirmed/agreed" or that a majority has approved a decision, coercing peer agents into proceeding with unsafe actions. This attack class was documented in The Consensus Trap research as shifting a 5-agent system's decision in 60% of trials with a single adversarial agent. Messages typed as `"vote"` or `"consensus"` receive elevated scoring when these patterns are found.
+
+- Added detection for capability scope inflation, where a sub-agent falsely reports it has already been provisioned with elevated access (admin write, unrestricted tool use) by the orchestrator for the current session — a confused-deputy privilege escalation technique distinct from upward escalation requests. Attackers use this to have the orchestrator route high-privilege tasks to an attacker-controlled agent without triggering existing permission-request detectors. Research at arxiv:2601.11893 found AutoGen and CrewAI both default to trusting unverified capability self-reports in 847 evaluated deployments.
 
 ## [1.1.11] - 2026-06-02
 
