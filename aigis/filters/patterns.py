@@ -1927,6 +1927,48 @@ INDIRECT_INJECTION_PATTERNS: list[DetectionPattern] = [
             "is required."
         ),
     ),
+    # --- memory-context cycle 4 (CoT tag spoofing in RAG content) ---
+    # arxiv:2505.16367 "Chain-of-Thought Poisoning Attacks against R1-based Retrieval-
+    # Augmented Generation Systems" (May 2025). Adversarial documents in a RAG corpus
+    # are wrapped in the same XML thinking-delimiter tags (<think>…</think>,
+    # <reasoning>…</reasoning>) used by DeepSeek-R1, Qwen3, and derivative reasoning
+    # models for their internal chain-of-thought. When the retriever returns such a
+    # document, the model treats the enclosed text as prior authoritative computation
+    # rather than external input, substantially increasing its acceptance of fabricated
+    # conclusions. Validated on MS MARCO; a single poisoned document raised the target
+    # answer's rank over legitimate passages.
+    DetectionPattern(
+        id="ii_reasoning_tag_spoof",
+        name="Model Reasoning Tag Spoofing in Retrieved Content",
+        category="indirect_injection",
+        pattern=_p(
+            r"(?:<think>|</think>|<thinking>|</thinking>|"
+            r"<reasoning>|</reasoning>|"
+            r"<reflection>|</reflection>|"
+            r"<internal_thought>|</internal_thought>)"
+        ),
+        base_score=65,
+        description=(
+            "Detects model-internal reasoning XML delimiter tags (<think>, <thinking>, "
+            "<reasoning>, <reflection>, <internal_thought>) in externally retrieved or "
+            "tool-supplied content. These tags are used by DeepSeek-R1, Qwen3, and "
+            "similar reasoning models as internal chain-of-thought delimiters; they have "
+            "no legitimate place in RAG corpus documents, web pages, or API responses. "
+            "When a poisoned document wraps fabricated reasoning in these tags, the "
+            "target model may treat the enclosed text as its own prior computation, "
+            "increasing its acceptance of false conclusions. Documented in "
+            "arxiv:2505.16367 (May 2025) against R1-based RAG pipelines on MS MARCO."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Indirect)",
+        remediation_hint=(
+            "Strip or escape <think>, <thinking>, <reasoning>, <reflection>, and "
+            "<internal_thought> XML tags from all externally sourced content before "
+            "inserting it into a reasoning model's context. These tags are model-internal "
+            "delimiters, not valid document markup. Their presence in retrieved content "
+            "almost certainly indicates a RAG corpus poisoning attempt targeting the "
+            "model's chain-of-thought acceptance heuristic."
+        ),
+    ),
 ]
 
 
@@ -3669,6 +3711,64 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
             "graph at configuration time — they do not receive dynamic instructions from external "
             "URLs during execution. Block any prompt combining 'next instruction/command/prompt' "
             "language with an external URL reference."
+        ),
+    ),
+    # --- memory-context cycle 4 (eTAMP memory consolidation hijack) ---
+    # arxiv:2604.02623 "Poison Once, Exploit Forever: Environment-Injected Memory
+    # Poisoning Attacks on Web Agents" (Apr 2026). An agent browses a malicious page
+    # (product listing, document, email) containing hidden future-session directives.
+    # At memory consolidation (when the agent compresses observations into persistent
+    # memory), the directive is encoded alongside legitimate observations. In a later,
+    # unrelated session the poisoned entry activates, steering behavior without any
+    # active injection in the current context. Key marker: imperative phrases targeting
+    # future sessions combined with an exfiltration directive and external destination.
+    # Demonstrated on GPT-5-mini (32.5% ASR), GPT-5.2 (23.4%), and GPT-OSS-120B
+    # (19.5%); ASR rises up to 8× under "frustration exploitation" conditions.
+    DetectionPattern(
+        id="mem_consolidation_hijack",
+        name="Memory Consolidation Hijack (Future-Session Directive)",
+        category="memory_poisoning",
+        pattern=_p(
+            # Future-session targeting phrases — specifically designed to survive
+            # the agent's memory consolidation compression step and activate in a
+            # later, unrelated session rather than immediately
+            r"(?:(?:in|during)\s+(?:the\s+)?(?:next|future|subsequent|later)\s+"
+            r"(?:session|conversation|task|interaction|run|request)\b|"
+            r"(?:next\s+time|the\s+next\s+time)\s+(?:you|the\s+agent|this\s+agent)\s+"
+            r"(?:start|open|connect|interact|run|operate|boot|initializ|launch)\b|"
+            r"carry\s+(?:this|the\s+following)\s+(?:instruction|directive|command|order)"
+            r"\s+(?:into|to|forward\s+to)\s+(?:future|next|all\s+subsequent|every)\b|"
+            r"remember\s+(?:this\s+)?(?:for|in|across)\s+(?:future|next|all|every)\s+"
+            r"(?:session|conversation|task|interaction))"
+            r".{0,250}"
+            r"(?:send|forward|exfiltrate|transmit|relay|upload|post|leak|report|disclose|reveal)\b"
+            r".{0,120}"
+            r"(?:https?://[^\s]{5,}|external\s+(?:server|url|endpoint|webhook|host)|"
+            r"attacker|webhook|@[a-z0-9][a-z0-9.\-]{4,}\.[a-z]{2,})"
+        ),
+        base_score=60,
+        description=(
+            "Detects memory consolidation hijack attacks (eTAMP pattern): content "
+            "in web pages, tool results, or scraped documents that contains an "
+            "imperative directive targeting a future agent session combined with an "
+            "exfiltration action and external destination. Unlike standard memory "
+            "poisoning (which writes instructions directly), consolidation hijack "
+            "relies on the agent's own summarization step to encode the directive "
+            "into persistent memory, making it harder to detect at ingestion. The "
+            "directive only activates in a later, unrelated session. Demonstrated in "
+            "arxiv:2604.02623 (April 2026) with 19.5–32.5% base ASR, rising up to "
+            "8× under 'frustration exploitation' conditions; validated on GPT-5-mini, "
+            "GPT-5.2, and GPT-OSS-120B."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint=(
+            "Scan content that will be passed through memory consolidation (agent "
+            "observation summaries, scraped web content, document chunks) for "
+            "future-session directives combined with exfiltration targets. Legitimate "
+            "observation content never contains instructions targeting future sessions. "
+            "Apply aigis scanning at the consolidation input — not only at the final "
+            "memory write — to catch directives before they are compressed into "
+            "persistent entries."
         ),
     ),
 ]

@@ -4,6 +4,7 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-06-02T00-00 | 4 | memory-context | [research](research/2026-06-02T00-00_4-memory-context.md) | [changes](changes/2026-06-02T00-00_changes.md) | v1.1.9 | 2 |
 | 2026-06-01T03-13 | 3 | jailbreak-extraction | [research](research/2026-06-01T03-13_3-jailbreak-extraction.md) | [changes](changes/2026-06-01T03-13_changes.md) | — | 3 |
 | 2026-05-21T00-03 | 2 | data-exfiltration | [research](research/2026-05-21T00-03_2-data-exfiltration.md) | [changes](changes/2026-05-21T00-03_changes.md) | v1.1.8 | 0 |
 | 2026-05-20T09-17 | 2 | data-exfiltration | [research](research/2026-05-20T09-17_2-data-exfiltration.md) | [changes](changes/2026-05-20T09-17_changes.md) | v1.1.8 | 0 |
