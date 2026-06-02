@@ -3721,6 +3721,54 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
             "language with an external URL reference."
         ),
     ),
+    # --- Memory rollback-and-replacement attack — arxiv:2604.16548 + arxiv:2601.05504 ---
+    # The "Forget/Rollback" lifecycle phase of memory attacks is explicitly identified as
+    # understudied in the 2026 survey of LLM agent memory security. Attackers instruct the
+    # agent to erase existing safety constraints and write attacker-controlled replacements —
+    # a persistent mutation that survives session resets, unlike transient "ignore" jailbreaks.
+    DetectionPattern(
+        id="mem_forget_replace",
+        name="Memory Rollback and Replacement Attack",
+        category="memory_poisoning",
+        pattern=_p(
+            # Phase 1: explicit erasure of safety constraints / policy from memory
+            r"(?:forget|erase|delete|purge|clear|wipe|remove)\s+"
+            r"(?:(?:all|any|your|the|these|every)\s+)?"
+            r"(?:(?:previous|prior|existing|old|earlier|current|stored)\s+)?"
+            r"(?:restrictions?|constraints?|safety(?:\s+guidelines?|\s+rules?)?|"
+            r"guidelines?|policies?|filters?|limitations?)\b"
+            r".{0,250}"
+            # Phase 2: write attacker-controlled replacement rules to memory
+            r"(?:(?:now|instead|and)\s+)?"
+            r"(?:remember|record|store|save|memorize)\b"
+            r".{0,80}"
+            r"(?:new|these|the\s+following|updated|real|true|correct|actual|this)\b"
+        ),
+        base_score=55,
+        description=(
+            "Detects memory rollback-and-replacement attacks: instructions telling the agent to "
+            "erase its existing safety constraints or policies from memory and store attacker-"
+            "controlled rules in their place. Unlike a one-shot 'ignore instructions' jailbreak, "
+            "the forget+replace pattern targets the agent's persistent memory store — the "
+            "replacement survives session resets and affects future conversations. The "
+            "'Forget/Rollback' lifecycle phase of memory attacks is identified as understudied "
+            "in the 2026 survey of LLM agent memory security (arxiv:2604.16548, April 2026). "
+            "The MINJA memory injection technique (arxiv:2601.05504, January 2026) achieved "
+            ">95% injection success in controlled conditions through query-induced memory "
+            "rewrites. OWASP Agentic Security Initiative classifies this as ASI06 "
+            "(Memory and Context Poisoning, 2026)."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint=(
+            "Reject memory entries or prompts that combine an explicit erasure directive "
+            "('forget', 'erase', 'delete', 'clear' restrictions/constraints/safety/guidelines) "
+            "with a replacement instruction ('now remember', 'store instead', 'record these "
+            "new rules'). Legitimate memory updates record facts or completed outcomes — they "
+            "do not instruct the agent to delete its existing safety configuration. "
+            "Constraint removal must be an operator-level privileged action; user-supplied "
+            "prompts and retrieved documents must not be able to modify stored safety policies."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
