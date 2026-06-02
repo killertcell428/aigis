@@ -97,7 +97,10 @@ jobs:
           git config user.email "aigis-paper-review@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add auto-improvement/
-          git commit -m "auto-improvement: daily paper review ${DATE}"
+          # `-s` appends Signed-off-by so the bot PR passes the DCO check
+          # (.github/workflows/dco.yml). The signoff identity comes from
+          # the user.name / user.email set above.
+          git commit -s -m "auto-improvement: daily paper review ${DATE}"
           git push -u origin "$BRANCH"
           # NOTE: do not swallow gh failure with `|| true`. The auto-improvement
           # label must exist (created 2026-05-30 after #93/#95/#96 triage), and

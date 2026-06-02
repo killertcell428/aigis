@@ -1,0 +1,4 @@
+# Keep git hooks LF — they execute as POSIX shell scripts in CI (Ubuntu runners)
+# and on contributors' Linux/macOS clones. Windows clones with autocrlf=true
+# would otherwise rewrite the shebang line and break execution.
+.githooks/*  text eol=lf
