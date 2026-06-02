@@ -286,17 +286,19 @@ to certify that you wrote (or have the right to submit) the patch.
 ### How to sign off
 
 Add `Signed-off-by: Your Name <your-email@example.com>` to every commit
-message. The easiest path is to let git append it automatically — pick
-either of these (or both):
+message. The easiest path is to let git append it automatically:
 
 ```bash
-# Option A — global default for this clone (recommended)
-git config format.signoff true
+# Recommended — sets both format.signoff and the repo's prepare-commit-msg hook
+make setup-git
 
-# Option B — repo-local hook (also covers IDEs / scripts that bypass
-# format.signoff). Run once after cloning:
-git config core.hooksPath .githooks
+# Or set them individually:
+git config format.signoff true        # Option A: global default for this clone
+git config core.hooksPath .githooks   # Option B: hook fallback (covers IDEs / scripts)
 ```
+
+`make install-dev` runs `setup-git` automatically, so most contributors don't
+need to invoke it directly.
 
 Or pass `-s` per commit:
 

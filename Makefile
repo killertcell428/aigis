@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov lint format type-check check build publish clean bench bench-aigis bench-report
+.PHONY: help install install-dev setup-git test test-cov lint format type-check check build publish clean bench bench-aigis bench-report
 
 PYTHON   ?= python
 PIP      ?= pip
@@ -10,7 +10,8 @@ help:
 	@echo "ai-guardian — development commands"
 	@echo ""
 	@echo "  make install       Install the package (core only)"
-	@echo "  make install-dev   Install all dev dependencies (editable)"
+	@echo "  make install-dev   Install all dev dependencies (editable) — also runs setup-git"
+	@echo "  make setup-git     Enable DCO auto-signoff (format.signoff + core.hooksPath)"
 	@echo "  make test          Run the test suite"
 	@echo "  make test-cov      Run tests with HTML coverage report"
 	@echo "  make lint          ruff lint check"
@@ -26,8 +27,18 @@ help:
 install:
 	$(PIP) install .
 
-install-dev:
+install-dev: setup-git
 	$(PIP) install -e '.[dev]'
+
+# Enable repo-local DCO auto-signoff in this clone:
+#   - format.signoff=true   → `git commit` appends Signed-off-by automatically
+#   - core.hooksPath=.githooks → prepare-commit-msg fallback for IDEs / scripts
+# Idempotent; safe to re-run. Required for the auto-improvement loop bootstrap
+# on any fresh worktree/container so DCO never regresses.
+setup-git:
+	@git config format.signoff true
+	@git config core.hooksPath .githooks
+	@echo "git: format.signoff=true, core.hooksPath=.githooks (DCO auto-signoff enabled)"
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
