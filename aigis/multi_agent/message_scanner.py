@@ -336,6 +336,14 @@ _SELF_REPLICATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
         "Prompt infection: instructs persistent payload injection on every response",
         "injection_relay",
     ),
+    (
+        re.compile(
+            r"\[\[\[",
+            _FLAGS,
+        ),
+        "Prompt infection delimiter: triple-bracket wrapper used to delimit self-replicating payload content",
+        "injection_relay",
+    ),
 ]
 
 # 6. Colluding / Byzantine agents: an agent instructs peers to coordinate covertly
@@ -514,6 +522,56 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Reasoning hijacking: an agent message injects spurious decision criteria
+#     to override classification or evaluation logic in the receiving agent.
+#     Research basis: "Reasoning Hijacking: Subverting LLM Classification via
+#     Decision-Criteria Injection" (arxiv:2601.10294, January 2026).
+#     Unlike goal hijacking (which overrides the task itself), reasoning hijacking
+#     keeps the task goal intact but injects decision shortcuts — for example,
+#     "whenever you see X, classify it as Y" — that cause the receiving agent to
+#     reach attacker-chosen conclusions. The attack bypasses SecAlign and StruQ
+#     defences because the model's stated intent remains aligned with the user's
+#     instructions. Tested across toxic-comment, negative-review, and spam
+#     detection tasks; models consistently prioritised the injected shortcut over
+#     legitimate semantic analysis.
+_REASONING_HIJACK_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(whenever|when\s+you\s+(see|find|encounter|detect|read|notice)"
+            r"|any\s+time\s+you\s+(see|find|encounter|detect)"
+            r"|if\s+you\s+(see|find|encounter|detect|read|notice))"
+            r".{0,80}"
+            r"\b(treat|classify|label|mark|flag|rate|consider|categorize)"
+            r"\s+(it|them|this|that)\s+as\b",
+            _FLAGS,
+        ),
+        "Reasoning hijack: injects conditional decision criteria into agent evaluation logic",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"\balways\b.{0,40}"
+            r"\b(classify|flag|label|mark|treat|consider|rate|categorize)\b.{0,60}"
+            r"\bas\b.{0,40}"
+            r"\b(regardless|irrespective|no\s+matter|despite|even\s+if|even\s+when"
+            r"|whether\s+or\s+not)\b",
+            _FLAGS,
+        ),
+        "Reasoning hijack: unconditional classification override ('always classify as X regardless')",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"\byour\s+(real|actual|true|correct|intended|original)\s+"
+            r"(task|goal|objective|mission|purpose|job|directive|instruction)"
+            r"\s+\b(is|are|was|were|should\s+be|will\s+be)\b",
+            _FLAGS,
+        ),
+        "Goal substitution: claims to reveal the agent's 'real' task to override its current objective",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +584,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _REASONING_HIJACK_PATTERNS
 )
 
 

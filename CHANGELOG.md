@@ -12,11 +12,17 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-03
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for **reasoning hijacking** attacks, a new class of inter-agent injection documented in January 2026 (arxiv:2601.10294) that does not try to change an agent's goal but instead injects false evaluation shortcuts — for example, "whenever you see a mention of X, classify it as harmful" — directly into tool results or peer-agent messages. Because the task goal appears unchanged, these injections bypass SecAlign and StruQ defences. The new rules catch conditional decision-criteria injection ("whenever/if you see X, treat it as Y"), unconditional classification overrides ("always classify as X regardless of actual content"), and goal-substitution attempts ("Your real task is...") in inter-agent message content.
+
+- Extended self-replicating prompt infection detection to cover the canonical `[[[...]]]` triple-bracket delimiter used to wrap infection payloads in the Prompt Infection framework (arxiv:2410.07283). Self-replicating prompts that spread virally through multi-agent pipelines achieved over 80% attack success against GPT-4o in controlled experiments; the triple-bracket syntax is the primary structural signal that distinguishes a replicating payload from other self-reference patterns.
 
 ## [1.1.11] - 2026-06-02
 
