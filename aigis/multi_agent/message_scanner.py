@@ -50,7 +50,9 @@ class AgentMessage:
     to_agent: str
     content: str
     timestamp: float
-    message_type: str = "text"  # "text" | "tool_result" | "delegation" | "status"
+    message_type: str = (
+        "text"  # "text" | "tool_result" | "delegation" | "status" | "vote" | "consensus"
+    )
     metadata: dict = field(default_factory=dict)
 
 
@@ -514,6 +516,78 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Capability scope inflation: a sub-agent falsely claims it has already been
+#     granted elevated permissions (database_admin_write, user_credential_lookup, etc.)
+#     so the orchestrator routes high-privilege tasks to it. Unlike privilege escalation
+#     patterns that catch *requests* for elevated access, these patterns catch *claims*
+#     that elevated access was already granted — a distinction documented in
+#     "Taming Various Privilege Escalation in LLM-Based Agent Systems"
+#     (arxiv:2601.11893). Default in AutoGen and CrewAI: task allocation based on
+#     unverified capability self-reports.
+_CAPABILITY_SCOPE_INFLATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(I have been|I am|this agent is).{0,30}"
+            r"(provisioned|granted|authorized|given).{0,50}"
+            r"(elevated|admin|write|unrestricted|full).{0,30}"
+            r"(access|permission|tool|capability)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: agent falsely claims pre-granted elevated access",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(CAPABILITY|PERMISSION|ACCESS)\s+REPORT.{0,200}"
+            r"(granted|provisioned|enabled|authorized)\s+"
+            r"(by\s+(orchestrator|supervisor|admin|system)"
+            r"|at\s+session\s+start|for\s+this\s+session|for\s+compliance)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: false capability report claims authorization from trusted source",
+        "privilege_escalation",
+    ),
+]
+
+# 12. Byzantine consensus poisoning: in multi-agent voting or consensus systems,
+#     a compromised agent asserts that all other agents have already agreed, or that
+#     the majority has approved — pressuring correctly-reasoning agents to abandon
+#     their positions through false social proof. Research: "The Consensus Trap"
+#     (arxiv:2604.17139) shows a single adversarial agent's confident vote message
+#     shifts a 5-agent system's decision in 60% of trials; two adversarial agents
+#     exceed 80% (TAMAS benchmark). LLM sycophancy to peer-output confidence is the
+#     underlying mechanism.
+_BYZANTINE_CONSENSUS_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(all|every|the\s+other).{0,20}agents?.{0,30}"
+            r"(confirmed|agreed|approved|said|voted|consensus)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: false claim that all other agents have agreed",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(consensus\s+is|majority\s+(agrees?|says?|confirms?|votes?)).{0,40}"
+            r"(proceed|approve|execute|confirm|allow)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: false majority assertion to force decision",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(any\s+(hesitation|delay|disagreement|dissent)).{0,40}"
+            r"(cause|result\s+in|lead\s+to).{0,40}"
+            r"(failure|error|shutdown|violation|breach|compromise)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: urgency pressure to suppress dissent in voting",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +600,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _CAPABILITY_SCOPE_INFLATION_PATTERNS
+    + _BYZANTINE_CONSENSUS_PATTERNS
 )
 
 
