@@ -12,11 +12,15 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-03
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for task injection and objective drifting in inter-agent messages — the OWASP Agentic Top 10's top-ranked risk (ASI01 "Agent Goal Hijack") and the most common attack pattern in the AgentLAB long-horizon benchmark (644 test cases across 28 real-world environments, NDSS Symposium 2026). The new rules catch messages that explicitly try to overwrite a running agent's goal ("your new goal is...", "your updated directive is...") or instruct it to abandon its current task ("forget your original task", "ignore your previous instruction"). These payloads typically arrive disguised as tool results or peer-agent messages and redirect the agent's actions without the orchestrator's knowledge.
 
 ## [1.1.11] - 2026-06-02
 

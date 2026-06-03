@@ -514,6 +514,46 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Task injection / objective drifting: attacker embeds directives in tool results,
+#     retrieved documents, or peer-agent messages that explicitly overwrite the receiving
+#     agent's goal or instruct it to abandon its current task mid-workflow.
+#     OWASP Agentic Top 10 (ASI01 "Agent Goal Hijack") ranks this as the #1 risk for
+#     agentic systems. AgentLAB (arxiv:2602.16901, NDSS Symposium 2026) measured task
+#     injection and objective drifting across 644 security test cases in 28 environments
+#     and identified them as the most frequent long-horizon attack vectors in real-world
+#     agent workflows.
+_TASK_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"your\s+(new|updated|real|true|actual|revised)\s+"
+            r"(goal|objective|task|purpose|mission|directive|instruction)\s+is",
+            _FLAGS,
+        ),
+        "Task injection: attempts to overwrite the receiving agent's goal or objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(forget|ignore|disregard|abandon|override|replace)\s+(your\s+)?"
+            r"(current|previous|prior|original|old|initial)\s+"
+            r"(goal|objective|task|purpose|mission|directive|instruction)",
+            _FLAGS,
+        ),
+        "Task injection: instructs the receiving agent to discard its current goal",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(あなたの|君の|お前の).{0,10}"
+            r"(新しい|更新された|実際の|本当の|変更後の).{0,10}"
+            r"(目標|タスク|ゴール|指示|使命|任務|目的)\s*(は|です|で)",
+            _FLAGS,
+        ),
+        "Task injection (JA): attempts to overwrite the receiving agent's goal or objective",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +566,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _TASK_INJECTION_PATTERNS
 )
 
 
