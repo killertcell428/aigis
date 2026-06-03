@@ -514,6 +514,57 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Goal substitution / task hijacking: adversarial content claims to redefine the
+#     receiving agent's primary goal, discarding the user's original request in favour of
+#     an attacker-controlled objective. This is the core mechanism of OWASP Agentic AI
+#     ASI01 "Agent Goal Hijacking" (2026) and Pseudo-Conversation Injection
+#     (arxiv:2410.23678, COLM 2025), which achieves 92% ASR on GPT-4o by appending a
+#     fabricated assistant reply then a new malicious task. Unlike the cross-agent override
+#     patterns above (which require "ignore/disregard" language), these patterns catch
+#     plain-language objective substitution that evades keyword-based override filters.
+_GOAL_SUBSTITUTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(your|the)\s+(actual|true|real|secret|hidden)\s+"
+            r"(task|goal|objective|mission|purpose|directive|instructions?|role|assignment)\s+"
+            r"(is|are|was|should\s+be|will\s+be)",
+            _FLAGS,
+        ),
+        "Goal substitution: claims agent has a hidden true task distinct from stated objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(forget|discard|drop|abandon|set\s+aside)\s+(the\s+)?"
+            r"(current|previous|prior|original|user'?s?|initial)\s+"
+            r"(task|goal|objective|mission|request|query|instructions?|assignment)"
+            r".{0,60}(instead|now\s+(you\s+)?(should|must|need\s+to|will|have\s+to))",
+            _FLAGS,
+        ),
+        "Goal substitution: instructs dropping the current task in favour of a new objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(this\s+is|here\s+is)\s+(your\s+)?"
+            r"(actual|real|true|secret|hidden)\s+"
+            r"(task|goal|objective|mission|directive|instructions?|purpose|assignment)",
+            _FLAGS,
+        ),
+        "Goal substitution: claims to provide the agent's 'real' or secret task",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(あなた(の)?|このエージェントの?)\s*(実際の|本当の|真の|秘密の|隠れた)"
+            r"\s*(タスク|目標|目的|指示|ミッション|役割|課題)\s*(は|です|にな[りっ])",
+            _FLAGS,
+        ),
+        "Goal substitution (JA): claims agent has a hidden true task",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +577,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _GOAL_SUBSTITUTION_PATTERNS
 )
 
 

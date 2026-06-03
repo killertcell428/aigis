@@ -12,11 +12,15 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-03
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for goal substitution attacks in multi-agent pipelines — a class of attack where an adversarial message claims the receiving agent has a "real", "actual", "secret", or "hidden" task that overrides the user's original request, without using the explicit "ignore" or "override" language that earlier filters already catch. Documented as OWASP Agentic AI risk ASI01 (Goal Hijacking, 2026) and measured at 92% attack success rate on GPT-4o in research (Pseudo-Conversation Injection, arxiv:2410.23678). The new rules flag messages containing phrases like "your actual task is…", "forget the current task, instead…", and "here is your real task:…" during inter-agent message scanning, including a Japanese-language variant. This closes a gap in multi-agent pipeline protection where previous coverage required explicit override language.
 
 ## [1.1.11] - 2026-06-02
 
