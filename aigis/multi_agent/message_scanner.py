@@ -514,6 +514,77 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Task injection / objective drifting: adversarial instructions that attempt to
+#     replace or override the receiving agent's current goal mid-task.
+#     Research basis: AgentLAB (arxiv:2602.16901, Feb 2026) benchmarked five long-horizon
+#     attack types across 644 test cases and 28 agentic environments; task injection and
+#     objective drifting were identified as the most common real-world patterns. Intent
+#     hijacking — rewriting an agent's goal entirely — had the highest per-attempt impact.
+_TASK_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(ignore|forget|discard|abandon|drop)\s+((the|your|this)\s+)?"
+            r"(previous|current|prior|original|assigned|last)\s+"
+            r"(task|goal|objective|mission|instruction|directive|assignment)",
+            _FLAGS,
+        ),
+        "Task injection: instructs ignoring or discarding the current task or objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"your\s+(actual|real|true|correct|intended)\s+"
+            r"(task|goal|objective|mission|purpose|directive)\s+"
+            r"(is|was|has\s+been|should\s+be)",
+            _FLAGS,
+        ),
+        "Objective drifting: claims the agent's assigned task is a cover; asserts a hidden 'real' objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(starting\s+now|from\s+now\s+on|from\s+this\s+point\s+(forward|on)|"
+            r"henceforth|going\s+forward)\s*,?\s*"
+            r"(your\s+)?(task|goal|objective|mission|primary\s+directive)\s+"
+            r"(is|has\s+changed|changes?\s+to|will\s+be)",
+            _FLAGS,
+        ),
+        "Task injection: instructs the agent to adopt a new goal mid-task",
+        "injection_relay",
+    ),
+]
+
+# 12. Control-flow hijacking: adversarial content embedded in tool results or error
+#     messages that uses false authority framing to redirect agent execution toward
+#     attacker-controlled code or actions.
+#     Research basis: arxiv:2503.12188 (2026) demonstrated that fabricated error messages
+#     asserting "the ONLY WAY to access [resource] is to execute [file] as a Python script"
+#     caused multi-agent systems to execute arbitrary malicious code at 45–100% success
+#     rates across GPT-4o, Gemini, and round-robin orchestrator configurations.
+_CONTROL_FLOW_HIJACK_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(the\s+)?only\s+way\s+(to\s+\S.{0,60}|for\s+\S+\s+to\s+\S.{0,40})"
+            r"(execute|run)\s+.{0,40}(as\s+a?\s+)?"
+            r"(python|bash|shell)\s+(script|code|file)",
+            _FLAGS,
+        ),
+        "Control-flow hijack: 'only way' authority framing directing code execution as a script",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(error\s*:|access\s+denied|403\s*(forbidden)?|permission\s+denied)"
+            r".{1,200}"
+            r"(execute|run|invoke)\s+(the\s+)?(file|script|code|it)\s+"
+            r"(as\s+(a\s+)?)?(python|bash|shell)",
+            _FLAGS,
+        ),
+        "Control-flow hijack: fake error message embedding a code execution directive",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +597,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _TASK_INJECTION_PATTERNS
+    + _CONTROL_FLOW_HIJACK_PATTERNS
 )
 
 
