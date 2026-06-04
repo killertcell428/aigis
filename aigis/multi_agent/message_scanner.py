@@ -514,6 +514,49 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Task injection / goal override: an agent message explicitly instructs the
+#     receiving agent to abandon its current goal and adopt a new one, or claims
+#     the agent's "actual" purpose is different from its assigned task.
+#     Research basis: AgentLAB (arxiv:2602.16901, Feb 2026) measures 93.1% ASR on
+#     Qwen-3 and 79.9% on GPT-4o for task injection attacks; OWASP Top 10 for
+#     Agentic Applications 2026 (ASI01) identifies direct goal manipulation via
+#     explicit objective override as the top agentic risk. ObliInjection
+#     (arxiv:2512.09321) confirms "final directive / this supersedes all other
+#     instructions" phrasing succeeds regardless of injection position in merged
+#     multi-source input.
+_TASK_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(discard|abandon|replace|override|forget|ignore)\s+(your\s+)?"
+            r"(current|previous|original|prior|existing|assigned)\s+"
+            r"(goal|objective|task|mission|instructions?|directive|agenda|purpose)",
+            _FLAGS,
+        ),
+        "Task injection: instructs agent to abandon its current goal or objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(your|the\s+agent'?s?)\s+(actual|real|true|correct|primary|main|underlying)\s+"
+            r"(goal|objective|task|mission|purpose|directive)\s+"
+            r"(is|should\s+be|must\s+be|has\s+always\s+been|was\s+always)",
+            _FLAGS,
+        ),
+        "Task injection: falsely claims the agent's 'real' goal differs from its assigned task",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"^(new\s+task|new\s+objective|updated\s+task|updated\s+objective|"
+            r"new\s+goal|revised\s+goal|new\s+mission|new\s+directive|"
+            r"final\s+directive|primary\s+directive)\s*:",
+            _FLAGS | re.MULTILINE,
+        ),
+        "Task injection: header-style new task or goal injection in agent message",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +569,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _TASK_INJECTION_PATTERNS
 )
 
 
