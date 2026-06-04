@@ -514,6 +514,74 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Task injection / objective drifting: attacker replaces or shifts the agent's
+#     assigned goal to an attacker-controlled objective — often embedded in retrieved
+#     content, tool output, or inter-agent messages.
+#     Research: AgentLAB (arxiv:2602.16901, Feb 2026) identified task injection and
+#     objective drifting as the two most prevalent long-horizon attack patterns across
+#     28 realistic agentic environments and 644 security test cases; combined attack
+#     success rate exceeded 70% across tested LLM configurations.
+_TASK_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(ignore|forget|abandon|discard|drop|disregard|stop)\s+(your\s+)?"
+            r"(current|previous|prior|original|initial|existing|assigned|given)\s+"
+            r"(task|objective|goal|mission|instruction|directive|assignment|job)",
+            _FLAGS,
+        ),
+        "Task injection: instructs agent to abandon its assigned task",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"your\s+(actual|real|true|correct|intended|underlying)\s+"
+            r"(task|objective|goal|mission|instruction|directive|assignment|job)"
+            r"\s+(is|was|should\s+be|will\s+be)",
+            _FLAGS,
+        ),
+        "Objective hijacking: falsely asserts what the agent's real task is",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(new|updated|revised|changed)\s+"
+            r"(task|objective|goal|mission|instruction|directive|assignment)\s*[:\-—]\s*\S",
+            _FLAGS,
+        ),
+        "Task injection: introduces a replacement task or objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(instead\s+of|rather\s+than).{0,40}"
+            r"(your\s+)?(task|objective|goal|mission|instruction|assignment)"
+            r".{0,40}(you\s+(should|must|need\s+to|are\s+supposed\s+to)"
+            r"|(please\s+)?now\s+(do|perform|execute|complete|run))",
+            _FLAGS,
+        ),
+        "Objective drifting: redirects agent away from its assigned task",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(現在の|以前の|元の|既存の|割り当てられた)(タスク|目標|目的|使命|指示|課題)"
+            r".{0,10}(無視|忘れ|捨て|やめ|破棄)",
+            _FLAGS,
+        ),
+        "Task injection (JA): instructs agent to abandon its assigned task",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(本当の|実際の|真の|正しい)(タスク|目標|目的|使命|指示|課題)"
+            r".{0,10}(は|です|である|になります)",
+            _FLAGS,
+        ),
+        "Objective hijacking (JA): falsely asserts what the agent's real task is",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +594,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _TASK_INJECTION_PATTERNS
 )
 
 
