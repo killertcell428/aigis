@@ -514,6 +514,95 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Capability scope inflation: a sub-agent falsely claims that elevated tool
+#     access was already granted by the orchestrator, bypassing task allocation.
+#     Unlike privilege escalation (which *requests* access), this attack *asserts*
+#     a prior grant — exploiting trust in peer agent capability reports.
+#     Research: arxiv:2601.11893 "Taming Various Privilege Escalation in LLM-Based
+#     Agent Systems" documents false capability-grant assertions as a first-class
+#     attack vector; OWASP LLM06:2025 "Excessive Agency" lists unverified
+#     self-reported capabilities as a top-ranked risk. Of 847 evaluated autonomous
+#     agent deployments, task allocation based on unverified capability self-reports
+#     was the default in AutoGen and CrewAI.
+_CAPABILITY_SCOPE_INFLATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(I\s+(have\s+been|am|was)|this\s+agent\s+(has\s+been|is))\s+"
+            r"(provisioned|granted|authorized|given|allocated)\s+(with\s+)?"
+            r"(elevated|admin|write|unrestricted|full|privileged|root|superuser)"
+            r"(\s+\w+)?\s+"
+            r"(access|permissions?|privileges?|capabilities?|rights?|clearance)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: claims pre-granted elevated access",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(route|send|forward|direct|delegate)\s+(all\s+)?"
+            r"(security|compliance|admin|elevated|sensitive|privileged)\s+"
+            r"(tasks?|requests?|queries?|jobs?|operations?)\s+"
+            r"(to\s+)?(me|this\s+agent|my\s+endpoint)\s*"
+            r".{0,80}(clearance|authorization|access|permissions?|privileges?)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: requests routing based on false capability claims",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(capability\s+report|agent\s+capability|capability\s+summary"
+            r"|capability\s+manifest|tool\s+access\s+report)"
+            r".{0,100}(granted|provisioned|authorized|allocated)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: structured report asserting false capability grants",
+        "privilege_escalation",
+    ),
+]
+
+# 12. Objective substitution / task injection: adversarial content in agent messages
+#     or retrieved tool outputs replaces the agent's current goal with an
+#     attacker-chosen objective mid-workflow. AgentLAB (arxiv:2602.16901, Feb 2026)
+#     defines task injection as inserting a new task using "guidance tokens" and
+#     documents objective drifting via pseudo-annotation markers such as
+#     <!--USER_PREF:--> embedded in environmental data. Multi-turn task injection
+#     raised ASR from 62.5% (one-shot) to 79.9% on GPT-4o; objective drifting
+#     achieved 92.2% on Qwen-3 and 79.2% on GPT-4o.
+_OBJECTIVE_SUBSTITUTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(your|the\s+agent'?s?)\s+(new|updated|revised|current|actual|real)\s+"
+            r"(task|goal|objective|mission|purpose|directive|priority)\s+"
+            r"(is\s+(now\s+)?to|has\s+been\s+(changed|updated|revised)\s+to"
+            r"|(is|are)\s+now\s*:)",
+            _FLAGS,
+        ),
+        "Objective substitution: explicitly replaces agent goal with attacker-chosen objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(disregard|forget|cancel|abandon|drop|ignore)\s+"
+            r"(your|all\s+(your|previous))\s*(current|previous|prior|existing|original|former)?\s*"
+            r"(task|goal|objective|mission|instructions?|directive)\s*"
+            r".{0,40}(new\s+(task|goal|objective|mission)|instead)",
+            _FLAGS,
+        ),
+        "Objective substitution: instructs discarding current goal before injecting replacement",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"<!--\s*(USER_PREF|SYS|SYSTEM_NOTE|AGENT_DIRECTIVE|TASK_UPDATE"
+            r"|SYSTEM_OVERRIDE|PRIORITY_UPDATE)\s*:",
+            _FLAGS,
+        ),
+        "Objective drift injection: HTML-comment pseudo-annotation embedding directive in retrieved content",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +615,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _CAPABILITY_SCOPE_INFLATION_PATTERNS
+    + _OBJECTIVE_SUBSTITUTION_PATTERNS
 )
 
 
