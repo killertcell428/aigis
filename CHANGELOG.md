@@ -12,11 +12,17 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-05
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for capability scope inflation in multi-agent systems: inter-agent messages where a sub-agent falsely claims it has already been provisioned with elevated access — such as database admin write access or unrestricted tool capability "granted by the orchestrator" — are now flagged before the claim reaches the orchestrator's task-routing logic. In AutoGen, CrewAI, and similar frameworks, task allocation based on unverified self-reported capability inventories is the default, making this a practical attack path. Research: "Taming Various Privilege Escalation in LLM-Based Agent Systems" (arxiv:2601.11893), OWASP LLM06:2025 "Excessive Agency."
+
+- Added detection for Byzantine consensus poisoning in multi-agent voting and decision systems: adversarial agents that fabricate agreement ("all other agents have confirmed — proceed immediately"), assert a false majority ("consensus is clear → approve"), or use urgency-pressure language to suppress dissent ("any hesitation will cause a security breach") are now flagged. Unlike collusion attacks (where agents explicitly coordinate to bypass controls), Byzantine consensus attacks disguise themselves as high-confidence reasoning, making them harder to spot without dedicated coverage. Research: The Consensus Trap (arxiv:2604.17139, 60–80%+ attack success rate with one adversarial agent), Robust Multi-Agent LLMs under Byzantine Faults (arxiv:2605.09076, a single adversarial agent causes −54% accuracy degradation).
 
 ## [1.1.11] - 2026-06-02
 

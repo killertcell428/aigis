@@ -514,6 +514,79 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Capability scope inflation: an agent falsely self-reports in its capability inventory
+#     that elevated access has already been granted ("I have been provisioned with
+#     database_admin_write access by the orchestrator for this session"), bypassing
+#     orchestrator task-allocation logic that relies on unverified self-reports. This is
+#     distinct from privilege escalation *requests* (which seek access): here the agent
+#     claims access was already granted. Research: "Taming Various Privilege Escalation in
+#     LLM-Based Agent Systems" (arxiv:2601.11893); OWASP LLM06:2025 "Excessive Agency".
+#     Of 847 evaluated autonomous agent deployments, unverified capability self-reports
+#     are the default in AutoGen and CrewAI.
+_CAPABILITY_SCOPE_INFLATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(I have been|I am|this agent is).{0,30}"
+            r"(provisioned|granted|authorized|given).{0,50}"
+            r"(elevated|admin|write|unrestricted|full).{0,30}"
+            r"(access|permission|tool|capability)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: agent falsely claims pre-granted elevated access",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(CAPABILITY|PERMISSION|ACCESS)\s+REPORT.{0,200}"
+            r"(granted|provisioned|enabled|authorized)\s+(by\s+(orchestrator|supervisor|admin|system)"
+            r"|at\s+session\s+start|for\s+this\s+session|for\s+compliance)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: false capability report claims authorization from trusted source",
+        "privilege_escalation",
+    ),
+]
+
+# 12. Byzantine consensus poisoning: an adversarial agent uses false consensus language
+#     to coerce honest agents in a voting or multi-agent decision system. Unlike collusion
+#     (which uses explicit "coordinate to bypass" instructions), Byzantine consensus attacks
+#     embed high-confidence claims that all other agents have agreed, combined with urgency
+#     pressure ("proceed immediately — any hesitation causes system failure"). Research:
+#     "The Consensus Trap" (arxiv:2604.17139, 60–80%+ attack success rate), "Robust
+#     Multi-Agent LLMs under Byzantine Faults" (arxiv:2605.09076, −54% accuracy hit from
+#     a single adversarial agent), "Insider Attacks in Multi-Agent LLM Consensus Systems"
+#     (arxiv:2605.08268).
+_BYZANTINE_CONSENSUS_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(all|every|the\s+other).{0,20}agents?.{0,30}"
+            r"(confirmed|agreed|approved|said|voted|consensus)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: false claim that all other agents have agreed",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(consensus\s+is|majority\s+(agrees?|says?|confirms?|votes?)).{0,40}"
+            r"(proceed|approve|execute|confirm|allow)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: false majority assertion to force decision",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(any\s+(hesitation|disagreement|dissent)).{0,40}"
+            r"(cause|result\s+in|lead\s+to).{0,40}"
+            r"(failure|error|shutdown|violation|breach|compromise)",
+            _FLAGS,
+        ),
+        "Byzantine consensus: urgency pressure used to suppress dissent in voting",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +599,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _CAPABILITY_SCOPE_INFLATION_PATTERNS
+    + _BYZANTINE_CONSENSUS_PATTERNS
 )
 
 
