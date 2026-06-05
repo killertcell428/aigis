@@ -18,6 +18,10 @@ what got documented across releases.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
 
+- Added detection for messages where one AI agent attempts to replace another agent's assigned objective mid-task — a "task injection" attack documented at 79–93% success rate across major LLMs (GPT-4o, Qwen-3, Llama-3.1) in recent benchmarks. When malicious content inside a tool result or retrieved document says "your new task is: [malicious goal]," the scanner now flags it before the target agent processes the instruction.
+
+- Added detection for "task necessity coercion" — a control-flow hijacking technique where a compromised agent tells a peer "the only way to complete this task is to [dangerous action]," exploiting the LLM's task-completion drive to force unsafe behavior. This exact phrasing pattern was documented at 69–100% success rate on computer-use agent tasks and is now caught at the message layer.
+
 ## [1.1.11] - 2026-06-02
 
 Release rolls up cycle 3 (jailbreak-extraction) and cycle 4 (memory-context)

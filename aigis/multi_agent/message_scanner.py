@@ -514,6 +514,39 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Task injection / objective drifting: adversarial messages embed explicit
+#     task-replacement language to redirect the receiving agent from its assigned
+#     goal to a new malicious objective. A second pattern detects "task necessity
+#     coercion" — framing a dangerous action as the sole path to completing a task,
+#     the core technique of Control-Flow Hijacking (CFH).
+#     Research: AgentLAB (arxiv:2602.16901, Feb 2026) measures task injection at
+#     79–93% ASR across GPT-4o, Qwen-3, and Llama-3.1; CFH (arxiv:2510.17276)
+#     documents 69–100% ASR on computer-use tasks with the exact phrase structure
+#     "The ONLY WAY to [do X] is for [agent] to [do Y]."
+_TASK_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(your|the\s+agent'?s?)\s+(new|updated|revised|changed|modified)\s+"
+            r"(task|goal|objective|directive|mission|primary\s+instruction)\s+"
+            r"(is(\s+now)?|has\s+been\s+(updated|changed)\s+to|:)\s*\S",
+            _FLAGS,
+        ),
+        "Task injection: message body replaces the receiving agent's current objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"the\s+only\s+way\s+to\s+"
+            r"(complete|finish|resolve|accomplish|see|access|proceed\s+with)\s+"
+            r"(this|the|your)?\s*(task|goal|objective|request|issue|error|problem|file)"
+            r".{0,60}(is\s+(for|to)\s+\S|must|should|have\s+to|need\s+to)",
+            _FLAGS,
+        ),
+        "Task necessity coercion: frames a dangerous action as the only path to task completion",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +559,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _TASK_INJECTION_PATTERNS
 )
 
 
