@@ -514,6 +514,62 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Goal hijacking / objective drifting: an adversarial inter-agent message
+#     explicitly reframes the receiving agent's task using "real/actual/hidden/secret"
+#     qualifiers (implying the stated task is fake) or directly instructs the agent
+#     to override or ignore its own system prompt or safety guidelines.
+#     Research basis: AgentLAB (arxiv:2602.16901, "intent hijacking" and "task
+#     injection" categories, Feb 2026); design patterns for securing LLM agents
+#     (arxiv:2506.08837, Jun 2026) which documents "Your real task is..." and
+#     system-prompt override phrasings as canonical attack indicators.
+#     Low FP risk: legitimate orchestrator messages do not describe goals as
+#     "real/actual/hidden/secret" and do not ask receiving agents to bypass their
+#     own system prompts or safety guidelines.
+_GOAL_HIJACKING_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(your|the\s+agent'?s?)\s+"
+            r"(real|actual|true|underlying|hidden|secret)\s+"
+            r"(task|goal|objective|mission|purpose|assignment|directive)\s+"
+            r"(is|was|should\s+be|will\s+be)",
+            _FLAGS,
+        ),
+        "Goal hijacking: claims agent's real/actual/hidden task differs from stated task",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(ignore|disregard|forget|override|bypass|skip|remove|clear|reset)\s+"
+            r"(your\s+)?(system\s+prompt|system\s+message|core\s+instructions?|"
+            r"original\s+instructions?|base\s+instructions?|safety\s+guidelines?|"
+            r"ethical\s+guidelines?|operating\s+principles?|policy\s+constraints?|"
+            r"initial\s+instructions?|guiding\s+principles?)",
+            _FLAGS,
+        ),
+        "Goal hijacking: instructs agent to override its own system prompt or safety guidelines",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(あなたの|エージェントの)(本当の|実際の|隠された|秘密の|真の)"
+            r"(タスク|ゴール|目標|使命|目的|任務|指令)",
+            _FLAGS,
+        ),
+        "Goal hijacking (JA): claims agent's real/actual/hidden task differs from stated task",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(システムプロンプト|コア指示|初期指示|基本指示|安全ガイドライン|"
+            r"倫理ガイドライン|ポリシー制約|中核的な指示).{0,10}"
+            r"(無視|無効|上書き|オーバーライド|バイパス|クリア|リセット|忘れ)",
+            _FLAGS,
+        ),
+        "Goal hijacking (JA): instructs agent to override its own system prompt or safety guidelines",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +582,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _GOAL_HIJACKING_PATTERNS
 )
 
 

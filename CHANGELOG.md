@@ -12,11 +12,17 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-05
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for adversarial inter-agent messages that try to hijack an agent's goal mid-task by claiming its "real/actual/hidden/secret" objective is different from what it was told — a technique documented in the AgentLAB benchmark (Feb 2026) as the highest-impact attack class in multi-agent pipelines. Attackers embed these phrases in tool results or agent-to-agent messages to redirect the receiving agent toward exfiltration, unauthorized actions, or policy bypass without the user's knowledge.
+
+- Added detection for inter-agent messages that directly instruct an agent to override or ignore its own system prompt, safety guidelines, core instructions, or operating principles (e.g., "ignore your system prompt", "disregard your safety guidelines", "forget your initial instructions"). This closes a gap in the firewall's multi-agent coverage: the previous cross-agent override rule required the phrase to reference "another agent's" instructions, so direct system-prompt override instructions slipped through.
 
 ## [1.1.11] - 2026-06-02
 
