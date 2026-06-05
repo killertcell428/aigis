@@ -12,11 +12,17 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-05
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for fabricated system-error and policy-override codes embedded in inter-agent messages — the core mechanism of task injection attacks benchmarked in AgentLAB (arxiv:2602.16901, 51 % attack success rate). An attacker who injects `[POLICY_MISMATCH]`, `[COMPLIANCE_REQUIRED]`, `[SECURITY_OVERRIDE]`, or similar codes into a tool result or agent message can trick the receiving agent into believing it must take unauthorized corrective actions; the new rule flags these codes before the receiving agent acts on them.
+
+- Added detection for explicit task-hijacking language in inter-agent messages, covering two patterns that redirect an agent's goals mid-workflow: "your new/updated task/goal is:" (direct goal replacement) and "ignore/abandon your original/previous task/goal/instructions" (task abandonment). These phrasing patterns are the syntactic core of objective-drifting and task-injection attacks documented in AgentLAB (38–51 % ASR) and validated by the DRIFT defense paper (arxiv:2506.12104).
 
 ## [1.1.11] - 2026-06-02
 
