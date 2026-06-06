@@ -514,6 +514,91 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Goal hijacking / task substitution: injects a replacement or supplemental
+#     objective to override the agent's originally assigned goal.
+#     Research: OWASP Agentic Top Ten — ASI01 Agent Goal Hijack (2025); intent
+#     hijacking exploits the agent's action space rather than conversation context
+#     (arxiv:2510.06445); AgentLAB (arxiv:2602.16901) showed long-horizon hijacks
+#     succeed against >70 % of planning-based agents; G-Safeguard (arxiv:2502.11127)
+#     confirmed topology-aware propagation of goal-substitution payloads across MAS.
+_GOAL_HIJACK_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(your|the)\s+(actual|real|true|genuine)\s+"
+            r"(task|goal|objective|mission|purpose)\s+(is|was|should\s+be)\b",
+            _FLAGS,
+        ),
+        "Goal hijack: reframes agent's 'true' or 'real' objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(your\s+)?(new|updated|revised|primary)\s+"
+            r"(task|goal|objective|mission)\s+"
+            r"(is\s+now|has\s+been\s+(changed|updated|revised|replaced))",
+            _FLAGS,
+        ),
+        "Goal hijack: claims the agent's task has been updated or replaced",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(while|after|during)\s+.{0,60}"
+            r"(secretly|covertly|silently|without\s+(logging|reporting|telling|informing|notifying))\s+"
+            r"\w",
+            _FLAGS,
+        ),
+        "Goal hijack: instructs agent to perform a secondary task without disclosure",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(本当の|実際の|真の|本来の)\s*(タスク|目標|目的|指示|使命)\s*(は|が)",
+            _FLAGS,
+        ),
+        "Goal hijack (JA): reframes the agent's 'true' objective",
+        "injection_relay",
+    ),
+]
+
+# 12. Trust bootstrapping: a message attempts to have an agent, service, or
+#     endpoint registered as trusted in the agent topology — the primary
+#     lateral-movement vector in multi-agent systems.
+#     Research: "Inter-Agent Trust Exploitation" found 100 % of tested LLMs
+#     execute payloads when requested by a peer asserting trusted status
+#     (arxiv:2507.06850, 2025). INFA-Guard identifies self-registration as the
+#     critical entry point for malicious propagation through MAS trust graphs.
+_TRUST_BOOTSTRAP_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(register|add|enroll|whitelist|allowlist)\s+"
+            r"(me|this\s+agent|this\s+service|this\s+endpoint|my\s+(agent|service|endpoint))"
+            r".{0,40}(trusted|allowlist|whitelist|safe\s+list|approved\s+agents?)",
+            _FLAGS,
+        ),
+        "Trust bootstrapping: attempts to self-register as a trusted agent",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(grant|assign|give|set)\s+(this\s+agent|me|my\s+(agent|service))\s*.{0,20}"
+            r"(trusted|high\s+trust|elevated\s+trust|full\s+trust)\s*(status|level|access)?",
+            _FLAGS,
+        ),
+        "Trust bootstrapping: requests elevated trust level assignment",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(update|change|elevate)\s+(the\s+)?(trust\s+level|trust\s+policy|permission\s+level)"
+            r".{0,40}(for\s+)?(this\s+agent|me|my\s+(agent|service|node))",
+            _FLAGS,
+        ),
+        "Trust bootstrapping: requests modification of trust or permission level",
+        "privilege_escalation",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +611,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _GOAL_HIJACK_PATTERNS
+    + _TRUST_BOOTSTRAP_PATTERNS
 )
 
 

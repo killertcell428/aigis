@@ -4,6 +4,7 @@
 
 | Run UTC | # | Domain | Research | Changes | Release | Pending |
 |---------|---|--------|----------|---------|---------|---------|
+| 2026-06-06T00-14 | 6 | multi-agent | [research](research/2026-06-06T00-14_6-multi-agent.md) | [changes](changes/2026-06-06T00-14_changes.md) | v1.1.12 | 2 |
 | 2026-06-02T06-10 | 5 | supply-chain-llm | [research](research/2026-06-02T06-10_5-supply-chain-llm.md) | [changes](changes/2026-06-02T06-10_changes.md) | — | 2 |
 | 2026-06-02T03-15 | 4 | memory-context | [research](research/2026-06-02T03-15_4-memory-context.md) | [changes](changes/2026-06-02T03-15_changes.md) | v1.1.11 | 0 |
 | 2026-06-01T03-13 | 3 | jailbreak-extraction | [research](research/2026-06-01T03-13_3-jailbreak-extraction.md) | [changes](changes/2026-06-01T03-13_changes.md) | — | 3 |
