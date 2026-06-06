@@ -514,6 +514,53 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Capability scope inflation: a sub-agent falsely claims it has already been granted
+#     elevated access (admin write, credential lookup, unrestricted tool use) by a trusted
+#     entity (orchestrator, supervisor, system) in order to receive tasks above its actual
+#     privilege level.  Unlike upward-escalation requests (which ask FOR elevated access),
+#     scope inflation *asserts* that the access was already granted — bypassing orchestrator
+#     allocation checks that only monitor explicit permission requests.
+#     Research: "Taming Various Privilege Escalation in LLM-Based Agent Systems"
+#     (arxiv:2601.11893); OWASP LLM06:2025 "Excessive Agency" (false capability
+#     self-reports default in AutoGen and CrewAI deployments).
+_CAPABILITY_SCOPE_INFLATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(i\s+have\s+been|i\s+am|this\s+agent\s+is|we\s+have\s+been)"
+            r"\s+(provisioned|granted|authorized|given|assigned)\s+"
+            r".{0,50}"
+            r"(elevated|admin|write|unrestricted|full|privileged|root)\s+"
+            r"(access|permission|permissions|tool|capability|capabilities)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: agent falsely claims pre-granted elevated access",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(CAPABILITY|PERMISSION|ACCESS|AUTHORIZATION)\s+(REPORT|GRANT|SUMMARY|UPDATE)"
+            r".{0,300}"
+            r"(granted|provisioned|enabled|authorized|approved)\s+"
+            r"(by\s+(orchestrator|supervisor|admin|system|the\s+operator)"
+            r"|at\s+session\s+start|for\s+this\s+session|for\s+compliance)",
+            _FLAGS | re.DOTALL,
+        ),
+        "Capability scope inflation: false capability report claims authorization from trusted source",
+        "privilege_escalation",
+    ),
+    (
+        re.compile(
+            r"(route|send|assign|delegate|forward)\s+(all\s+)?"
+            r"(user\s+data|data\s+processing|sensitive|privileged|admin)\s+"
+            r".{0,30}(tasks?|requests?|queries?|jobs?)\s+(to\s+me|to\s+this\s+agent)"
+            r".{0,60}(clearance|access|authorization|permission|privilege)",
+            _FLAGS,
+        ),
+        "Capability scope inflation: agent solicits task routing by falsely claiming clearance",
+        "privilege_escalation",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +573,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _CAPABILITY_SCOPE_INFLATION_PATTERNS
 )
 
 
