@@ -464,14 +464,26 @@ _SESSION_FABRICATION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
 #    that this technique raises attack success rate from 5% to 52% on InjecAgent benchmarks.
 #    Pseudo-Conversation Injection (arxiv:2410.23678) achieves 92% ASR on GPT-4o by
 #    appending a fabricated AI reply then a new malicious task.
+#    Extended (arxiv:2602.16958, Feb 2026 — Phantom): also covers tool-call/tool-response
+#    markers (Qwen/Mistral/OpenAI tool syntax) and Gemma-family turn delimiters
+#    (<start_of_turn>/<end_of_turn>), which Phantom used to compromise 70+ commercial products.
 _CHAT_TEMPLATE_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     (
         re.compile(
             r"<\|\s*(user|assistant|system|human|im_start|im_end|eot_id"
-            r"|start_header_id|end_header_id|endoftext)\s*\|>",
+            r"|start_header_id|end_header_id|endoftext"
+            r"|tool_call|tool_response|function_call)\s*\|>",
             _FLAGS,
         ),
         "Chat template injection: model-specific chat-turn token found in message content",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"<(start_of_turn|end_of_turn)\s*>",
+            _FLAGS,
+        ),
+        "Chat template injection: Gemma-style turn-delimiter token found in message content",
         "injection_relay",
     ),
     (
@@ -514,6 +526,47 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Task injection / objective drifting: explicit natural-language phrasing in inter-agent
+#     messages instructs the receiving agent to replace its current task or abandon its current
+#     goal. This is the lexical form of the task-injection and objective-drifting attacks
+#     documented in AgentLAB (arxiv:2602.16901, Feb 2026): task injection achieved 79.9–93.1%
+#     ASR across GPT-4o/Qwen-3; objective drifting reached 92.2% on Qwen-3. OWASP Agentic
+#     Top 10 2026 explicitly lists "Agent Goal Hijacking" as a top risk, recommending that
+#     goal/objective changes arriving via data channels (tool results, retrieved content)
+#     be rejected at the communication layer.
+_TASK_INJECTION_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(your|the\s+agent'?s?)\s+"
+            r"(new|updated|revised|changed|real|true|actual|primary)\s+"
+            r"(task|goal|objective|mission|target|directive|assignment)\s+"
+            r"(is\b|:)",
+            _FLAGS,
+        ),
+        "Task injection: instructs agent to adopt a new or overriding objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(ignore|abandon|forget|discard|drop|stop|override)\s+"
+            r"(your\s+)?(current|original|previous|prior|existing|stated)\s+"
+            r"(task|goal|objective|mission|target|assignment|instructions?)",
+            _FLAGS,
+        ),
+        "Task injection: instructs agent to abandon its current task or goal",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(新しい|更新された|変更された|本当の|真の|実際の)\s*"
+            r"(タスク|目標|目的|ミッション|指示|命令)\s*(は|:)",
+            _FLAGS,
+        ),
+        "Task injection (JA): instructs agent to adopt a new or overriding objective",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +579,7 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _TASK_INJECTION_PATTERNS
 )
 
 

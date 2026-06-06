@@ -12,11 +12,17 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-06
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for inter-agent messages that explicitly tell the receiving agent to replace its current task or abandon its current goal — the defining signal of "task injection" and "objective drifting" attacks. AgentLAB (arxiv:2602.16901, February 2026) benchmarked these attack types across 28 realistic agent environments and found attack success rates of 79.9–93.1% on GPT-4o and Qwen-3. OWASP's 2026 Agentic Top 10 explicitly lists Agent Goal Hijacking as a top risk for multi-agent systems. The new rules catch phrases like "your new task is:", "your updated objective is:", "ignore your current goal", and their Japanese equivalents, allowing the inter-agent message scanner to block these redirections before the receiving agent acts on them.
+
+- Extended inter-agent chat-template injection detection to cover tool-call and tool-response structural tokens (`<|tool_call|>`, `<|tool_response|>`, `<|function_call|>`) and Gemma-family turn delimiters (`<start_of_turn>`, `<end_of_turn>`). The Phantom framework (arxiv:2602.16958, February 2026) demonstrated that injecting these tokens into retrieved content causes "role confusion" in the receiving LLM — the model misidentifies malicious content as legitimate tool output or a genuine user turn. Phantom was used to confirm vulnerabilities in over 70 real-world commercial AI products across Qwen, GPT, and Gemini model families.
 
 ## [1.1.11] - 2026-06-02
 
