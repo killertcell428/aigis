@@ -1260,7 +1260,7 @@ wheels = [
 
 [[package]]
 name = "pyaigis"
-version = "1.1.11"
+version = "1.1.12"
 source = { editable = "." }
 
 [package.optional-dependencies]

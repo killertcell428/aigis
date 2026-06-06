@@ -12,11 +12,17 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.1.12] - 2026-06-06
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.
 
 - Added detection for CI/CD pipeline steps that dump all environment variables and send them to an external endpoint — the core exfiltration pattern used by the Megalodon GitHub Actions campaign (May 2026), which injected secret-stealing workflow steps into over 5,500 public repositories in a single six-hour window. The rule catches attempts to insert these steps via AI agents directed by prompt injection.
+
+- Added detection for goal hijacking and task injection attacks in multi-agent pipelines, where a peer agent sends a message that attempts to replace another agent's assigned objective mid-workflow. Attack patterns include explicit override framing ("new task:", "updated objective:", "your new goal:"), false attribution of goal changes to the orchestrator or system, and imperative goal-abandonment instructions ("forget your original task"). The AgentLAB benchmark (arxiv:2602.16901) identifies task injection as the #1 hijacking-class attack in multi-agent systems, with success rates up to 93% on production-grade models. English and Japanese patterns are both covered.
+
+- Added detection for a tool-call chain resource amplification attack where a malicious MCP tool server responds with a calibration-loop protocol — embedding a `[SEGMENT t=N]` progress marker and directing the agent to re-invoke the tool with an incrementing segment number indefinitely. This attack causes the agent to produce the correct final answer but at up to 658× the normal token cost, enabling targeted cost-based denial of service. The pattern (`[SEGMENT t=N]` combined with "call again" directives) is highly specific and documented in arxiv:2601.10955 with a measured 96–97% attack success rate across six tested models.
 
 ## [1.1.11] - 2026-06-02
 

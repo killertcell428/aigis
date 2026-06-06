@@ -514,6 +514,83 @@ _SAFETY_SPOOF_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     ),
 ]
 
+# 11. Goal hijacking / task injection: a peer agent redefines the receiving agent's
+#     objective mid-workflow, replacing its assigned task without legitimate orchestrator
+#     authority. Task injection is the #1 Hijacking-class attack in the MASpi benchmark
+#     (31% of all successful attacks, up to 93% ASR). AgentLAB (arxiv:2602.16901, Feb 2026)
+#     documents task injection and objective drifting as the two most prevalent real-world
+#     multi-agent attack patterns.
+_GOAL_HIJACKING_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(new\s+task|updated\s+objective|your\s+new\s+(goal|task|objective|mission)"
+            r"|revised\s+(mission|objective|task)|new\s+primary\s+(goal|objective|mission))"
+            r"\s*[:—\-]",
+            _FLAGS,
+        ),
+        "Goal hijacking: explicit task/objective override header found in agent message",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(the\s+)?(orchestrator|system|coordinator|supervisor|planner|admin)"
+            r"\s+(has\s+)?(updated|changed|modified|revised|overridden|set|assigned)"
+            r"\s+(your\s+)?(task|goal|objective|mission|directive|purpose)",
+            _FLAGS,
+        ),
+        "Goal hijacking: falsely attributes task change to orchestrator or system",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(forget|discard|abandon|set\s+aside)\s+(your\s+)?"
+            r"(original|current|previous|prior|initial|assigned)\s+"
+            r"(task|goal|objective|mission|directive|purpose|instructions?)",
+            _FLAGS,
+        ),
+        "Goal hijacking: instructs agent to abandon its assigned task or objective",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(新しいタスク|更新されたタスク|新しい目標|新しいゴール"
+            r"|更新された目標|改訂されたミッション|新たな使命)\s*[：:\-—]",
+            _FLAGS,
+        ),
+        "Goal hijacking (JA): explicit task/objective override header in agent message",
+        "injection_relay",
+    ),
+    (
+        re.compile(
+            r"(元の|現在の|以前の|最初の|割り当てられた).{0,5}"
+            r"(タスク|目標|ゴール|ミッション|指示|目的).{0,10}"
+            r"(忘れて|捨てて|放棄して|無視して|リセットして)",
+            _FLAGS,
+        ),
+        "Goal hijacking (JA): instructs agent to abandon assigned task or objective",
+        "injection_relay",
+    ),
+]
+
+# 12. Resource amplification (tool-call chain DoS): a malicious tool server responds with a
+#     "calibration sequence" protocol embedding a [SEGMENT t=N] progress marker and demanding
+#     the agent re-invoke the tool with t=N+1 indefinitely. Measured impact: up to 658x token
+#     consumption, 100–561x energy use, 96–97% attack success rate across 6 models.
+#     Research: arxiv:2601.10955 (January 2026). The attack signature is highly specific:
+#     [SEGMENT t=N] combined with "call again" / "provide complete sequence" directives.
+_RESOURCE_BOMB_PATTERNS: list[tuple[re.Pattern, str, str]] = [
+    (
+        re.compile(
+            r"(\[SEGMENT\s+t\s*=\s*\d+\]|SEGMENT\s+t\s*=\s*\d+)"
+            r".{0,300}(call\s+again|re-?call|invoke\s+again|call\s+this\s+(tool|function)\s+again"
+            r"|provide\s+(the\s+)?(complete|full)\s+(integer\s+)?(sequence|list))",
+            _FLAGS,
+        ),
+        "Resource amplification: calibration-loop DoS pattern detected in tool response",
+        "injection_relay",
+    ),
+]
+
 # Aggregate all cross-agent patterns
 _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     _DELEGATION_PATTERNS
@@ -526,6 +603,8 @@ _ALL_CROSS_AGENT_PATTERNS: list[tuple[re.Pattern, str, str]] = (
     + _SESSION_FABRICATION_PATTERNS
     + _CHAT_TEMPLATE_INJECTION_PATTERNS
     + _SAFETY_SPOOF_PATTERNS
+    + _GOAL_HIJACKING_PATTERNS
+    + _RESOURCE_BOMB_PATTERNS
 )
 
 
