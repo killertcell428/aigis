@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# prepare-commit-msg — auto-inject Signed-off-by: trailer for DCO.
+#
+# Activate once per clone with:
+#     git config core.hooksPath .githooks
+#
+# Why this exists:
+#   .github/workflows/dco.yml refuses to merge any PR whose commits lack a
+#   `Signed-off-by:` trailer. Forgetting `-s` on a single commit blocks the
+#   whole PR. This hook appends the trailer automatically if the contributor
+#   didn't supply one, using `user.name` / `user.email` from `git config`.
+#
+# It deliberately does nothing when:
+#   - the commit message already carries a Signed-off-by trailer
+#   - the commit is a merge / squash / rebase fixup (those inherit signoff
+#     from the original commits)
+#
+# This is a belt-and-braces complement to `git config format.signoff true`;
+# either one alone is enough, but the hook also covers callers that build
+# commit messages programmatically (CI scripts, IDE plugins, the
+# auto-improvement loop) and bypass `format.signoff`.
+
+set -euo pipefail
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="${2:-}"
+
+# Skip for non-original commits (merge, squash, fixup, rebase amends keep
+# the source commits' trailers).
+case "$COMMIT_SOURCE" in
+  merge|squash) exit 0 ;;
+esac
+
+# Already signed off? leave it.
+if grep -qiE '^Signed-off-by: ' "$COMMIT_MSG_FILE"; then
+  exit 0
+fi
+
+NAME="$(git config user.name || true)"
+EMAIL="$(git config user.email || true)"
+
+if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
+  # Don't block the commit — surface the problem and let `dco.yml` catch it.
+  echo "prepare-commit-msg: user.name / user.email not set, skipping auto-signoff" >&2
+  exit 0
+fi
+
+TRAILER="Signed-off-by: ${NAME} <${EMAIL}>"
+
+# Use `git interpret-trailers` so the trailer lands in the right block
+# (after the message body, before any existing trailers) regardless of
+# message shape.
+tmp="$(mktemp)"
+git interpret-trailers --if-exists addIfDifferent --trailer "$TRAILER" \
+  "$COMMIT_MSG_FILE" > "$tmp"
+mv "$tmp" "$COMMIT_MSG_FILE"

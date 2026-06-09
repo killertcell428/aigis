@@ -286,7 +286,21 @@ to certify that you wrote (or have the right to submit) the patch.
 ### How to sign off
 
 Add `Signed-off-by: Your Name <your-email@example.com>` to every commit
-message. Git can append it automatically:
+message. The easiest path is to let git append it automatically:
+
+```bash
+# Recommended — sets both format.signoff and the repo's prepare-commit-msg hook
+make setup-git
+
+# Or set them individually:
+git config format.signoff true        # Option A: global default for this clone
+git config core.hooksPath .githooks   # Option B: hook fallback (covers IDEs / scripts)
+```
+
+`make install-dev` runs `setup-git` automatically, so most contributors don't
+need to invoke it directly.
+
+Or pass `-s` per commit:
 
 ```bash
 git commit -s -m "feat: add new detection pattern"

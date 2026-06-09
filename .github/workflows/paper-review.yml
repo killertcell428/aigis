@@ -44,7 +44,7 @@ jobs:
       issues: write         # file daily summary issue
       pull-requests: write  # open bot PR with new pending files
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Set up Python 3.11
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -52,7 +52,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
 
       - name: Install anthropic SDK
         run: uv pip install --system "anthropic>=0.40.0"
@@ -97,7 +97,10 @@ jobs:
           git config user.email "aigis-paper-review@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add auto-improvement/
-          git commit -m "auto-improvement: daily paper review ${DATE}"
+          # `-s` appends Signed-off-by so the bot PR passes the DCO check
+          # (.github/workflows/dco.yml). The signoff identity comes from
+          # the user.name / user.email set above.
+          git commit -s -m "auto-improvement: daily paper review ${DATE}"
           git push -u origin "$BRANCH"
           # NOTE: do not swallow gh failure with `|| true`. The auto-improvement
           # label must exist (created 2026-05-30 after #93/#95/#96 triage), and
