@@ -480,13 +480,17 @@ class TrustPackGenerator:
         from aigis.policy import _default_policy
 
         policy = _default_policy()
-        # Render the default policy to a YAML string without touching disk.
-        tmp = Path(self.project_dir) / ".aigis" / "_trust_pack_default_policy.yaml"
+        # Render the default policy to a YAML string via a throwaway temp
+        # file, so no .aigis/ state directory is created as a side effect.
+        import tempfile
+
         try:
-            tmp.parent.mkdir(parents=True, exist_ok=True)
-            save_policy(policy, str(tmp))
-            yaml_text = tmp.read_text(encoding="utf-8")
-            tmp.unlink()
+            with tempfile.NamedTemporaryFile(
+                mode="r+", suffix=".yaml", delete=True, encoding="utf-8"
+            ) as tf:
+                save_policy(policy, tf.name)
+                tf.seek(0)
+                yaml_text = Path(tf.name).read_text(encoding="utf-8")
         except OSError:
             yaml_text = "# (default policy — run `aigis init` to materialise)\n"
         return policy, yaml_text

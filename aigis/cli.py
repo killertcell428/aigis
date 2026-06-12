@@ -1,24 +1,27 @@
 """Aigis CLI - command-line interface for agent governance.
 
 Usage:
-    aig init                     # Initialize Aigis in current project
-    aig init --agent claude-code # Also configure Claude Code hooks
-    aig doctor                   # Diagnose setup issues
-    aig status                   # Show governance status summary
-    aig logs                     # View recent activity
-    aig logs --action shell:exec # Filter by action type
-    aig logs --risk-above 50     # Filter by risk score
-    aig logs --alerts            # Show blocked/reviewed events only
-    aig logs --export-csv out.csv  # Export to CSV
-    aig policy check             # Validate policy file
-    aig policy show              # Show all rules
-    aig scan "rm -rf /"          # Scan text for threats
-    aig scan --file prompt.txt   # Scan a file
-    echo "text" | aig scan       # Scan from stdin
-    aig report --days 30         # Generate compliance report
-    aig maintenance              # Rotate and compress old logs
-    aig mcp '{"name":"add",...}'  # Scan MCP tool definition for poisoning
-    aig mcp --file tools.json    # Scan MCP tools from JSON file
+    aigis init                     # Initialize Aigis in current project
+    aigis init --agent claude-code # Also configure Claude Code hooks
+    aigis doctor                   # Diagnose setup issues
+    aigis status                   # Show governance status summary
+    aigis logs                     # View recent activity
+    aigis logs --action shell:exec # Filter by action type
+    aigis logs --risk-above 50     # Filter by risk score
+    aigis logs --alerts            # Show blocked/reviewed events only
+    aigis logs --export-csv out.csv  # Export to CSV
+    aigis policy check             # Validate policy file
+    aigis policy show              # Show all rules
+    aigis scan "rm -rf /"          # Scan text for threats
+    aigis scan --file prompt.txt   # Scan a file
+    echo "text" | aigis scan       # Scan from stdin
+    aigis report --days 30         # Generate compliance report
+    aigis maintenance              # Rotate and compress old logs
+    aigis mcp '{"name":"add",...}'  # Scan MCP tool definition for poisoning
+    aigis mcp --file tools.json    # Scan MCP tools from JSON file
+    aigis trust-pack               # Generate IT/security adoption-approval pack
+    aigis audit verify             # Verify signed audit-log integrity
+    aigis audit status             # Show signed audit-log status
 """
 
 import argparse
@@ -354,6 +357,153 @@ def cmd_serve(args: argparse.Namespace) -> int:
     from aigis.server import serve
 
     serve(host=args.host, port=args.port)
+    return 0
+
+
+def cmd_trust_pack(args: argparse.Namespace) -> int:
+    """Generate the IT/security adoption-approval document pack."""
+    from aigis.trust_pack import TrustPackGenerator
+
+    out_dir = Path(args.output)
+    gen = TrustPackGenerator(org=args.org, contact=args.contact)
+
+    if args.format == "html":
+        path = gen.write_html(out_dir, lang=args.lang)
+        print("Aigis Trust Pack generated (HTML)")
+        print(f"  Output: {path}")
+        print(f"  Language: {args.lang}")
+        print(f"  Policy: {gen.evidence.policy_name} (v{gen.evidence.policy_version})")
+        print("\n  Open in a browser, print to PDF, or email to your IT/security team.")
+        return 0
+
+    written = gen.write_markdown(out_dir, lang=args.lang)
+    print("Aigis Trust Pack generated (Markdown)")
+    print(f"  Output: {out_dir}/")
+    print(f"  Language: {args.lang}")
+    print(f"  Files: {len(written)}")
+    for p in written:
+        print(f"    - {p.name}")
+    print(f"\n  Start with {out_dir}/README.md (the index).")
+    if not gen.evidence.settings_hook_configured:
+        print("\n  Note: Claude Code hook is not yet configured in this project.")
+        print("        Run 'aigis init --agent claude-code' for a complete posture.")
+    return 0
+
+
+def cmd_audit(args: argparse.Namespace, audit_parser: argparse.ArgumentParser) -> int:
+    """Signed audit-log integrity commands."""
+    if args.audit_command == "verify":
+        return _cmd_audit_verify(args)
+    elif args.audit_command == "status":
+        return _cmd_audit_status(args)
+    else:
+        audit_parser.print_help()
+        return 0
+
+
+def _default_audit_log_path() -> Path:
+    return Path(".aigis") / "audit.jsonl"
+
+
+def _cmd_audit_verify(args: argparse.Namespace) -> int:
+    """Verify signed audit-log integrity (signature + chain + sequence + time)."""
+    from aigis.audit import AuditVerifier
+    from aigis.audit.signed_log import _resolve_key
+
+    log_path = Path(args.log) if args.log else _default_audit_log_path()
+
+    if not log_path.exists():
+        msg = f"Audit log not found: {log_path}"
+        if getattr(args, "json_output", False):
+            print(json.dumps({"valid": False, "error": "log_not_found", "path": str(log_path)}))
+        else:
+            print(msg, file=sys.stderr)
+            print("  No signed audit log to verify. Enable signed logging first.", file=sys.stderr)
+        return 1
+
+    # Resolve the HMAC key the same way SignedAuditLog does (.aigis/audit_key).
+    key = _resolve_key(None).decode("utf-8")
+    verifier = AuditVerifier(secret_key=key)
+    result = verifier.verify_file(log_path)
+
+    if getattr(args, "json_output", False):
+        print(
+            json.dumps(
+                {
+                    "valid": result.valid,
+                    "total_entries": result.total_entries,
+                    "checked_entries": result.checked_entries,
+                    "chain_valid": result.chain_valid,
+                    "signature_valid": result.signature_valid,
+                    "broken_chain_at": result.broken_chain_at,
+                    "invalid_signatures_at": result.invalid_signatures_at,
+                    "sequence_errors_at": result.sequence_errors_at,
+                    "timestamp_errors_at": result.timestamp_errors_at,
+                    "summary": result.summary,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0 if result.valid else 1
+
+    print("Aigis Audit Verify")
+    print("=" * 50)
+    print(f"  Log: {log_path}")
+    print(f"  Entries: {result.total_entries}")
+
+    def line(label: str, ok: bool) -> None:
+        print(f"  [{'OK' if ok else 'FAIL'}] {label}")
+
+    line("Signatures (HMAC-SHA256)", result.signature_valid)
+    line("Hash chain", result.chain_valid)
+    line("Sequence ordering", not result.sequence_errors_at)
+    line("Timestamp ordering", not result.timestamp_errors_at)
+    print()
+    if result.valid:
+        print("  PASS — no tampering detected.")
+        return 0
+    print("  FAIL — integrity check failed.")
+    print(f"  {result.summary}")
+    return 1
+
+
+def _cmd_audit_status(args: argparse.Namespace) -> int:
+    """Show signed audit-log status (key present? log present? entry count)."""
+    log_path = Path(args.log) if args.log else _default_audit_log_path()
+    key_path = Path(".aigis") / "audit_key"
+
+    key_present = key_path.exists()
+    log_present = log_path.exists()
+    entry_count = 0
+    if log_present:
+        try:
+            with open(log_path, encoding="utf-8") as f:
+                entry_count = sum(1 for line in f if line.strip())
+        except OSError:
+            entry_count = 0
+
+    if getattr(args, "json_output", False):
+        print(
+            json.dumps(
+                {
+                    "key_present": key_present,
+                    "key_path": str(key_path),
+                    "log_present": log_present,
+                    "log_path": str(log_path),
+                    "entry_count": entry_count,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0
+
+    print("Aigis Audit Status")
+    print("=" * 50)
+    print(f"  HMAC key: {'present' if key_present else 'absent'} ({key_path})")
+    print(f"  Audit log: {'present' if log_present else 'absent'} ({log_path})")
+    print(f"  Entries: {entry_count}")
+    if not key_present and not log_present:
+        print("\n  Signed audit logging is not yet active.")
     return 0
 
 
