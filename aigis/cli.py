@@ -29,7 +29,7 @@ from pathlib import Path
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="aig",
+        prog="aigis",
         description="Aigis - Agent Governance CLI",
     )
     sub = parser.add_subparsers(dest="command")
@@ -266,6 +266,51 @@ def main(argv: list[str] | None = None) -> int:
     serve_p.add_argument("--host", default="0.0.0.0", help="Bind host (default: 0.0.0.0)")
     serve_p.add_argument("--port", type=int, default=8080, help="Bind port (default: 8080)")
 
+    # aigis trust-pack
+    tp_p = sub.add_parser(
+        "trust-pack",
+        help="Generate an IT/security adoption-approval document pack from live config",
+    )
+    tp_p.add_argument(
+        "--output",
+        "-o",
+        metavar="DIR",
+        default="./aigis-trust-pack",
+        help="Output directory (default: ./aigis-trust-pack)",
+    )
+    tp_p.add_argument(
+        "--lang",
+        choices=["ja", "en", "both"],
+        default="both",
+        help="Document language (default: both)",
+    )
+    tp_p.add_argument(
+        "--format",
+        choices=["markdown", "html"],
+        default="markdown",
+        help="Output format (default: markdown)",
+    )
+    tp_p.add_argument("--org", metavar="NAME", help="Organisation name to substitute into the pack")
+    tp_p.add_argument(
+        "--contact", metavar="EMAIL", help="Security contact email to substitute into the pack"
+    )
+
+    # aigis audit
+    audit_p = sub.add_parser("audit", help="Signed audit-log integrity verification")
+    audit_sub = audit_p.add_subparsers(dest="audit_command")
+    audit_verify_p = audit_sub.add_parser("verify", help="Verify signed audit-log integrity")
+    audit_verify_p.add_argument(
+        "--log", metavar="PATH", help="Audit log path (default: .aigis/audit.jsonl)"
+    )
+    audit_verify_p.add_argument("--json", dest="json_output", action="store_true", help="JSON output")
+    audit_status_p = audit_sub.add_parser("status", help="Show signed audit-log status")
+    audit_status_p.add_argument(
+        "--log", metavar="PATH", help="Audit log path (default: .aigis/audit.jsonl)"
+    )
+    audit_status_p.add_argument(
+        "--json", dest="json_output", action="store_true", help="JSON output"
+    )
+
     args = parser.parse_args(argv)
 
     if args.command == "init":
@@ -296,6 +341,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_benchmark(args)
     elif args.command == "serve":
         return cmd_serve(args)
+    elif args.command == "trust-pack":
+        return cmd_trust_pack(args)
+    elif args.command == "audit":
+        return cmd_audit(args, audit_p)
     else:
         parser.print_help()
         return 0
