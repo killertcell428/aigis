@@ -22,7 +22,7 @@ aigis init --agent claude-code --policy enterprise   # guardrails + audit log ON
 aigis trust-pack --lang en                           # → hand ./aigis-trust-pack/ to your security team
 ```
 
-`init` wires PreToolUse hooks into Claude Code so every Bash/Edit/Write/WebFetch is scanned *before* it runs, and starts a signed, hash-chained audit log. `trust-pack` reads your **live local config** and writes an approval pack — executive summary, a control matrix (ISO/IEC 27001:2022 Annex A · NIST AI RMF · OWASP LLM Top 10 · 経産省 AI 事業者ガイドライン), a policy snapshot, the audit-log evidence spec, an incident runbook, and a rollout plan. That folder is what lands on the security team's desk.
+`init` wires PreToolUse hooks into Claude Code so every Bash/Edit/Write/WebFetch is scanned *before* it runs, and records every decision to an append-only audit log. A tamper-evident signed log (HMAC-SHA256 + hash chain) ships in the box — prove log integrity anytime with `aigis audit verify`. `trust-pack` reads your **live local config** and writes an approval pack — executive summary, a control matrix (ISO/IEC 27001:2022 Annex A · NIST AI RMF · OWASP LLM Top 10 · 経産省 AI 事業者ガイドライン), a policy snapshot, the audit-log evidence spec, an incident runbook, and a rollout plan. That folder is what lands on the security team's desk.
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> ·

@@ -561,10 +561,10 @@ def cmd_init(args: argparse.Namespace) -> int:
     print("  Done! Aigis is ready.")
     print()
     print("  Next steps:")
-    print("    aig doctor       -Check setup health")
-    print("    aig status       -Check governance status")
-    print("    aig logs         -View activity stream")
-    print("    aig policy show  -View active policy")
+    print("    aigis doctor      -Check setup health")
+    print("    aigis status      -Check governance status")
+    print("    aigis logs        -View activity stream")
+    print("    aigis policy show -View active policy")
     print()
     print("  If Aigis helps you ship safer agents, a star keeps the project moving:")
     print("    https://github.com/killertcell428/aigis")
@@ -634,7 +634,7 @@ def cmd_policy(args: argparse.Namespace) -> int:
         policy_path = "aigis-policy.yaml"
         if not Path(policy_path).exists():
             print(f"No policy file found at {policy_path}")
-            print("Run 'aig init' to create one.")
+            print("Run 'aigis init' to create one.")
             return 1
         policy = load_policy(policy_path)
         print(f"Policy: {policy.name} (v{policy.version})")
@@ -681,7 +681,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         print(f"  Policy: {policy.name} (v{policy.version})")
         print(f"  Rules: {len(policy.rules)} ({deny} deny, {review} review)")
     else:
-        print("  Policy: Not configured (run 'aig init')")
+        print("  Policy: Not configured (run 'aigis init')")
 
     # Check activity
     stream = ActivityStream()
@@ -697,7 +697,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     if claude_hooks.exists():
         print("\n  Claude Code: Hooks configured")
     else:
-        print("\n  Claude Code: Not configured (run 'aig init --agent claude-code')")
+        print("\n  Claude Code: Not configured (run 'aigis init --agent claude-code')")
 
     # Compliance
     try:
@@ -896,7 +896,7 @@ def cmd_monitor(args: argparse.Namespace) -> int:
     if snap.learned_patterns_count > 0:
         print(f"\n  Auto-Fix: {snap.learned_patterns_count} learned patterns")
 
-    print("\n  Tip: Use 'aig report --format html -o report.html' for a full visual report.")
+    print("\n  Tip: Use 'aigis report --format html -o report.html' for a full visual report.")
     return 0
 
 
@@ -947,7 +947,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     if policy_path.exists():
         ok(f"Policy file found: {policy_path}")
     else:
-        fail("Policy file not found. Run 'aig init'")
+        fail("Policy file not found. Run 'aigis init'")
 
     # 2. .aigis/logs/ directory
     log_dir = Path(".aigis/logs")
@@ -970,7 +970,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     if hook_script.exists():
         ok(f"Hook script found: {hook_script}")
     else:
-        warn("Hook script not found. Run 'aig init --agent claude-code'")
+        warn("Hook script not found. Run 'aigis init --agent claude-code'")
 
     # 5. Claude Code settings.json has hook configured
     settings_path = Path(".claude/settings.json")
@@ -1042,7 +1042,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     print()
 
     if failed:
-        print("\nFix the FAIL items above, then run 'aig doctor' again.")
+        print("\nFix the FAIL items above, then run 'aigis doctor' again.")
         return 1
     elif warned:
         print("\nNo critical issues. Review warnings above.")

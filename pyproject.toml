@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "pyaigis"
 version = "1.1.11"
-description = "Zero-dependency Python firewall for AI agents. 4-wall + L4-L7 defense built on 2025-2026 LLM-security papers (Mirror, StruQ, MI9, MemoryGraft, MSB, DataFilter, AdvJudge-Zero), 44 compliance templates across US/CN/JP/EU. Library, Docker sidecar, or CLI — drop-in for Claude Code, Cursor, FastAPI, LangChain."
+description = "Open-source trust layer for adopting Claude Code and autonomous AI agents at work: deterministic guardrails on every tool call, tamper-evident audit logs, and a generated IT-approval pack (aigis trust-pack). Zero-dependency Python firewall — prompt injection, MCP tool poisoning, memory defense; 44 compliance templates across US/CN/JP/EU. Library, Docker sidecar, or CLI."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
@@ -16,6 +16,8 @@ keywords = [
     "langchain", "openai", "anthropic", "mcp",
     "mcp-security", "red-team", "mitre-atlas",
     "ai-firewall", "agent-security", "aigis",
+    "claude-code", "audit-log", "ai-governance",
+    "devsecops", "compliance", "trust-layer",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

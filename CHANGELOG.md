@@ -12,6 +12,54 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Added
+
+- **`aigis trust-pack`** (`aigis/trust_pack.py`) — generates a bilingual (EN/JA)
+  "IT approval pack" for adopting Claude Code and other autonomous agents inside
+  an organization, built entirely from the **live local configuration** (active
+  `aigis-policy.yaml`, hook installation status, audit-log posture, recent
+  activity counts) rather than canned claims. Writes 13 files by default
+  (`README.md` index + 6 documents × EN/JA): executive summary, control matrix
+  (ISO/IEC 27001:2022 Annex A · NIST AI RMF · OWASP LLM Top 10 · 経産省 AI
+  事業者ガイドライン v1.2 — phrased as "supports evidence for", never
+  "certifies"), policy snapshot with literal YAML, audit-log evidence spec,
+  incident runbook, and a 3-phase rollout plan. Org-specific unknowns are
+  emitted as explicit `[TO FILL]` / `【要記入】` template fields.
+  Flags: `-o/--output DIR`, `--lang {ja,en,both}`, `--format {markdown,html}`
+  (HTML mode renders one self-contained, printable file with no JS/CDN),
+  `--org NAME`, `--contact EMAIL`. Stdlib-only; 25 new tests. Feature doc:
+  `docs/trust-pack.md`.
+
+- **`aigis audit verify` / `aigis audit status`** — exposes the existing
+  signed-audit-log machinery (`aigis/audit/`: HMAC-SHA256 signatures +
+  SHA-256 hash chain) in the CLI. `verify` runs the four integrity checks
+  (signature, chain, sequence, timestamp) and exits non-zero on tampering,
+  giving security teams a one-command way to prove log integrity to auditors;
+  `status` reports key/log presence and entry counts. `--json` supported.
+
+- **`docs/adoption/`** — Claude Code corporate-adoption guide (EN/JA): the
+  15-question IT-security checklist answered with the three-tier split
+  (Claude Code built-in controls / what Aigis adds / what stays the org's
+  decision) and a two-layer architecture explainer (managed-settings.json
+  permission rules as layer 1, Aigis PreToolUse hooks + audit logs as
+  layer 2), including an honest "what neither layer covers" table.
+
+### Changed
+
+- **Repositioned the project** around bringing autonomous AI agents into
+  organizations: README.md / README.ja.md rewritten with a
+  "From `pip install` to IT approval in 3 commands" flow and a
+  "For security teams" section (the audit-gap framing: Claude Code Team plan
+  has no audit-log API and OTel export is telemetry-grade, so Aigis hooks
+  provide schema-stable, verifiable machine-level evidence on any plan).
+  PyPI description and keywords updated to match (`claude-code`, `audit-log`,
+  `ai-governance`, `devsecops`, `trust-layer`).
+
+- CLI help output now shows the real installed command name `aigis`
+  (was `prog="aig"`), and all user-facing hints (`Run 'aig init'`,
+  `aig doctor`, …) were updated to the `aigis` spelling — the previous hints
+  suggested a command that does not exist in a standard install.
+
 ### Hardened
 
 - Added detection for Jinja2 server-side template injection (SSTI) payloads embedded in AI model configuration files, closing the attack vector used in CVE-2026-5760 (CVSS 9.8, SGLang). A malicious GGUF model can embed a crafted chat-template field that executes arbitrary code on the inference server when rendered; the new rule catches these payloads before an AI agent propagates them into a tokenizer config or YAML file.

@@ -10,7 +10,7 @@
 
 <p align="center">
   「Claude Code、会社で使う許可が下りない。」——止めているのはたいていモデルそのものではなく、「何を実行できるのか」「監査ログはどこにあるのか」に答えがないことです。<br />
-  Aigis はその答えになるレイヤーです。すべてのツール呼び出しに決定論的ガードレールを掛け、改ざん検知つきの監査ログを残し、情シスに渡せる承認パックを生成します。Claude Code のどのプランでも動きます。<br />
+  Aigis はその答えになるレイヤーです。すべてのツール呼び出しに決定論的ガードレールを掛け、検証可能な監査ログを残し、情シスに渡せる承認パックを生成します。Claude Code のどのプランでも動きます。<br />
   独立した OSS、Apache-2.0、ランタイム依存ゼロ。<code>pip install pyaigis</code>。
 </p>
 
@@ -22,7 +22,7 @@ aigis init --agent claude-code --policy enterprise   # ガードレール + 監�
 aigis trust-pack --lang ja                            # → ./aigis-trust-pack/ をセキュリティ部門へ
 ```
 
-`init` は Claude Code に PreToolUse フックを組み込み、すべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、署名・ハッシュチェーン付きの監査ログを開始します。`trust-pack` は**ローカルの実設定**を読み取り、承認パックを書き出します——エグゼクティブサマリ、コントロールマトリクス（ISO/IEC 27001:2022 附属書 A・NIST AI RMF・OWASP LLM Top 10・経産省 AI 事業者ガイドライン）、ポリシースナップショット、監査ログのエビデンス仕様、インシデント対応 Runbook、展開計画。このフォルダがそのまま情シスの机に載る成果物です。
+`init` は Claude Code に PreToolUse フックを組み込み、すべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、全判定を追記型の監査ログに記録します。さらに HMAC-SHA256＋ハッシュチェーンの署名付き監査ログを同梱しており、`aigis audit verify` でいつでも改ざんの有無を検証できます。`trust-pack` は**ローカルの実設定**を読み取り、承認パックを書き出します——エグゼクティブサマリ、コントロールマトリクス（ISO/IEC 27001:2022 附属書 A・NIST AI RMF・OWASP LLM Top 10・経産省 AI 事業者ガイドライン）、ポリシースナップショット、監査ログのエビデンス仕様、インシデント対応 Runbook、展開計画。このフォルダがそのまま情シスの机に載る成果物です。
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> ·
