@@ -548,7 +548,9 @@ class TrustPackGenerator:
     def _readme(self, langs: list[str]) -> str:
         ev = self.evidence
         lines: list[str] = []
-        lines.append("# Aigis Trust Pack — AI Agent Adoption Approval / AIエージェント導入承認パック")
+        lines.append(
+            "# Aigis Trust Pack — AI Agent Adoption Approval / AIエージェント導入承認パック"
+        )
         lines.append("")
         lines.append(
             "This pack contains the documents an IT / information-security "
@@ -569,16 +571,22 @@ class TrustPackGenerator:
         lines.append(f"- **Generated at / 生成日時:** {ev.generated_at}")
         lines.append(f"- **Aigis version / バージョン:** {ev.aigis_version}")
         org_disp = _fill(self.org, "organisation name", "組織名", "en")
-        contact_disp = _fill(self.contact, "security contact email", "セキュリティ窓口メールアドレス", "en")
+        contact_disp = _fill(
+            self.contact, "security contact email", "セキュリティ窓口メールアドレス", "en"
+        )
         lines.append(f"- **Organisation / 組織:** {org_disp}")
         lines.append(f"- **Security contact / セキュリティ窓口:** {contact_disp}")
         lines.append(f"- **Languages / 言語:** {', '.join(langs)}")
         lines.append("")
         lines.append("## Live posture summary / 現状サマリ")
         lines.append("")
-        lines.append(f"- Active policy / 適用ポリシー: **{ev.policy_name}** (v{ev.policy_version}) — "
-                     f"{ev.total_rules} rules ({ev.deny_rules} deny / {ev.review_rules} review / {ev.allow_rules} allow)")
-        hook_state = "configured / 設定済み" if ev.settings_hook_configured else "NOT configured / 未設定"
+        lines.append(
+            f"- Active policy / 適用ポリシー: **{ev.policy_name}** (v{ev.policy_version}) — "
+            f"{ev.total_rules} rules ({ev.deny_rules} deny / {ev.review_rules} review / {ev.allow_rules} allow)"
+        )
+        hook_state = (
+            "configured / 設定済み" if ev.settings_hook_configured else "NOT configured / 未設定"
+        )
         lines.append(f"- Claude Code hook / フック: **{hook_state}**")
         log_state = (
             f"present ({ev.events_last_7d} events in 7d) / あり"
@@ -586,7 +594,11 @@ class TrustPackGenerator:
             else "no logs yet / ログなし"
         )
         lines.append(f"- Activity logs / 監査ログ: **{log_state}**")
-        audit_state = "enabled / 有効" if ev.signed_audit_enabled else "available, not yet enabled / 利用可能（未有効化）"
+        audit_state = (
+            "enabled / 有効"
+            if ev.signed_audit_enabled
+            else "available, not yet enabled / 利用可能（未有効化）"
+        )
         lines.append(f"- Signed audit log / 署名付き監査ログ: **{audit_state}**")
         lines.append("")
         lines.append("## Contents / 収録文書")
@@ -626,7 +638,9 @@ class TrustPackGenerator:
         return self._exec_en(ev)
 
     def _exec_en(self, ev: Evidence) -> str:
-        hook_state = "installed and configured" if ev.settings_hook_configured else "NOT yet installed"
+        hook_state = (
+            "installed and configured" if ev.settings_hook_configured else "NOT yet installed"
+        )
         log_state = (
             f"active ({ev.events_last_7d} events in the last 7 days, "
             f"{ev.events_last_30d} in 30 days)"
@@ -1296,11 +1310,7 @@ documents you submit to IT always reflect the live posture._
 
 
 def _esc(text: str) -> str:
-    return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    )
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _inline(text: str) -> str:

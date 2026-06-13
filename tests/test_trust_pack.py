@@ -220,7 +220,8 @@ class TestMarkdownGeneration:
         logs.mkdir(parents=True)
         now = datetime.now(UTC).isoformat()
         (logs / "activity.jsonl").write_text(
-            json.dumps({"action": "file:read", "target": "x", "timestamp": now}) + "\n"
+            json.dumps({"action": "file:read", "target": "x", "timestamp": now})
+            + "\n"
             + "this is not json\n",  # malformed line must be skipped, not crash
             encoding="utf-8",
         )

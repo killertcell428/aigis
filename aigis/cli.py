@@ -305,7 +305,9 @@ def main(argv: list[str] | None = None) -> int:
     audit_verify_p.add_argument(
         "--log", metavar="PATH", help="Audit log path (default: .aigis/audit.jsonl)"
     )
-    audit_verify_p.add_argument("--json", dest="json_output", action="store_true", help="JSON output")
+    audit_verify_p.add_argument(
+        "--json", dest="json_output", action="store_true", help="JSON output"
+    )
     audit_status_p = audit_sub.add_parser("status", help="Show signed audit-log status")
     audit_status_p.add_argument(
         "--log", metavar="PATH", help="Audit log path (default: .aigis/audit.jsonl)"
