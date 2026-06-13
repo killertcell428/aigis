@@ -3,7 +3,7 @@ title: "Claude Code、会社で使う許可が下りない — 情シスが「�
 emoji: "🛡️"
 type: "tech"
 topics: ["claudecode", "セキュリティ", "AIエージェント", "OSS", "情シス"]
-published: false
+published: true
 ---
 
 ## 「とりあえず個人の判断で使ってください」では済まない
