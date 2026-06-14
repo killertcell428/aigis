@@ -302,7 +302,7 @@ aigis monitor --owasp
 Every template is a readable regex rule you can inspect, test, and modify.
 </details>
 
-Benchmarks: [docs/benchmarks/](docs/benchmarks/) · Dashboard & web UI: [docs/](docs/) (`docker compose up -d`)
+Benchmarks: [**reproducible results**](docs/benchmarks/REPRODUCIBLE_RESULTS.md) (real measured numbers + exact repro commands — incl. an honest latency-tail finding) · [all benchmarks](docs/benchmarks/) · Dashboard & web UI: [docs/](docs/) (`docker compose up -d`)
 
 ---
 

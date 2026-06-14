@@ -310,7 +310,7 @@ aigis monitor --owasp
 すべて読める正規表現ルール。ブラックボックスなし。
 </details>
 
-ベンチマーク: [docs/benchmarks/](docs/benchmarks/) · ダッシュボード & Web UI: [docs/](docs/)（`docker compose up -d`）
+ベンチマーク: [**再現可能な実測結果**](docs/benchmarks/REPRODUCIBLE_RESULTS.md)（実際に計測した数値＋再現コマンド。レイテンシ末尾の正直な所見も記載）· [全ベンチ](docs/benchmarks/) · ダッシュボード & Web UI: [docs/](docs/)（`docker compose up -d`）
 
 ---
 
