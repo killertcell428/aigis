@@ -24,6 +24,8 @@ aigis trust-pack --lang ja                            # → ./aigis-trust-pack/ 
 
 `init` は Claude Code に PreToolUse フックを組み込み、すべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、全判定を追記型の監査ログに記録します。さらに HMAC-SHA256＋ハッシュチェーンの署名付き監査ログを同梱しており、`aigis audit verify` でいつでも改ざんの有無を検証できます。`trust-pack` は**ローカルの実設定**を読み取り、承認パックを書き出します——エグゼクティブサマリ、コントロールマトリクス（ISO/IEC 27001:2022 附属書 A・NIST AI RMF・OWASP LLM Top 10・経産省 AI 事業者ガイドライン）、ポリシースナップショット、監査ログのエビデンス仕様、インシデント対応 Runbook、展開計画。このフォルダがそのまま情シスの机に載る成果物です。
 
+**👉 生成物の実物を見る（インストール不要）: [`docs/sample-trust-pack/`](docs/sample-trust-pack/)**（実際の EN/JA 出力。情シスにそのままメールできる[印刷用の単一 HTML](docs/sample-trust-pack/aigis-trust-pack.html) もあります）。
+
 <p align="center">
   <a href="#quick-start">Quick Start</a> ·
   <a href="#for-security-teams">情シス向け</a> ·

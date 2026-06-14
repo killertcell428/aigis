@@ -24,6 +24,8 @@ aigis trust-pack --lang en                           # → hand ./aigis-trust-pa
 
 `init` wires PreToolUse hooks into Claude Code so every Bash/Edit/Write/WebFetch is scanned *before* it runs, and records every decision to an append-only audit log. A tamper-evident signed log (HMAC-SHA256 + hash chain) ships in the box — prove log integrity anytime with `aigis audit verify`. `trust-pack` reads your **live local config** and writes an approval pack — executive summary, a control matrix (ISO/IEC 27001:2022 Annex A · NIST AI RMF · OWASP LLM Top 10 · 経産省 AI 事業者ガイドライン), a policy snapshot, the audit-log evidence spec, an incident runbook, and a rollout plan. That folder is what lands on the security team's desk.
 
+**👉 See a real generated pack — no install needed: [`docs/sample-trust-pack/`](docs/sample-trust-pack/)** (actual EN/JA output, plus a [printable single-file HTML](docs/sample-trust-pack/aigis-trust-pack.html) you can email to IT).
+
 <p align="center">
   <a href="#quick-start">Quick Start</a> ·
   <a href="#for-security-teams-the-people-who-say-yes">For Security Teams</a> ·

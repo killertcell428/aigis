@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aigis Trust Pack — AI Agent Adoption Approval / AIエージェント導入承認パック</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
+      "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.7; color: #1a1a2e; max-width: 920px; margin: 0 auto;
+    padding: 2rem 1.25rem;
+  }
+  header h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  .meta { color: #555; font-size: 0.9rem; margin-bottom: 1rem; }
+  nav {
+    background: #f4f6fb; border: 1px solid #d8deec; border-radius: 8px;
+    padding: 0.75rem 1rem; margin-bottom: 2rem; font-size: 0.9rem;
+  }
+  nav a { color: #2b4eff; text-decoration: none; margin-right: 0.25rem; }
+  nav a:hover { text-decoration: underline; }
+  section {
+    border-top: 2px solid #e3e8f4; padding-top: 1.25rem; margin-top: 2rem;
+  }
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1.15rem; margin-top: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 0.2rem; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; margin: 1rem 0; }
+  th, td { border: 1px solid #d0d7e6; padding: 0.4rem 0.6rem; text-align: left; vertical-align: top; }
+  th { background: #eef1f8; }
+  code { background: #f2f3f7; padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.85em; }
+  pre { background: #1a1a2e; color: #e8e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.8rem; }
+  pre code { background: transparent; color: inherit; padding: 0; }
+  @media print { nav { display: none; } body { max-width: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Aigis Trust Pack — AI Agent Adoption Approval / AIエージェント導入承認パック</h1>
+  <div class="meta">Generated 2026-06-14T03:52:27.279551+00:00 · Aigis v1.1.11 · Policy: Aigis Enterprise Policy (v1.0)</div>
+</header>
+<nav><a href="#01_executive_summary-en">1. Executive Summary (en)</a> · <a href="#02_control_matrix-en">2. Control Matrix (en)</a> · <a href="#03_policy_snapshot-en">3. Policy Snapshot (en)</a> · <a href="#04_audit_log_evidence-en">4. Audit Log Evidence (en)</a> · <a href="#05_incident_runbook-en">5. Incident Runbook (en)</a> · <a href="#06_rollout_plan-en">6. Rollout Plan (en)</a> · <a href="#01_executive_summary-ja">1. エグゼクティブサマリ (ja)</a> · <a href="#02_control_matrix-ja">2. コントロールマトリクス (ja)</a> · <a href="#03_policy_snapshot-ja">3. ポリシースナップショット (ja)</a> · <a href="#04_audit_log_evidence-ja">4. 監査ログの証跡 (ja)</a> · <a href="#05_incident_runbook-ja">5. インシデント対応手順 (ja)</a> · <a href="#06_rollout_plan-ja">6. 展開計画 (ja)</a></nav>
+<section id="01_executive_summary-en">
+<h1>1. Executive Summary</h1>
+<p><strong>Organisation:</strong> Example Corp（サンプル株式会社）</p>
+<p><strong>Prepared for:</strong> [TO FILL: IT / Information Security Department]</p>
+<p><strong>Security contact:</strong> security@example.com</p>
+<p><strong>Generated:</strong> 2026-06-14T03:52:27.279551+00:00 (Aigis v1.1.11)</p>
+<h2>What Claude Code is</h2>
+<p>Claude Code is Anthropic's command-line coding agent. It reads and edits</p>
+<p>files, runs shell commands, fetches web content, and can call external</p>
+<p>tools (including Model Context Protocol servers) on a developer's machine</p>
+<p>to complete software-engineering tasks autonomously. Because it executes</p>
+<p>real actions on a real workstation, an uncontrolled deployment is a</p>
+<p>meaningful operational and security risk.</p>
+<h2>What Aigis adds</h2>
+<p>Aigis is a zero-dependency, open-source guardrail layer that sits between</p>
+<p>the agent and the actions it wants to take. It provides three things an</p>
+<p>IT/security department can rely on:</p>
+<p>1. <strong>Deterministic pre-execution guardrails.</strong> A Claude Code *PreToolUse*</p>
+<p>hook intercepts every tool call. Aigis scans the request, evaluates it</p>
+<p>against your organisation's policy, and returns allow / review / deny</p>
+<p><strong>before</strong> the action runs. Decisions are rule-based and reproducible —</p>
+<p>not a probabilistic model judging itself.</p>
+<p>2. <strong>Tamper-evident audit logs.</strong> Every decision is recorded to an</p>
+<p>append-only JSONL log. A signed variant (HMAC-SHA256 + hash chain)</p>
+<p>makes after-the-fact deletion or modification detectable.</p>
+<p>3. <strong>An organisation-owned policy.</strong> The policy is a human-readable file in</p>
+<p>your repository, reviewed and version-controlled like any other code.</p>
+<p>Aigis runs entirely locally and adds no new runtime dependencies. It does</p>
+<p>not send your prompts or code anywhere; it governs what the agent is</p>
+<p>allowed to do on your machine.</p>
+<h2>What this pack contains</h2>
+<ul>
+<li><strong>Control matrix</strong> — Aigis controls mapped to ISO/IEC 27001:2022 Annex A,</li>
+</ul>
+<p>NIST AI RMF, OWASP LLM Top 10, and the METI/MIC AI Business Operator</p>
+<p>Guidelines v1.2, plus an explicit "what Aigis does NOT cover" boundary.</p>
+<ul>
+<li><strong>Policy snapshot</strong> — the exact policy currently in force, in plain</li>
+</ul>
+<p>language and as literal YAML.</p>
+<ul>
+<li><strong>Audit log evidence</strong> — where logs live, their schema, retention, the</li>
+</ul>
+<p>tamper-evidence design, and the command to verify integrity.</p>
+<ul>
+<li><strong>Incident runbook</strong> — what happens when Aigis blocks an action, how to</li>
+</ul>
+<p>triage, escalate, and report false positives.</p>
+<ul>
+<li><strong>Rollout plan</strong> — a three-phase pilot template with review gates.</li>
+</ul>
+<h2>Current live posture</h2>
+<ul>
+<li><strong>Policy profile:</strong> Aigis Enterprise Policy (v1.0), 16</li>
+</ul>
+<p>rules — 10 deny, 5 review, 1 allow.</p>
+<p>Default decision when no rule matches: <code>allow</code>.</p>
+<ul>
+<li><strong>Hook status:</strong> installed and configured.</li>
+<li><strong>Log status:</strong> no events recorded yet.</li>
+<li><strong>Signed audit log:</strong> available but not yet enabled.</li>
+<li><strong>SIEM forwarding:</strong> not detected (forwarders are configured in code; see docs/forwarders.md).</li>
+</ul>
+</section>
+<section id="02_control_matrix-en">
+<h1>2. Control Matrix</h1>
+<p>This table maps each control Aigis implements to the major security and AI-governance frameworks. ISO/IEC 27001 item numbers are listed as "supports evidence for" — Aigis is a control implementation, not a certification body, and does not guarantee compliance.</p>
+<table><thead><tr>
+<th>Aigis control</th>
+<th>What it does</th>
+<th>ISO/IEC 27001:2022 Annex A</th>
+<th>NIST AI RMF</th>
+<th>OWASP LLM Top 10</th>
+<th>AI Business Operator GL v1.2</th>
+</tr></thead><tbody>
+<tr>
+<td>Input scanning (prompt-injection / jailbreak / PII)</td>
+<td>Deterministic regex + similarity detection on every prompt before it reaches the model.</td>
+<td>A.8.16 (Monitoring activities), A.5.7 (Threat intelligence)</td>
+<td>MEASURE 2.7, MANAGE 2.1</td>
+<td>LLM01 Prompt Injection, LLM02 Sensitive Information Disclosure</td>
+<td>GL-POISON-01, SEC-PI-01</td>
+</tr>
+<tr>
+<td>Output scanning (data leak / secret / PII)</td>
+<td>Scans model output for leaked secrets, PII, and system-prompt disclosure before it is returned.</td>
+<td>A.8.12 (Data leakage prevention), A.5.34 (Privacy and PII)</td>
+<td>MEASURE 2.7, MANAGE 4.1</td>
+<td>LLM02 Sensitive Information Disclosure, LLM06 Excessive Agency</td>
+<td>APPI-PII-01, GL-DATA-01</td>
+</tr>
+<tr>
+<td>Tool-call policy enforcement</td>
+<td>Deterministic allow/deny/review decision on every tool call (shell, file, network) before execution.</td>
+<td>A.8.2 (Privileged access rights), A.8.18 (Use of privileged utility programs)</td>
+<td>GOVERN 1.1, MANAGE 2.1</td>
+<td>LLM06 Excessive Agency, LLM08 Vector and Embedding Weaknesses</td>
+<td>GL-HUMAN-03 (最小権限), SEC-PRIV-01</td>
+</tr>
+<tr>
+<td>MCP tool-definition scanning</td>
+<td>Detects tool-poisoning and rug-pull changes in Model Context Protocol server definitions.</td>
+<td>A.5.21 (ICT supply chain security), A.8.30 (Outsourced development)</td>
+<td>MAP 4.1, MANAGE 3.1</td>
+<td>LLM03 Supply Chain, LLM01 Prompt Injection</td>
+<td>GL-SEC-03 (攻撃対象面の管理)</td>
+</tr>
+<tr>
+<td>Memory / file-write filter</td>
+<td>Blocks writes to protected paths (.env, credentials, SSH keys) and filters persisted agent memory.</td>
+<td>A.8.3 (Information access restriction), A.8.12 (Data leakage prevention)</td>
+<td>MANAGE 2.1, GOVERN 1.4</td>
+<td>LLM06 Excessive Agency, LLM02 Sensitive Information Disclosure</td>
+<td>GL-HUMAN-03 (最小権限), GL-DATA-02</td>
+</tr>
+<tr>
+<td>Tamper-evident audit log (HMAC + hash chain)</td>
+<td>Append-only log; each entry HMAC-SHA256 signed and hash-chained so deletion/modification is detectable.</td>
+<td>A.8.15 (Logging), A.8.16 (Monitoring activities), A.5.28 (Collection of evidence)</td>
+<td>MEASURE 2.8, MANAGE 4.1</td>
+<td>LLM09 Misinformation (audit trail), LLM06 Excessive Agency</td>
+<td>GL-AUDIT-01 (追跡可能性), GL-RISK-02 (インシデントDB)</td>
+</tr>
+<tr>
+<td>SIEM forwarding (ECS / HTTP)</td>
+<td>Optional non-blocking forwarder mirrors events to a SIEM in Elastic Common Schema; PII redaction runs first.</td>
+<td>A.8.16 (Monitoring activities), A.5.25 (Assessment of security events)</td>
+<td>MEASURE 2.8, MANAGE 4.1</td>
+<td>LLM06 Excessive Agency</td>
+<td>GL-HUMAN-04 (継続的モニタリング)</td>
+</tr>
+<tr>
+<td>Weekly security report</td>
+<td>Automated weekly report of scans, blocks, OWASP coverage, and week-over-week trend for review meetings.</td>
+<td>A.5.36 (Compliance review), A.8.16 (Monitoring activities)</td>
+<td>MEASURE 4.1, GOVERN 4.1</td>
+<td>LLM09 Misinformation (reporting)</td>
+<td>GL-TRANS-01 (ドキュメント化), GL-RISK-02</td>
+</tr>
+</tbody></table>
+<h2>What Aigis does NOT cover</h2>
+<p>For an honest scope boundary, the following areas are <strong>out of scope</strong> for Aigis and must be handled by other controls (your existing security tooling and operational processes).</p>
+<ul>
+<li>Model training / fine-tuning safety — Aigis does not train or align models.</li>
+<li>Content moderation policy decisions — Aigis flags categories but does not define your acceptable-use policy.</li>
+<li>Network-layer DLP — egress filtering at the network boundary is your existing CASB/proxy's job.</li>
+<li>Endpoint security (EDR/antivirus) — Aigis governs the agent, not the host machine.</li>
+<li>Claude Code's own cloud-side processing — prompts sent to Anthropic are governed by Anthropic's terms, not by Aigis.</li>
+<li>Identity and access management — user authentication and SSO remain your IdP's responsibility.</li>
+</ul>
+</section>
+<section id="03_policy_snapshot-en">
+<h1>3. Policy Snapshot</h1>
+<p>Policy currently in force: <strong>Aigis Enterprise Policy</strong> (v1.0). Default decision when no rule matches: <code>allow</code>.</p>
+<h2>Rules (human-readable)</h2>
+<table><thead><tr>
+<th>#</th>
+<th>Rule ID</th>
+<th>Action</th>
+<th>Target</th>
+<th>Decision</th>
+<th>Reason</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td><code>dangerous_commands</code></td>
+<td><code>shell:exec</code></td>
+<td><code>rm -rf *</code></td>
+<td><strong>deny</strong></td>
+<td>Recursive forced deletion is blocked</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>dangerous_format</code></td>
+<td><code>shell:exec</code></td>
+<td><code>*mkfs*</code></td>
+<td><strong>deny</strong></td>
+<td>Filesystem format commands are blocked</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>dangerous_dd</code></td>
+<td><code>shell:exec</code></td>
+<td><code>*dd if=*</code></td>
+<td><strong>deny</strong></td>
+<td>Raw disk operations are blocked</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>sudo_commands</code></td>
+<td><code>shell:exec</code></td>
+<td><code>sudo *</code></td>
+<td><strong>review</strong></td>
+<td>Privilege escalation requires review</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>env_file_protection</code></td>
+<td><code>file:write</code></td>
+<td><code>.env*</code></td>
+<td><strong>deny</strong></td>
+<td>Environment files are protected from modification</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>secrets_dir_protection</code></td>
+<td><code>file:*</code></td>
+<td><code>*secrets*</code></td>
+<td><strong>review</strong></td>
+<td>Access to secrets directories requires review</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>ssh_key_protection</code></td>
+<td><code>file:*</code></td>
+<td><code>*.ssh/*</code></td>
+<td><strong>deny</strong></td>
+<td>SSH key access is blocked</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>credentials_protection</code></td>
+<td><code>file:write</code></td>
+<td><code>*credentials*</code></td>
+<td><strong>deny</strong></td>
+<td>Credential files are protected</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>pipe_to_shell</code></td>
+<td><code>shell:exec</code></td>
+<td>`*</td>
+<td>bash*`</td>
+<td><strong>deny</strong></td>
+<td>Piping remote content to shell is blocked</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>pipe_to_sh</code></td>
+<td><code>shell:exec</code></td>
+<td>`*</td>
+<td>sh*`</td>
+<td><strong>deny</strong></td>
+<td>Piping remote content to shell is blocked</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>git_force_push</code></td>
+<td><code>shell:exec</code></td>
+<td><code>*--force*</code></td>
+<td><strong>deny</strong></td>
+<td>Force push is blocked</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>git_push_review</code></td>
+<td><code>shell:exec</code></td>
+<td><code>git push*</code></td>
+<td><strong>review</strong></td>
+<td>Git push requires review</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>agent_spawn_review</code></td>
+<td><code>agent:spawn</code></td>
+<td><code>*</code></td>
+<td><strong>review</strong></td>
+<td>Spawning sub-agents requires review</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>llm_prompt_scan</code></td>
+<td><code>llm:prompt</code></td>
+<td><code>*</code></td>
+<td><strong>allow</strong></td>
+<td>LLM prompts are scanned by Aigis's detection engine</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>risk_threshold_critical</code></td>
+<td><code>*</code></td>
+<td><code>*</code></td>
+<td><strong>deny</strong></td>
+<td>Critical-risk content detected by Aigis scan engine</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>risk_threshold_medium</code></td>
+<td><code>*</code></td>
+<td><code>*</code></td>
+<td><strong>review</strong></td>
+<td>Suspicious content detected by Aigis scan engine</td>
+</tr>
+</tbody></table>
+<h2>Policy file (literal YAML)</h2>
+<p>The following is the verbatim policy file under version control.</p>
+<pre><code># Aigis Policy: Aigis Enterprise Policy
+# Generated by Aigis v0.3.0
+
+name: "Aigis Enterprise Policy"
+version: "1.0"
+default_decision: allow
+
+rules:
+  - id: dangerous_commands
+    action: "shell:exec"
+    target: "rm -rf *"
+    decision: deny
+    reason: "Recursive forced deletion is blocked"
+
+  - id: dangerous_format
+    action: "shell:exec"
+    target: "*mkfs*"
+    decision: deny
+    reason: "Filesystem format commands are blocked"
+
+  - id: dangerous_dd
+    action: "shell:exec"
+    target: "*dd if=*"
+    decision: deny
+    reason: "Raw disk operations are blocked"
+
+  - id: sudo_commands
+    action: "shell:exec"
+    target: "sudo *"
+    decision: review
+    reason: "Privilege escalation requires review"
+
+  - id: env_file_protection
+    action: "file:write"
+    target: ".env*"
+    decision: deny
+    reason: "Environment files are protected from modification"
+
+  - id: secrets_dir_protection
+    action: "file:*"
+    target: "*secrets*"
+    decision: review
+    reason: "Access to secrets directories requires review"
+
+  - id: ssh_key_protection
+    action: "file:*"
+    target: "*.ssh/*"
+    decision: deny
+    reason: "SSH key access is blocked"
+
+  - id: credentials_protection
+    action: "file:write"
+    target: "*credentials*"
+    decision: deny
+    reason: "Credential files are protected"
+
+  - id: pipe_to_shell
+    action: "shell:exec"
+    target: "*| bash*"
+    decision: deny
+    reason: "Piping remote content to shell is blocked"
+
+  - id: pipe_to_sh
+    action: "shell:exec"
+    target: "*| sh*"
+    decision: deny
+    reason: "Piping remote content to shell is blocked"
+
+  - id: git_force_push
+    action: "shell:exec"
+    target: "*--force*"
+    decision: deny
+    reason: "Force push is blocked"
+
+  - id: git_push_review
+    action: "shell:exec"
+    target: "git push*"
+    decision: review
+    reason: "Git push requires review"
+
+  - id: agent_spawn_review
+    action: "agent:spawn"
+    target: "*"
+    decision: review
+    reason: "Spawning sub-agents requires review"
+
+  - id: llm_prompt_scan
+    action: "llm:prompt"
+    target: "*"
+    decision: allow
+    reason: "LLM prompts are scanned by Aigis's detection engine"
+
+  - id: risk_threshold_critical
+    action: "*"
+    target: "*"
+    decision: deny
+    reason: "Critical-risk content detected by Aigis scan engine"
+    conditions:
+      risk_above: 80
+
+  - id: risk_threshold_medium
+    action: "*"
+    target: "*"
+    decision: review
+    reason: "Suspicious content detected by Aigis scan engine"
+    conditions:
+      risk_above: 40</code></pre>
+</section>
+<section id="04_audit_log_evidence-en">
+<h1>4. Audit Log Evidence</h1>
+<h2>Where logs live</h2>
+<p>Aigis keeps audit logs in three tiers (all append-only JSONL, one event per line):</p>
+<ul>
+<li><strong>Local logs:</strong> <code>.aigis/logs</code> (per-project, developer-visible)</li>
+<li><strong>Global logs:</strong> <code>~/.aigis/global/</code> (cross-project, for audit / CISO)</li>
+<li><strong>Alert archive:</strong> <code>~/.aigis/alerts/</code> (deny / review events, permanent)</li>
+</ul>
+<p>Current state: local logs are not yet created,</p>
+<p>with 0 events in the last 7 days and 0 in 30 days.</p>
+<h2>Event schema (JSONL fields)</h2>
+<p>Each event is recorded as an <code>aigis.activity.ActivityEvent</code> with these fields:</p>
+<ul>
+<li><code>action</code></li>
+<li><code>target</code></li>
+<li><code>agent_type</code></li>
+<li><code>user_id</code></li>
+<li><code>session_id</code></li>
+<li><code>event_type</code></li>
+<li><code>cwd</code></li>
+<li><code>project_name</code></li>
+<li><code>details</code></li>
+<li><code>risk_score</code></li>
+<li><code>risk_level</code></li>
+<li><code>matched_rules</code></li>
+<li><code>remediation_hints</code></li>
+<li><code>owasp_refs</code></li>
+<li><code>policy_decision</code></li>
+<li><code>policy_rule_id</code></li>
+<li><code>timestamp</code></li>
+<li><code>event_id</code></li>
+<li><code>autonomy_level</code></li>
+<li><code>delegation_chain</code></li>
+<li><code>estimated_cost</code></li>
+<li><code>memory_scope</code></li>
+<li><code>suggested_fix</code></li>
+<li><code>fix_applied</code></li>
+</ul>
+<h2>Retention / rotation</h2>
+<ul>
+<li>Full logs are retained for 60 days by default, then auto-rotated</li>
+</ul>
+<p>(compressed or deleted).</p>
+<ul>
+<li>Alert logs (<code>~/.aigis/alerts/</code>) are kept permanently and never deleted.</li>
+<li>Run rotation/compression with: <code>aigis maintenance</code></li>
+</ul>
+<h2>Tamper-evidence design</h2>
+<p>The signed audit log (<code>aigis.audit.SignedAuditLog</code>) does two things per entry:</p>
+<p>1. <strong>HMAC-SHA256 signature</strong> — every field of the entry is canonicalised to</p>
+<p>JSON and signed with a secret key. The signature depends on the entry's</p>
+<p>content, so changing a single byte fails signature verification.</p>
+<p>2. <strong>Hash chain</strong> — each entry stores the SHA-256 hash of the previous entry</p>
+<p>(<code>prev_hash</code>), so deleting, reordering, or inserting entries is detectable.</p>
+<p>Integrity is checked with four tests: signature, chain, sequence, and</p>
+<p>timestamp ordering.</p>
+<p><strong>Verify command:</strong></p>
+<pre><code>aigis audit verify</code></pre>
+<p>Use <code>--log PATH</code> to point at a specific log file and <code>--json</code> for a</p>
+<p>machine-readable result. Use <code>aigis audit status</code> for a quick health check.</p>
+<p>Current state: signed audit log is</p>
+<p>available but not yet enabled.</p>
+<h2>SIEM forwarding</h2>
+<p>Events can optionally be forwarded to an external SIEM (Elastic Common Schema,</p>
+<p>over HTTP). Forwarding is non-blocking and never delays an agent tool call. A</p>
+<p>PII redactor can run before any event leaves the process. See</p>
+<p><code>docs/forwarders.md</code>. Current state: not detected (forwarders are configured in code; see docs/forwarders.md).</p>
+</section>
+<section id="05_incident_runbook-en">
+<h1>5. Incident Runbook</h1>
+<h2>What happens when Aigis blocks an action</h2>
+<p>A Claude Code *PreToolUse* hook runs on every tool call. When Aigis <strong>denies</strong></p>
+<p>a request, the hook exits with code <strong>2</strong> and Claude Code aborts that tool</p>
+<p>execution. The reason (the matched policy rule ID, and the risk score where</p>
+<p>relevant) is printed to standard error and simultaneously written to the</p>
+<p>audit log.</p>
+<p>The hook is <strong>fail-closed</strong>: if it cannot reach a decision — unparseable</p>
+<p>input, Aigis not installed, an exception during scanning — it blocks on the</p>
+<p>safe side.</p>
+<h2>Severity levels</h2>
+<table><thead><tr>
+<th>Severity</th>
+<th>Guideline</th>
+<th>Response</th>
+</tr></thead><tbody>
+<tr>
+<td>Critical</td>
+<td>Risk score ≥ 80, or a denied destructive op (<code>rm -rf</code>, etc.)</td>
+<td>Immediate block. Review the record; escalate if needed</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Risk score 50–79</td>
+<td>Block or review. A responder examines it</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Risk score 40–49, review decision</td>
+<td>Human approval via the review queue</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Risk score &lt; 40</td>
+<td>Allowed; logged only</td>
+</tr>
+</tbody></table>
+<h2>Triage steps</h2>
+<p>1. List recent alerts: <code>aigis logs --alerts</code></p>
+<p>2. Inspect the event details (action, target, matched rule, risk score).</p>
+<p>3. Verify audit-log integrity: <code>aigis audit verify</code></p>
+<p>4. If a legitimate action was blocked, follow "Reporting false positives" below.</p>
+<p>5. If this looks like an attack, report it using the escalation template.</p>
+<h2>Escalation template</h2>
+<pre><code>Subject: [Aigis] {severity} — detected {rule_id}
+
+When: {ISO-8601 timestamp}
+Project / host: {project name / hostname}
+User: {user_id}
+Action: {action} Target: {target}
+Risk score: {score}  Decision: {decision}
+Matched rule: {rule_id}
+Audit-log verification: {result of `aigis audit verify`}
+
+First responder: [TO FILL: first responder name]
+Escalate to: security@example.com</code></pre>
+<h2>Reporting false positives</h2>
+<p>1. Capture the exact blocked input/action (<code>aigis logs --alerts --json</code>).</p>
+<p>2. Reproduce by re-scanning the input: <code>aigis scan "&lt;input&gt;"</code></p>
+<p>3. If it is genuinely legitimate, adjust the policy (see below).</p>
+<p>4. Record the adjustment in the commit message for the review trail.</p>
+<h2>Updating the policy</h2>
+<ul>
+<li>Inspect the current policy: <code>aigis policy show</code></li>
+<li>Edit <code>aigis-policy.yaml</code> to add or adjust rules.</li>
+<li>Validate: <code>aigis policy check</code></li>
+<li>Version-control the change and apply it with sign-off from</li>
+</ul>
+<p>[TO FILL: approver / role].</p>
+</section>
+<section id="06_rollout_plan-en">
+<h1>6. Rollout Plan</h1>
+<p>We recommend introducing Aigis in three phases to limit risk while validating</p>
+<p>it in real use. Each phase ends with a review gate that decides whether to</p>
+<p>proceed to the next.</p>
+<h2>Phase 1: Pilot (2 weeks)</h2>
+<p>Scope: [TO FILL: pilot team / project]</p>
+<ul>
+<li>&amp;#9744; Confirm the pilot team and scope</li>
+<li>&amp;#9744; Install the hook with <code>aigis init --agent claude-code</code></li>
+<li>&amp;#9744; Verify the install with <code>aigis doctor</code></li>
+<li>&amp;#9744; Run the default policy for two weeks; collect blocks, reviews, and false positives</li>
+<li>&amp;#9744; Review status via <code>aigis logs --alerts</code> and the weekly report</li>
+<li>&amp;#9744; Tune the policy in response to false positives</li>
+</ul>
+<p><strong>Review gate 1:</strong> Is the false-positive rate acceptable? Were there any</p>
+<p>serious block events? Approver: [TO FILL: phase-1 approver]</p>
+<h2>Phase 2: Expand</h2>
+<ul>
+<li>&amp;#9744; Finalise the pilot-tuned policy as the department standard</li>
+<li>&amp;#9744; Expand to [TO FILL: next teams / departments]</li>
+<li>&amp;#9744; Enable the signed audit log</li>
+<li>&amp;#9744; Configure SIEM forwarding if required (<code>docs/forwarders.md</code>)</li>
+<li>&amp;#9744; Fold the incident runbook into operations</li>
+</ul>
+<p><strong>Review gate 2:</strong> Is audit-log integrity verifiable (<code>aigis audit verify</code>)?</p>
+<p>Is the operational load reasonable? Approver:</p>
+<p>[TO FILL: phase-2 approver]</p>
+<h2>Phase 3: Organisation default</h2>
+<ul>
+<li>&amp;#9744; Make Aigis the standard for all Claude Code use</li>
+<li>&amp;#9744; Establish the approval flow for policy changes</li>
+<li>&amp;#9744; Schedule periodic policy reviews (e.g. quarterly)</li>
+<li>&amp;#9744; Build pack regeneration into audit / compliance reporting</li>
+</ul>
+<p><strong>Review gate 3:</strong> Is the governance process sustainable?</p>
+<p>Approver: [TO FILL: phase-3 approver]</p>
+<hr>
+<p>_Regenerate this pack whenever the policy changes (it can run in CI), so the</p>
+<p>documents you submit to IT always reflect the live posture._</p>
+</section>
+<section id="01_executive_summary-ja">
+<h1>1. エグゼクティブサマリ</h1>
+<p><strong>組織:</strong> Example Corp（サンプル株式会社）</p>
+<p><strong>提出先:</strong> 【要記入: 情報システム部門】</p>
+<p><strong>セキュリティ窓口:</strong> security@example.com</p>
+<p><strong>生成日時:</strong> 2026-06-14T03:52:27.279551+00:00（Aigis v1.1.11）</p>
+<h2>Claude Codeとは</h2>
+<p>Claude CodeはAnthropic社が提供するコマンドライン型のコーディングエージェントです。</p>
+<p>ファイルの読み書き、シェルコマンドの実行、Webコンテンツの取得を行い、外部ツール</p>
+<p>（Model Context Protocolサーバーを含む）を呼び出して、ソフトウェア開発タスクを</p>
+<p>自律的に遂行します。開発者の実機上で実際の操作を実行するため、統制のない導入は</p>
+<p>運用・セキュリティ上の重大なリスクとなり得ます。</p>
+<h2>Aigisが付加するもの</h2>
+<p>Aigisは、エージェントと、それが実行しようとする操作との間に位置する、ゼロ依存の</p>
+<p>オープンソース・ガードレール層です。情報システム部門が拠り所とできる、次の3点を</p>
+<p>提供します。</p>
+<p>1. <strong>決定論的な実行前ガードレール。</strong> Claude Codeの *PreToolUse* フックが、すべての</p>
+<p>ツール呼び出しを捕捉します。Aigisはリクエストを検査し、貴社のポリシーに照らして</p>
+<p>評価し、操作が実行される<strong>前に</strong>「許可／レビュー／拒否」を返します。判定はルール</p>
+<p>ベースで再現可能であり、モデルが自分自身を確率的に判定するものではありません。</p>
+<p>2. <strong>改ざん検知が可能な監査ログ。</strong> すべての判定は追記専用のJSONLログに記録されます。</p>
+<p>署名付き版（HMAC-SHA256＋ハッシュチェーン）により、事後の削除・改ざんを検知できます。</p>
+<p>3. <strong>組織が保有するポリシー。</strong> ポリシーはリポジトリ内の可読なファイルであり、他の</p>
+<p>コードと同様にレビューおよびバージョン管理が可能です。</p>
+<p>Aigisは完全にローカルで動作し、新たな実行時依存関係を追加しません。プロンプトや</p>
+<p>コードを外部に送信することはなく、エージェントが貴社の端末上で行える操作を統制します。</p>
+<h2>本パックの内容</h2>
+<ul>
+<li><strong>コントロールマトリクス</strong> — Aigisのコントロールを、ISO/IEC 27001:2022 附属書A、</li>
+</ul>
+<p>NIST AI RMF、OWASP LLM Top 10、および経済産業省・総務省「AI事業者ガイドライン</p>
+<p>v1.2」へマッピングしたもの。あわせて「Aigisが対象としない範囲」を明示します。</p>
+<ul>
+<li><strong>ポリシースナップショット</strong> — 現在適用中のポリシーを、平易な説明と実際のYAMLで提示します。</li>
+<li><strong>監査ログの証跡</strong> — ログの保存場所、スキーマ、保持期間、改ざん検知の設計、整合性</li>
+</ul>
+<p>検証コマンドを記載します。</p>
+<ul>
+<li><strong>インシデント対応手順</strong> — Aigisが操作をブロックした際の流れ、トリアージ、エスカ</li>
+</ul>
+<p>レーション、誤検知の報告方法を記載します。</p>
+<ul>
+<li><strong>展開計画</strong> — レビューゲートを備えた3段階のパイロット導入テンプレートです。</li>
+</ul>
+<h2>現状の稼働状況</h2>
+<ul>
+<li><strong>ポリシープロファイル:</strong> Aigis Enterprise Policy（v1.0）、ルール16件</li>
+</ul>
+<p>— 拒否10件、レビュー5件、許可1件。</p>
+<p>どのルールにも一致しない場合の既定判定: <code>allow</code>。</p>
+<ul>
+<li><strong>フックの状態:</strong> 導入・設定済み。</li>
+<li><strong>ログの状態:</strong> まだイベントは記録されていません。</li>
+<li><strong>署名付き監査ログ:</strong> 利用可能ですが未有効化。</li>
+<li><strong>SIEM転送:</strong> not detected (forwarders are configured in code; see docs/forwarders.md)。</li>
+</ul>
+</section>
+<section id="02_control_matrix-ja">
+<h1>2. コントロールマトリクス</h1>
+<p>本表は、Aigisが実装する各コントロールを、主要なセキュリティ・AIガバナンスフレームワークへ対応付けたものです。ISO/IEC 27001の項番は「証跡を補強するもの（supports evidence for）」として記載しており、Aigisが認証や準拠を保証するものではありません。</p>
+<table><thead><tr>
+<th>Aigisコントロール</th>
+<th>概要</th>
+<th>ISO/IEC 27001:2022 附属書A</th>
+<th>NIST AI RMF</th>
+<th>OWASP LLM Top 10</th>
+<th>AI事業者GL v1.2</th>
+</tr></thead><tbody>
+<tr>
+<td>入力スキャン（プロンプトインジェクション・ジェイルブレイク・個人情報）</td>
+<td>モデルに到達する前に、すべてのプロンプトを正規表現と類似度検知で決定論的に検査します。</td>
+<td>A.8.16 (Monitoring activities), A.5.7 (Threat intelligence)</td>
+<td>MEASURE 2.7, MANAGE 2.1</td>
+<td>LLM01 Prompt Injection, LLM02 Sensitive Information Disclosure</td>
+<td>GL-POISON-01, SEC-PI-01</td>
+</tr>
+<tr>
+<td>出力スキャン（情報漏洩・秘密情報・個人情報）</td>
+<td>モデルの出力を返す前に、秘密情報・個人情報・システムプロンプトの漏洩がないか検査します。</td>
+<td>A.8.12 (Data leakage prevention), A.5.34 (Privacy and PII)</td>
+<td>MEASURE 2.7, MANAGE 4.1</td>
+<td>LLM02 Sensitive Information Disclosure, LLM06 Excessive Agency</td>
+<td>APPI-PII-01, GL-DATA-01</td>
+</tr>
+<tr>
+<td>ツール呼び出しポリシー強制</td>
+<td>すべてのツール呼び出し（シェル・ファイル・ネットワーク）を実行前に許可/拒否/レビュー判定します。</td>
+<td>A.8.2 (Privileged access rights), A.8.18 (Use of privileged utility programs)</td>
+<td>GOVERN 1.1, MANAGE 2.1</td>
+<td>LLM06 Excessive Agency, LLM08 Vector and Embedding Weaknesses</td>
+<td>GL-HUMAN-03 (最小権限), SEC-PRIV-01</td>
+</tr>
+<tr>
+<td>MCPツール定義スキャン</td>
+<td>Model Context Protocolサーバー定義に含まれるツールポイズニングや定義改ざん（ラグプル）を検出します。</td>
+<td>A.5.21 (ICT supply chain security), A.8.30 (Outsourced development)</td>
+<td>MAP 4.1, MANAGE 3.1</td>
+<td>LLM03 Supply Chain, LLM01 Prompt Injection</td>
+<td>GL-SEC-03 (攻撃対象面の管理)</td>
+</tr>
+<tr>
+<td>メモリ・ファイル書き込みフィルター</td>
+<td>保護対象パス（.env、認証情報、SSH鍵）への書き込みをブロックし、永続化されるエージェントメモリを検査します。</td>
+<td>A.8.3 (Information access restriction), A.8.12 (Data leakage prevention)</td>
+<td>MANAGE 2.1, GOVERN 1.4</td>
+<td>LLM06 Excessive Agency, LLM02 Sensitive Information Disclosure</td>
+<td>GL-HUMAN-03 (最小権限), GL-DATA-02</td>
+</tr>
+<tr>
+<td>改ざん検知監査ログ（HMAC＋ハッシュチェーン）</td>
+<td>追記専用ログ。各エントリをHMAC-SHA256で署名しハッシュチェーンで連結するため、削除・改ざんを検知できます。</td>
+<td>A.8.15 (Logging), A.8.16 (Monitoring activities), A.5.28 (Collection of evidence)</td>
+<td>MEASURE 2.8, MANAGE 4.1</td>
+<td>LLM09 Misinformation (audit trail), LLM06 Excessive Agency</td>
+<td>GL-AUDIT-01 (追跡可能性), GL-RISK-02 (インシデントDB)</td>
+</tr>
+<tr>
+<td>SIEM転送（ECS／HTTP）</td>
+<td>任意の非ブロッキング転送機能が、イベントをElastic Common Schema形式でSIEMへ複製します。送信前に個人情報の墨消しを実施します。</td>
+<td>A.8.16 (Monitoring activities), A.5.25 (Assessment of security events)</td>
+<td>MEASURE 2.8, MANAGE 4.1</td>
+<td>LLM06 Excessive Agency</td>
+<td>GL-HUMAN-04 (継続的モニタリング)</td>
+</tr>
+<tr>
+<td>週次セキュリティレポート</td>
+<td>スキャン数・ブロック数・OWASPカバレッジ・前週比トレンドを集計した週次レポートを自動生成します。</td>
+<td>A.5.36 (Compliance review), A.8.16 (Monitoring activities)</td>
+<td>MEASURE 4.1, GOVERN 4.1</td>
+<td>LLM09 Misinformation (reporting)</td>
+<td>GL-TRANS-01 (ドキュメント化), GL-RISK-02</td>
+</tr>
+</tbody></table>
+<h2>Aigisが対象としない範囲</h2>
+<p>正直な範囲設定のため、Aigisが<strong>対象としない</strong>領域を明示します。これらは別の管理策（既存のセキュリティ製品・運用体制）で対応する必要があります。</p>
+<ul>
+<li>モデルの学習・ファインチューニングの安全性 — Aigisはモデルの学習やアライメントを行いません。</li>
+<li>コンテンツモデレーションのポリシー判断 — Aigisはカテゴリを検知しますが、貴社の利用規約（許容利用方針）の定義は行いません。</li>
+<li>ネットワーク層のDLP — ネットワーク境界での外向き通信フィルタリングは、既存のCASB／プロキシの役割です。</li>
+<li>エンドポイントセキュリティ（EDR／アンチウイルス） — Aigisはエージェントを統制しますが、ホスト端末自体は対象外です。</li>
+<li>Claude Code自体のクラウド側処理 — Anthropicへ送信されるプロンプトはAnthropicの規約に従うものであり、Aigisの統制対象外です。</li>
+<li>ID・アクセス管理 — ユーザー認証やSSOは引き続き貴社のIdP（ID基盤）の責任範囲です。</li>
+</ul>
+</section>
+<section id="03_policy_snapshot-ja">
+<h1>3. ポリシースナップショット</h1>
+<p>現在適用中のポリシー: <strong>Aigis Enterprise Policy</strong>（v1.0）。どのルールにも一致しない場合の既定判定は <code>allow</code> です。</p>
+<h2>ルール一覧（可読形式）</h2>
+<table><thead><tr>
+<th>#</th>
+<th>ルールID</th>
+<th>アクション</th>
+<th>対象</th>
+<th>判定</th>
+<th>理由</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td><code>dangerous_commands</code></td>
+<td><code>shell:exec</code></td>
+<td><code>rm -rf *</code></td>
+<td><strong>deny</strong></td>
+<td>Recursive forced deletion is blocked</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>dangerous_format</code></td>
+<td><code>shell:exec</code></td>
+<td><code>*mkfs*</code></td>
+<td><strong>deny</strong></td>
+<td>Filesystem format commands are blocked</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>dangerous_dd</code></td>
+<td><code>shell:exec</code></td>
+<td><code>*dd if=*</code></td>
+<td><strong>deny</strong></td>
+<td>Raw disk operations are blocked</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>sudo_commands</code></td>
+<td><code>shell:exec</code></td>
+<td><code>sudo *</code></td>
+<td><strong>review</strong></td>
+<td>Privilege escalation requires review</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>env_file_protection</code></td>
+<td><code>file:write</code></td>
+<td><code>.env*</code></td>
+<td><strong>deny</strong></td>
+<td>Environment files are protected from modification</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>secrets_dir_protection</code></td>
+<td><code>file:*</code></td>
+<td><code>*secrets*</code></td>
+<td><strong>review</strong></td>
+<td>Access to secrets directories requires review</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>ssh_key_protection</code></td>
+<td><code>file:*</code></td>
+<td><code>*.ssh/*</code></td>
+<td><strong>deny</strong></td>
+<td>SSH key access is blocked</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>credentials_protection</code></td>
+<td><code>file:write</code></td>
+<td><code>*credentials*</code></td>
+<td><strong>deny</strong></td>
+<td>Credential files are protected</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>pipe_to_shell</code></td>
+<td><code>shell:exec</code></td>
+<td>`*</td>
+<td>bash*`</td>
+<td><strong>deny</strong></td>
+<td>Piping remote content to shell is blocked</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>pipe_to_sh</code></td>
+<td><code>shell:exec</code></td>
+<td>`*</td>
+<td>sh*`</td>
+<td><strong>deny</strong></td>
+<td>Piping remote content to shell is blocked</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>git_force_push</code></td>
+<td><code>shell:exec</code></td>
+<td><code>*--force*</code></td>
+<td><strong>deny</strong></td>
+<td>Force push is blocked</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>git_push_review</code></td>
+<td><code>shell:exec</code></td>
+<td><code>git push*</code></td>
+<td><strong>review</strong></td>
+<td>Git push requires review</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>agent_spawn_review</code></td>
+<td><code>agent:spawn</code></td>
+<td><code>*</code></td>
+<td><strong>review</strong></td>
+<td>Spawning sub-agents requires review</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>llm_prompt_scan</code></td>
+<td><code>llm:prompt</code></td>
+<td><code>*</code></td>
+<td><strong>allow</strong></td>
+<td>LLM prompts are scanned by Aigis's detection engine</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>risk_threshold_critical</code></td>
+<td><code>*</code></td>
+<td><code>*</code></td>
+<td><strong>deny</strong></td>
+<td>Critical-risk content detected by Aigis scan engine</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>risk_threshold_medium</code></td>
+<td><code>*</code></td>
+<td><code>*</code></td>
+<td><strong>review</strong></td>
+<td>Suspicious content detected by Aigis scan engine</td>
+</tr>
+</tbody></table>
+<h2>ポリシーファイル（実体・YAML）</h2>
+<p>以下は、リポジトリで管理されている実際のポリシーファイルの全文です。</p>
+<pre><code># Aigis Policy: Aigis Enterprise Policy
+# Generated by Aigis v0.3.0
+
+name: "Aigis Enterprise Policy"
+version: "1.0"
+default_decision: allow
+
+rules:
+  - id: dangerous_commands
+    action: "shell:exec"
+    target: "rm -rf *"
+    decision: deny
+    reason: "Recursive forced deletion is blocked"
+
+  - id: dangerous_format
+    action: "shell:exec"
+    target: "*mkfs*"
+    decision: deny
+    reason: "Filesystem format commands are blocked"
+
+  - id: dangerous_dd
+    action: "shell:exec"
+    target: "*dd if=*"
+    decision: deny
+    reason: "Raw disk operations are blocked"
+
+  - id: sudo_commands
+    action: "shell:exec"
+    target: "sudo *"
+    decision: review
+    reason: "Privilege escalation requires review"
+
+  - id: env_file_protection
+    action: "file:write"
+    target: ".env*"
+    decision: deny
+    reason: "Environment files are protected from modification"
+
+  - id: secrets_dir_protection
+    action: "file:*"
+    target: "*secrets*"
+    decision: review
+    reason: "Access to secrets directories requires review"
+
+  - id: ssh_key_protection
+    action: "file:*"
+    target: "*.ssh/*"
+    decision: deny
+    reason: "SSH key access is blocked"
+
+  - id: credentials_protection
+    action: "file:write"
+    target: "*credentials*"
+    decision: deny
+    reason: "Credential files are protected"
+
+  - id: pipe_to_shell
+    action: "shell:exec"
+    target: "*| bash*"
+    decision: deny
+    reason: "Piping remote content to shell is blocked"
+
+  - id: pipe_to_sh
+    action: "shell:exec"
+    target: "*| sh*"
+    decision: deny
+    reason: "Piping remote content to shell is blocked"
+
+  - id: git_force_push
+    action: "shell:exec"
+    target: "*--force*"
+    decision: deny
+    reason: "Force push is blocked"
+
+  - id: git_push_review
+    action: "shell:exec"
+    target: "git push*"
+    decision: review
+    reason: "Git push requires review"
+
+  - id: agent_spawn_review
+    action: "agent:spawn"
+    target: "*"
+    decision: review
+    reason: "Spawning sub-agents requires review"
+
+  - id: llm_prompt_scan
+    action: "llm:prompt"
+    target: "*"
+    decision: allow
+    reason: "LLM prompts are scanned by Aigis's detection engine"
+
+  - id: risk_threshold_critical
+    action: "*"
+    target: "*"
+    decision: deny
+    reason: "Critical-risk content detected by Aigis scan engine"
+    conditions:
+      risk_above: 80
+
+  - id: risk_threshold_medium
+    action: "*"
+    target: "*"
+    decision: review
+    reason: "Suspicious content detected by Aigis scan engine"
+    conditions:
+      risk_above: 40</code></pre>
+</section>
+<section id="04_audit_log_evidence-ja">
+<h1>4. 監査ログの証跡</h1>
+<h2>ログの保存場所</h2>
+<p>Aigisは監査ログを3階層で保持します（いずれも追記専用のJSONL形式、1行1イベント）。</p>
+<ul>
+<li><strong>ローカルログ:</strong> <code>.aigis/logs</code>（プロジェクト単位、開発者が確認可能）</li>
+<li><strong>グローバルログ:</strong> <code>~/.aigis/global/</code>（全プロジェクト横断、監査・CISO向け）</li>
+<li><strong>アラート保管:</strong> <code>~/.aigis/alerts/</code>（拒否・レビューイベントを恒久保存）</li>
+</ul>
+<p>現状: ローカルログは未生成、</p>
+<p>直近7日間で0件、30日間で0件を記録しています。</p>
+<h2>イベントスキーマ（JSONLフィールド）</h2>
+<p>各イベントは <code>aigis.activity.ActivityEvent</code> として記録され、以下のフィールドを持ちます。</p>
+<ul>
+<li><code>action</code></li>
+<li><code>target</code></li>
+<li><code>agent_type</code></li>
+<li><code>user_id</code></li>
+<li><code>session_id</code></li>
+<li><code>event_type</code></li>
+<li><code>cwd</code></li>
+<li><code>project_name</code></li>
+<li><code>details</code></li>
+<li><code>risk_score</code></li>
+<li><code>risk_level</code></li>
+<li><code>matched_rules</code></li>
+<li><code>remediation_hints</code></li>
+<li><code>owasp_refs</code></li>
+<li><code>policy_decision</code></li>
+<li><code>policy_rule_id</code></li>
+<li><code>timestamp</code></li>
+<li><code>event_id</code></li>
+<li><code>autonomy_level</code></li>
+<li><code>delegation_chain</code></li>
+<li><code>estimated_cost</code></li>
+<li><code>memory_scope</code></li>
+<li><code>suggested_fix</code></li>
+<li><code>fix_applied</code></li>
+</ul>
+<h2>保持・ローテーション</h2>
+<ul>
+<li>完全ログは既定で60日間保持し、それ以降は自動でローテーション（圧縮または削除）されます。</li>
+<li>アラートログ（<code>~/.aigis/alerts/</code>）は恒久保存され、削除されません。</li>
+<li>ローテーション・圧縮は次のコマンドで実行します: <code>aigis maintenance</code></li>
+</ul>
+<h2>改ざん検知の設計</h2>
+<p>署名付き監査ログ（<code>aigis.audit.SignedAuditLog</code>）は、各エントリに対して次を行います。</p>
+<p>1. <strong>HMAC-SHA256署名</strong> — 各エントリの全フィールドを正準JSON化し、秘密鍵で署名します。</p>
+<p>署名はそのエントリの内容に依存するため、1バイトでも改変すれば署名検証に失敗します。</p>
+<p>2. <strong>ハッシュチェーン</strong> — 各エントリは直前エントリのSHA-256ハッシュ（<code>prev_hash</code>）を保持</p>
+<p>します。これにより、エントリの削除・並べ替え・挿入が検知可能になります。</p>
+<p>整合性は次の4チェックで検証されます: 署名・チェーン・連番・タイムスタンプ順序。</p>
+<p><strong>検証コマンド:</strong></p>
+<pre><code>aigis audit verify</code></pre>
+<p><code>--log PATH</code> でログファイルを指定でき、<code>--json</code> で機械可読な結果を出力します。</p>
+<p>状態確認には <code>aigis audit status</code> を使用します。</p>
+<p>現状: 署名付き監査ログは利用可能（未有効化）です。</p>
+<h2>SIEM転送</h2>
+<p>イベントは任意で外部SIEMへ転送できます（Elastic Common Schema形式、HTTP）。転送は</p>
+<p>非ブロッキングで、エージェントのツール呼び出しを遅延させません。送信前に個人情報の</p>
+<p>墨消し（Redactor）を実行できます。詳細は <code>docs/forwarders.md</code> を参照してください。</p>
+<p>現状: not detected (forwarders are configured in code; see docs/forwarders.md)。</p>
+</section>
+<section id="05_incident_runbook-ja">
+<h1>5. インシデント対応手順</h1>
+<h2>Aigisが操作をブロックしたとき</h2>
+<p>Claude Codeの *PreToolUse* フックがツール呼び出しごとに動作します。Aigisがリクエストを</p>
+<p>拒否（deny）した場合、フックは終了コード <strong>2</strong> を返し、Claude Codeはそのツール実行を</p>
+<p>中止します。理由（一致したポリシールールID、必要に応じてリスクスコア）が標準エラー出力に</p>
+<p>表示され、同時に監査ログへ記録されます。</p>
+<p>フックはフェイルクローズ（fail-closed）設計です。入力の解析失敗、Aigis未導入、スキャン</p>
+<p>時の例外など、判定できない事象が発生した場合は、安全側に倒してブロックします。</p>
+<h2>重大度レベル</h2>
+<table><thead><tr>
+<th>重大度</th>
+<th>目安</th>
+<th>対応</th>
+</tr></thead><tbody>
+<tr>
+<td>Critical</td>
+<td>リスクスコア ≥ 80、または破壊的操作（<code>rm -rf</code> 等）の拒否</td>
+<td>即時ブロック。記録を確認し、必要に応じてエスカレーション</td>
+</tr>
+<tr>
+<td>High</td>
+<td>リスクスコア 50–79</td>
+<td>ブロックまたはレビュー。担当者が確認</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>リスクスコア 40–49、レビュー判定</td>
+<td>レビューキューで人間が承認</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>リスクスコア &lt; 40</td>
+<td>許可。ログのみ記録</td>
+</tr>
+</tbody></table>
+<h2>トリアージ手順</h2>
+<p>1. 直近のアラートを確認します: <code>aigis logs --alerts</code></p>
+<p>2. 該当イベントの詳細（アクション・対象・一致ルール・リスクスコア）を確認します。</p>
+<p>3. 監査ログの整合性を検証します: <code>aigis audit verify</code></p>
+<p>4. 正当な操作が誤ってブロックされた場合は、下記「誤検知の報告」に従います。</p>
+<p>5. 攻撃の可能性がある場合は、下記エスカレーションテンプレートで報告します。</p>
+<h2>エスカレーションテンプレート</h2>
+<pre><code>件名: [Aigis] {重大度} — {ルールID} を検知
+
+発生日時: {ISO-8601タイムスタンプ}
+プロジェクト / 端末: {プロジェクト名 / ホスト名}
+利用者: {ユーザーID}
+アクション: {action} 対象: {target}
+リスクスコア: {score}  判定: {decision}
+一致ルール: {rule_id}
+監査ログ検証結果: {aigis audit verify の結果}
+
+一次対応: 【要記入: 一次対応者名】
+エスカレーション先: security@example.com</code></pre>
+<h2>誤検知（False Positive）の報告</h2>
+<p>1. ブロックされた具体的な入力／操作を記録します（<code>aigis logs --alerts --json</code>）。</p>
+<p>2. 当該入力を再スキャンして再現します: <code>aigis scan "&lt;入力&gt;"</code></p>
+<p>3. 正当な操作であると確認できた場合は、ポリシーを調整します（下記参照）。</p>
+<p>4. 調整内容は、レビュー記録のためコミットメッセージに残します。</p>
+<h2>ポリシーの更新</h2>
+<ul>
+<li>現在のポリシーを確認: <code>aigis policy show</code></li>
+<li><code>aigis-policy.yaml</code> を編集してルールを追加・調整します。</li>
+<li>妥当性を確認: <code>aigis policy check</code></li>
+<li>変更はバージョン管理し、【要記入: 承認者・役割】 の承認を経て反映します。</li>
+</ul>
+</section>
+<section id="06_rollout_plan-ja">
+<h1>6. 展開計画</h1>
+<p>Aigisの導入は、リスクを抑えつつ実運用での妥当性を確認するため、3段階で進めることを</p>
+<p>推奨します。各フェーズの終わりにレビューゲートを設け、次フェーズへの移行可否を判断します。</p>
+<h2>フェーズ1: パイロット（2週間）</h2>
+<p>対象: 【要記入: パイロットチーム・プロジェクト】</p>
+<ul>
+<li>&amp;#9744; パイロット対象チームと範囲を確定する</li>
+<li>&amp;#9744; <code>aigis init --agent claude-code</code> でフックを導入する</li>
+<li>&amp;#9744; <code>aigis doctor</code> で導入状態を確認する</li>
+<li>&amp;#9744; 既定ポリシーで2週間運用し、ブロック・レビュー・誤検知を収集する</li>
+<li>&amp;#9744; <code>aigis logs --alerts</code> と週次レポートで状況を確認する</li>
+<li>&amp;#9744; 誤検知に応じてポリシーを調整する</li>
+</ul>
+<p><strong>レビューゲート1:</strong> 誤検知率は許容範囲か。重大なブロック事象はなかったか。</p>
+<p>承認者: 【要記入: フェーズ1承認者】</p>
+<h2>フェーズ2: 拡大</h2>
+<ul>
+<li>&amp;#9744; パイロットで調整したポリシーを部門全体の標準として確定する</li>
+<li>&amp;#9744; 対象を 【要記入: 次の対象チーム・部門】 へ拡大する</li>
+<li>&amp;#9744; 署名付き監査ログを有効化する</li>
+<li>&amp;#9744; 必要に応じてSIEM転送を構成する（<code>docs/forwarders.md</code>）</li>
+<li>&amp;#9744; インシデント対応手順を運用に組み込む</li>
+</ul>
+<p><strong>レビューゲート2:</strong> 監査ログの整合性は検証可能か（<code>aigis audit verify</code>）。</p>
+<p>運用負荷は妥当か。承認者: 【要記入: フェーズ2承認者】</p>
+<h2>フェーズ3: 全社標準</h2>
+<ul>
+<li>&amp;#9744; Aigisを全社のClaude Code利用の標準とする</li>
+<li>&amp;#9744; ポリシー変更の承認フローを確立する</li>
+<li>&amp;#9744; 定期的なポリシーレビュー（四半期ごと等）を計画する</li>
+<li>&amp;#9744; 監査・コンプライアンス報告に本パックの再生成を組み込む</li>
+</ul>
+<p><strong>レビューゲート3:</strong> ガバナンス体制は継続的に運用可能か。</p>
+<p>承認者: 【要記入: フェーズ3承認者】</p>
+<hr>
+<p>_本パックはポリシー変更時に再生成することを推奨します（CIに組み込み可能）。</p>
+<p>最新の稼働状況を反映した文書を、常に情報システム部門へ提出できます。_</p>
+</section>
+</body>
+</html>
