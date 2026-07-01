@@ -80,10 +80,14 @@ Shared canonical ATLAS techniques where both projects have a real detection.
 | AML.T0050 — Command and Scripting Interpreter | cmdi_shell, cmdi_path_traversal | ATR-2026-00040, ATR-2026-00110 | 19 | Interpreter-invocation attempts on the input side. |
 | AML.T0105 — Escape to Host | se_container_escape, afe_python_mro_escape | ATR-2026-00436, ATR-2026-00539 | 3 | Sandbox or container escape reaching the host. |
 | AML.T0010 — AI Supply Chain Compromise | sc_compromised_pkg_version | ATR-2026-00060, ATR-2026-00062, ATR-2026-00065 | 38 | Compromised skill, package, or dependency in the agent supply chain. |
+| AML.T0109 — AI Supply Chain Rug Pull | mcp_rug_pull_indicator | ATR-2026-00126 | 1 | Benign-then-malicious tool or skill update. Aigis flags version/update language paired with new sensitive-data access; ATR carries the rug-pull setup rule. |
 
-**14 verified rows.** Coverage checked: 269 Aigis patterns (all DetectionPattern
-IDs in source) and 655 ATR rules on main, of which the 55 ATR rule IDs referenced
-across this document and the gap tables were each confirmed present on main.
+**15 verified rows.** Coverage checked against 264 DetectionPattern definitions in
+aigis/filters/patterns.py (the reproducible Aigis pattern inventory; 297 total id=
+entries exist across the package once re-exports and scorer heuristics are
+included). The 40 distinct ATR rule IDs referenced across this document and the gap
+tables were each confirmed present on the Agent-Threat-Rule/agent-threat-rules main
+branch.
 
 ---
 
@@ -94,9 +98,11 @@ detect (Aigis patterns to technique by detection behaviour; ATR rules to
 technique by their references.mitre_atlas value, base technique only). The two
 sets are compared below.
 
-- Aigis: 14 canonical ATLAS techniques with a real runtime pattern.
+- Aigis: 15 canonical ATLAS techniques surfaced as crosswalk rows above, plus
+  AML.T0088 (Generate Deepfakes), which synth_deepfake_request detects but which is
+  not tagged to that ATLAS ID in source.
 - ATR: 34 canonical ATLAS techniques referenced in rule metadata.
-- Shared: the 14 techniques in the crosswalk above.
+- Shared: the 15 techniques in the crosswalk above.
 
 ### (a) Techniques Aigis covers that ATR has no rule for
 
@@ -108,7 +114,7 @@ technique coverage.
 
 ### (b) Techniques ATR covers that Aigis has no pattern for
 
-These are the 20 canonical ATLAS techniques present in ATR rule metadata with no
+These are the 19 canonical ATLAS techniques present in ATR rule metadata with no
 corresponding Aigis detection pattern. They split into two groups.
 
 Group 1 — Runtime-detectable; candidate Aigis patterns. These occur in the
@@ -118,11 +124,16 @@ prompt, output, or tool stream Aigis already inspects, so a pattern is plausible
 |---|---|---|
 | AML.T0069 — Discover LLM System Information | ATR-2026-01303, ATR-2026-01772 | Recon prompts that enumerate tool schemas or internal state — a screenable input pattern. |
 | AML.T0060 — Publish Hallucinated Entities | ATR-2026-00260 | Hallucinated package or dependency names in output, matchable against a package-name heuristic. Aigis has related synth_* and hal_* families but no pattern tied to this technique. |
-| AML.T0088 — Generate Deepfakes | ATR-2026-00706 | Requests to synthesise impersonating media. Aigis has synth_deepfake_request conceptually adjacent but not mapped to this technique. |
-| AML.T0102 — Generate Malicious Commands | ATR-2026-00040, ATR-2026-00110 | Output-side generation of harmful command strings; complements Aigis's input-side cmdi_* patterns. |
+| AML.T0102 — Generate Malicious Commands | ATR-2026-00413 | Output-side generation of harmful command or malware strings — a screenable output pattern Aigis does not yet carry. |
 | AML.T0104 — Publish Poisoned AI Agent Tool | ATR-2026-00060 | A malicious tool or skill published for others to install — screenable in tool-manifest scanning (mcp_scanner). |
-| AML.T0109 — AI Supply Chain Rug Pull | ATR-2026-00126 | Benign-then-malicious tool or skill update. Aigis's supply_chain family is close but has no rug-pull-specific pattern. |
 | AML.T0034 — Cost Harvesting | (ATR carries one rule for this technique) | Token or compute exhaustion for cost damage. Aigis has a token_exhaustion family under a DoS framing but not this technique specifically. |
+
+One technique sits between the two directions and is not a gap: AML.T0088 —
+Generate Deepfakes. Aigis has synth_deepfake_request, which detects requests to
+synthesise deepfake or impersonating media, and ATR carries one rule for this
+technique (ATR-2026-00706). It is not surfaced as a crosswalk row above because
+the Aigis pattern is not tagged to this ATLAS ID in source; it is recorded here
+so the technique is not misread as absent from Aigis.
 
 Group 2 — Training-time, model-artifact, or infrastructure. These sit outside the
 input/output runtime boundary Aigis inspects (they concern datasets, model files,
