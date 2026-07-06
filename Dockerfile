@@ -1,4 +1,4 @@
-FROM python:3.14-slim@sha256:63a4c7f612a00f92042cbdcc7cdc6a306f38485af0a200b9c89de7d9b1607d15 AS build
+FROM python:3.14-slim@sha256:b877e50bd90de10af8d82c57a022fc2e0dc731c5320d762a27986facfc3355c1 AS build
 
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE NOTICE ./
@@ -6,7 +6,7 @@ COPY aigis ./aigis
 RUN pip install --no-cache-dir --upgrade 'pip==26.1.1' 'build==1.5.0' \
     && python -m build --wheel --outdir /wheels
 
-FROM python:3.14-slim@sha256:63a4c7f612a00f92042cbdcc7cdc6a306f38485af0a200b9c89de7d9b1607d15 AS runtime
+FROM python:3.14-slim@sha256:b877e50bd90de10af8d82c57a022fc2e0dc731c5320d762a27986facfc3355c1 AS runtime
 
 LABEL org.opencontainers.image.title="Aigis"
 LABEL org.opencontainers.image.description="Zero-dependency Python firewall for AI agents — 4-wall + L4-L7 defense, 7-paper coverage, 44 compliance templates."
