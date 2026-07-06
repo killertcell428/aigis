@@ -55,7 +55,7 @@ server = [
     "pyaigis[yaml,fastapi,openai]",
     "uvicorn[standard]>=0.30.0",
     "sqlalchemy>=2.0.0",
-    "alembic>=1.13.0",
+    "alembic>=1.18.5",
     "asyncpg>=0.31.0",
     "pydantic>=2.7.0",
     "pydantic-settings>=2.14.2",
