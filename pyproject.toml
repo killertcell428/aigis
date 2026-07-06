@@ -54,7 +54,7 @@ anthropic = ["anthropic>=0.112.0"]
 server = [
     "pyaigis[yaml,fastapi,openai]",
     "uvicorn[standard]>=0.30.0",
-    "sqlalchemy>=2.0.0",
+    "sqlalchemy>=2.0.51",
     "alembic>=1.18.5",
     "asyncpg>=0.31.0",
     "pydantic>=2.7.0",
