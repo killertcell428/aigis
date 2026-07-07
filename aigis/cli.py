@@ -1,24 +1,27 @@
 """Aigis CLI - command-line interface for agent governance.
 
 Usage:
-    aig init                     # Initialize Aigis in current project
-    aig init --agent claude-code # Also configure Claude Code hooks
-    aig doctor                   # Diagnose setup issues
-    aig status                   # Show governance status summary
-    aig logs                     # View recent activity
-    aig logs --action shell:exec # Filter by action type
-    aig logs --risk-above 50     # Filter by risk score
-    aig logs --alerts            # Show blocked/reviewed events only
-    aig logs --export-csv out.csv  # Export to CSV
-    aig policy check             # Validate policy file
-    aig policy show              # Show all rules
-    aig scan "rm -rf /"          # Scan text for threats
-    aig scan --file prompt.txt   # Scan a file
-    echo "text" | aig scan       # Scan from stdin
-    aig report --days 30         # Generate compliance report
-    aig maintenance              # Rotate and compress old logs
-    aig mcp '{"name":"add",...}'  # Scan MCP tool definition for poisoning
-    aig mcp --file tools.json    # Scan MCP tools from JSON file
+    aigis init                     # Initialize Aigis in current project
+    aigis init --agent claude-code # Also configure Claude Code hooks
+    aigis doctor                   # Diagnose setup issues
+    aigis status                   # Show governance status summary
+    aigis logs                     # View recent activity
+    aigis logs --action shell:exec # Filter by action type
+    aigis logs --risk-above 50     # Filter by risk score
+    aigis logs --alerts            # Show blocked/reviewed events only
+    aigis logs --export-csv out.csv  # Export to CSV
+    aigis policy check             # Validate policy file
+    aigis policy show              # Show all rules
+    aigis scan "rm -rf /"          # Scan text for threats
+    aigis scan --file prompt.txt   # Scan a file
+    echo "text" | aigis scan       # Scan from stdin
+    aigis report --days 30         # Generate compliance report
+    aigis maintenance              # Rotate and compress old logs
+    aigis mcp '{"name":"add",...}'  # Scan MCP tool definition for poisoning
+    aigis mcp --file tools.json    # Scan MCP tools from JSON file
+    aigis trust-pack               # Generate IT/security adoption-approval pack
+    aigis audit verify             # Verify signed audit-log integrity
+    aigis audit status             # Show signed audit-log status
 """
 
 import argparse
@@ -29,7 +32,7 @@ from pathlib import Path
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="aig",
+        prog="aigis",
         description="Aigis - Agent Governance CLI",
     )
     sub = parser.add_subparsers(dest="command")
@@ -266,6 +269,53 @@ def main(argv: list[str] | None = None) -> int:
     serve_p.add_argument("--host", default="0.0.0.0", help="Bind host (default: 0.0.0.0)")
     serve_p.add_argument("--port", type=int, default=8080, help="Bind port (default: 8080)")
 
+    # aigis trust-pack
+    tp_p = sub.add_parser(
+        "trust-pack",
+        help="Generate an IT/security adoption-approval document pack from live config",
+    )
+    tp_p.add_argument(
+        "--output",
+        "-o",
+        metavar="DIR",
+        default="./aigis-trust-pack",
+        help="Output directory (default: ./aigis-trust-pack)",
+    )
+    tp_p.add_argument(
+        "--lang",
+        choices=["ja", "en", "both"],
+        default="both",
+        help="Document language (default: both)",
+    )
+    tp_p.add_argument(
+        "--format",
+        choices=["markdown", "html"],
+        default="markdown",
+        help="Output format (default: markdown)",
+    )
+    tp_p.add_argument("--org", metavar="NAME", help="Organisation name to substitute into the pack")
+    tp_p.add_argument(
+        "--contact", metavar="EMAIL", help="Security contact email to substitute into the pack"
+    )
+
+    # aigis audit
+    audit_p = sub.add_parser("audit", help="Signed audit-log integrity verification")
+    audit_sub = audit_p.add_subparsers(dest="audit_command")
+    audit_verify_p = audit_sub.add_parser("verify", help="Verify signed audit-log integrity")
+    audit_verify_p.add_argument(
+        "--log", metavar="PATH", help="Audit log path (default: .aigis/audit.jsonl)"
+    )
+    audit_verify_p.add_argument(
+        "--json", dest="json_output", action="store_true", help="JSON output"
+    )
+    audit_status_p = audit_sub.add_parser("status", help="Show signed audit-log status")
+    audit_status_p.add_argument(
+        "--log", metavar="PATH", help="Audit log path (default: .aigis/audit.jsonl)"
+    )
+    audit_status_p.add_argument(
+        "--json", dest="json_output", action="store_true", help="JSON output"
+    )
+
     args = parser.parse_args(argv)
 
     if args.command == "init":
@@ -296,6 +346,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_benchmark(args)
     elif args.command == "serve":
         return cmd_serve(args)
+    elif args.command == "trust-pack":
+        return cmd_trust_pack(args)
+    elif args.command == "audit":
+        return cmd_audit(args, audit_p)
     else:
         parser.print_help()
         return 0
@@ -305,6 +359,153 @@ def cmd_serve(args: argparse.Namespace) -> int:
     from aigis.server import serve
 
     serve(host=args.host, port=args.port)
+    return 0
+
+
+def cmd_trust_pack(args: argparse.Namespace) -> int:
+    """Generate the IT/security adoption-approval document pack."""
+    from aigis.trust_pack import TrustPackGenerator
+
+    out_dir = Path(args.output)
+    gen = TrustPackGenerator(org=args.org, contact=args.contact)
+
+    if args.format == "html":
+        path = gen.write_html(out_dir, lang=args.lang)
+        print("Aigis Trust Pack generated (HTML)")
+        print(f"  Output: {path}")
+        print(f"  Language: {args.lang}")
+        print(f"  Policy: {gen.evidence.policy_name} (v{gen.evidence.policy_version})")
+        print("\n  Open in a browser, print to PDF, or email to your IT/security team.")
+        return 0
+
+    written = gen.write_markdown(out_dir, lang=args.lang)
+    print("Aigis Trust Pack generated (Markdown)")
+    print(f"  Output: {out_dir}/")
+    print(f"  Language: {args.lang}")
+    print(f"  Files: {len(written)}")
+    for p in written:
+        print(f"    - {p.name}")
+    print(f"\n  Start with {out_dir}/README.md (the index).")
+    if not gen.evidence.settings_hook_configured:
+        print("\n  Note: Claude Code hook is not yet configured in this project.")
+        print("        Run 'aigis init --agent claude-code' for a complete posture.")
+    return 0
+
+
+def cmd_audit(args: argparse.Namespace, audit_parser: argparse.ArgumentParser) -> int:
+    """Signed audit-log integrity commands."""
+    if args.audit_command == "verify":
+        return _cmd_audit_verify(args)
+    elif args.audit_command == "status":
+        return _cmd_audit_status(args)
+    else:
+        audit_parser.print_help()
+        return 0
+
+
+def _default_audit_log_path() -> Path:
+    return Path(".aigis") / "audit.jsonl"
+
+
+def _cmd_audit_verify(args: argparse.Namespace) -> int:
+    """Verify signed audit-log integrity (signature + chain + sequence + time)."""
+    from aigis.audit import AuditVerifier
+    from aigis.audit.signed_log import _resolve_key
+
+    log_path = Path(args.log) if args.log else _default_audit_log_path()
+
+    if not log_path.exists():
+        msg = f"Audit log not found: {log_path}"
+        if getattr(args, "json_output", False):
+            print(json.dumps({"valid": False, "error": "log_not_found", "path": str(log_path)}))
+        else:
+            print(msg, file=sys.stderr)
+            print("  No signed audit log to verify. Enable signed logging first.", file=sys.stderr)
+        return 1
+
+    # Resolve the HMAC key the same way SignedAuditLog does (.aigis/audit_key).
+    key = _resolve_key(None).decode("utf-8")
+    verifier = AuditVerifier(secret_key=key)
+    result = verifier.verify_file(log_path)
+
+    if getattr(args, "json_output", False):
+        print(
+            json.dumps(
+                {
+                    "valid": result.valid,
+                    "total_entries": result.total_entries,
+                    "checked_entries": result.checked_entries,
+                    "chain_valid": result.chain_valid,
+                    "signature_valid": result.signature_valid,
+                    "broken_chain_at": result.broken_chain_at,
+                    "invalid_signatures_at": result.invalid_signatures_at,
+                    "sequence_errors_at": result.sequence_errors_at,
+                    "timestamp_errors_at": result.timestamp_errors_at,
+                    "summary": result.summary,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0 if result.valid else 1
+
+    print("Aigis Audit Verify")
+    print("=" * 50)
+    print(f"  Log: {log_path}")
+    print(f"  Entries: {result.total_entries}")
+
+    def line(label: str, ok: bool) -> None:
+        print(f"  [{'OK' if ok else 'FAIL'}] {label}")
+
+    line("Signatures (HMAC-SHA256)", result.signature_valid)
+    line("Hash chain", result.chain_valid)
+    line("Sequence ordering", not result.sequence_errors_at)
+    line("Timestamp ordering", not result.timestamp_errors_at)
+    print()
+    if result.valid:
+        print("  PASS — no tampering detected.")
+        return 0
+    print("  FAIL — integrity check failed.")
+    print(f"  {result.summary}")
+    return 1
+
+
+def _cmd_audit_status(args: argparse.Namespace) -> int:
+    """Show signed audit-log status (key present? log present? entry count)."""
+    log_path = Path(args.log) if args.log else _default_audit_log_path()
+    key_path = Path(".aigis") / "audit_key"
+
+    key_present = key_path.exists()
+    log_present = log_path.exists()
+    entry_count = 0
+    if log_present:
+        try:
+            with open(log_path, encoding="utf-8") as f:
+                entry_count = sum(1 for line in f if line.strip())
+        except OSError:
+            entry_count = 0
+
+    if getattr(args, "json_output", False):
+        print(
+            json.dumps(
+                {
+                    "key_present": key_present,
+                    "key_path": str(key_path),
+                    "log_present": log_present,
+                    "log_path": str(log_path),
+                    "entry_count": entry_count,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0
+
+    print("Aigis Audit Status")
+    print("=" * 50)
+    print(f"  HMAC key: {'present' if key_present else 'absent'} ({key_path})")
+    print(f"  Audit log: {'present' if log_present else 'absent'} ({log_path})")
+    print(f"  Entries: {entry_count}")
+    if not key_present and not log_present:
+        print("\n  Signed audit logging is not yet active.")
     return 0
 
 
@@ -362,10 +563,10 @@ def cmd_init(args: argparse.Namespace) -> int:
     print("  Done! Aigis is ready.")
     print()
     print("  Next steps:")
-    print("    aig doctor       -Check setup health")
-    print("    aig status       -Check governance status")
-    print("    aig logs         -View activity stream")
-    print("    aig policy show  -View active policy")
+    print("    aigis doctor      -Check setup health")
+    print("    aigis status      -Check governance status")
+    print("    aigis logs        -View activity stream")
+    print("    aigis policy show -View active policy")
     print()
     print("  If Aigis helps you ship safer agents, a star keeps the project moving:")
     print("    https://github.com/killertcell428/aigis")
@@ -435,7 +636,7 @@ def cmd_policy(args: argparse.Namespace) -> int:
         policy_path = "aigis-policy.yaml"
         if not Path(policy_path).exists():
             print(f"No policy file found at {policy_path}")
-            print("Run 'aig init' to create one.")
+            print("Run 'aigis init' to create one.")
             return 1
         policy = load_policy(policy_path)
         print(f"Policy: {policy.name} (v{policy.version})")
@@ -482,7 +683,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         print(f"  Policy: {policy.name} (v{policy.version})")
         print(f"  Rules: {len(policy.rules)} ({deny} deny, {review} review)")
     else:
-        print("  Policy: Not configured (run 'aig init')")
+        print("  Policy: Not configured (run 'aigis init')")
 
     # Check activity
     stream = ActivityStream()
@@ -498,7 +699,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     if claude_hooks.exists():
         print("\n  Claude Code: Hooks configured")
     else:
-        print("\n  Claude Code: Not configured (run 'aig init --agent claude-code')")
+        print("\n  Claude Code: Not configured (run 'aigis init --agent claude-code')")
 
     # Compliance
     try:
@@ -697,7 +898,7 @@ def cmd_monitor(args: argparse.Namespace) -> int:
     if snap.learned_patterns_count > 0:
         print(f"\n  Auto-Fix: {snap.learned_patterns_count} learned patterns")
 
-    print("\n  Tip: Use 'aig report --format html -o report.html' for a full visual report.")
+    print("\n  Tip: Use 'aigis report --format html -o report.html' for a full visual report.")
     return 0
 
 
@@ -748,7 +949,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     if policy_path.exists():
         ok(f"Policy file found: {policy_path}")
     else:
-        fail("Policy file not found. Run 'aig init'")
+        fail("Policy file not found. Run 'aigis init'")
 
     # 2. .aigis/logs/ directory
     log_dir = Path(".aigis/logs")
@@ -771,7 +972,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     if hook_script.exists():
         ok(f"Hook script found: {hook_script}")
     else:
-        warn("Hook script not found. Run 'aig init --agent claude-code'")
+        warn("Hook script not found. Run 'aigis init --agent claude-code'")
 
     # 5. Claude Code settings.json has hook configured
     settings_path = Path(".claude/settings.json")
@@ -843,7 +1044,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     print()
 
     if failed:
-        print("\nFix the FAIL items above, then run 'aig doctor' again.")
+        print("\nFix the FAIL items above, then run 'aigis doctor' again.")
         return 1
     elif warned:
         print("\nNo critical issues. Review warnings above.")

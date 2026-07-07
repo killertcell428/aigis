@@ -1,5 +1,7 @@
 # OSS Guardrails Comparison
 
+> **Measured / reproducible source:** for verbatim, re-runnable numbers (with exact commands, hardware, and date) see [REPRODUCIBLE_RESULTS.md](./REPRODUCIBLE_RESULTS.md). The numbers on this page are the design intent; that page is what was actually executed.
+
 > **Status:** v0 baseline — Aigis-only numbers measured locally. The three
 > external tool numbers populate once the docker-compose sidecars run in CI
 > (see [open work](#open-work) at the bottom).

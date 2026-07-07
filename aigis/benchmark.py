@@ -554,11 +554,16 @@ class LatencyResult:
             "",
             "## Key Takeaways",
             "",
-            f"- **Sub-millisecond scanning**: {self.avg_us:.0f}us average ({self.avg_us / 1000:.2f}ms)",
-            f"- **High throughput**: ~{throughput:,.0f} scans per second",
-            "- **Zero dependencies**: Pure Python stdlib, no ML overhead",
-            f"- **Consistent performance**: P99 at {self.p99_us:.0f}us "
-            f"({self.p99_us / self.avg_us:.1f}x average)",
+            f"- **Typical scan (median): {self.median_us:.0f}us ({self.median_us / 1000:.2f}ms)** — "
+            "the benign/short inputs that dominate real traffic.",
+            f"- **Tail latency is real**: mean {self.avg_us:.0f}us "
+            f"({self.avg_us / 1000:.2f}ms), P99 {self.p99_us:.0f}us, max {self.max_us:.0f}us. "
+            "Long adversarial inputs (e.g. thousands of repeated tokens) cost far more than the "
+            "median — budget for the tail, not the average.",
+            "- **Zero dependencies**: Pure Python stdlib, no ML overhead.",
+            f"- **Derived throughput** (from mean, mixed corpus): ~{throughput:,.0f} scans/sec — "
+            "dominated by worst-case inputs; throughput on typical traffic is much higher "
+            "(see median).",
         ]
         return "\n".join(lines)
 
