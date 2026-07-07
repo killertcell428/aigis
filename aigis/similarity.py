@@ -264,6 +264,17 @@ def _ngram_similarity(text1: str, text2: str, n: int = 3) -> float:
     return len(intersection) / len(union)
 
 
+_MAX_SIMILARITY_INPUT_CHARS = 100
+"""Inputs longer than this are truncated before sliding-window similarity checks.
+
+Long highly-repetitive inputs (e.g. "ignore " * 400) cause O(n) SequenceMatcher
+calls that take seconds per scan.  Attack phrases are at most ~50 chars, so 150
+chars covers 3 full repetitions — sufficient to detect attack intent.  Anything
+beyond this length is itself a strong DoS / token-exhaustion signal; the regex
+layer handles any attack patterns deeper in the input.
+"""
+
+
 def _sliding_window_check(
     text: str,
     phrase: str,
@@ -275,6 +286,12 @@ def _sliding_window_check(
     """
     normalized_text = _normalize(text)
     normalized_phrase = _normalize(phrase)
+
+    # Guard: cap input length to prevent super-linear SequenceMatcher cost on
+    # long repeated-token inputs.  The first chunk is enough to confirm attack
+    # intent; the remainder is redundant repeated content.
+    if len(normalized_text) > _MAX_SIMILARITY_INPUT_CHARS:
+        normalized_text = normalized_text[:_MAX_SIMILARITY_INPUT_CHARS]
 
     # Direct SequenceMatcher on full text (good for short inputs)
     seq_score = difflib.SequenceMatcher(None, normalized_text, normalized_phrase).ratio()
