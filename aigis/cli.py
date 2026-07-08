@@ -556,6 +556,14 @@ def cmd_init(args: argparse.Namespace) -> int:
         install_hooks(".")
         print("  Configured Claude Code hooks")
 
+    # Enterprise policy: initialise signed audit log key
+    if args.policy == "enterprise":
+        from aigis.audit.signed_log import _resolve_key
+
+        _resolve_key(None)  # generates .aigis/audit_key if absent
+        print("  Initialised signed audit log key (.aigis/audit_key)")
+        print("  Signed audit log will be written to .aigis/signed_audit.jsonl")
+
     # Warn if hooks are disabled
     _warn_if_hooks_disabled(project_dir=".")
 
@@ -1032,6 +1040,32 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             warn("Global log directory exists but has no log files")
     else:
         warn("Global log directory not found (~/.aigis/global/)")
+
+    # 9. Signed audit log (required under enterprise policy; opt-in otherwise)
+    key_file = Path(".aigis") / "audit_key"
+    signed_log_file = Path(".aigis") / "signed_audit.jsonl"
+    _policy_is_enterprise = False
+    if policy_path.exists():
+        try:
+            from aigis.policy import load_policy as _lp
+
+            _pol = _lp(str(policy_path))
+            _policy_is_enterprise = "enterprise" in _pol.name.lower()
+        except Exception:  # policy file may be absent or unreadable; fall back to non-enterprise
+            pass
+
+    if key_file.exists():
+        if signed_log_file.exists() and signed_log_file.stat().st_size > 0:
+            ok("Signed audit log: ACTIVE (.aigis/signed_audit.jsonl)")
+        else:
+            warn("Signed audit log: key present but no entries yet (run a tool call to populate)")
+    elif _policy_is_enterprise:
+        fail(
+            "Signed audit log: INACTIVE — enterprise policy requires signed log. "
+            "Run 'aigis init --policy enterprise' to initialise."
+        )
+    else:
+        ok("Signed audit log: not enabled (opt-in via 'aigis init --policy enterprise')")
 
     # Summary
     print()
