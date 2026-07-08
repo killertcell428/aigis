@@ -66,7 +66,7 @@ def test_init_enterprise_creates_audit_key(tmp_path):
 
 
 def test_signed_log_failure_does_not_block(tmp_path):
-    """_append_signed_log raises, but the caller swallows it — decision unchanged."""
+    """_append_signed_log swallows write errors internally — decision unchanged."""
     ns = _load_hook_ns()
     _append = ns["_append_signed_log"]
 
