@@ -7,14 +7,12 @@ Acceptance criteria:
   AC4. hook writes a verifiable entry to signed_audit.jsonl
 """
 
+import hashlib
+import hmac as _hmac
 import json
-import os
-import sys
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -33,19 +31,24 @@ def _make_event(action="shell:exec", target="ls", decision="allow"):
     return ev, decision
 
 
+def _load_hook_ns():
+    from aigis.adapters.claude_code import HOOK_SCRIPT
+
+    ns: dict = {}
+    exec(HOOK_SCRIPT, ns)  # noqa: S102 — executing generated hook script in test
+    return ns
+
+
 # ---------------------------------------------------------------------------
 # AC1 — init --policy enterprise initialises audit key
 # ---------------------------------------------------------------------------
 
 
-def test_init_enterprise_creates_audit_key(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    from aigis.audit.signed_log import _KEY_FILE
-
-    # Temporarily point _KEY_FILE to tmp_path
+def test_init_enterprise_creates_audit_key(tmp_path):
     import aigis.audit.signed_log as sal
 
-    orig = sal._KEY_FILE
+    orig_file = sal._KEY_FILE
+    orig_dir = sal._KEY_DIR
     sal._KEY_FILE = tmp_path / ".aigis" / "audit_key"
     sal._KEY_DIR = tmp_path / ".aigis"
 
@@ -53,8 +56,8 @@ def test_init_enterprise_creates_audit_key(tmp_path, monkeypatch):
         sal._resolve_key(None)
         assert sal._KEY_FILE.exists(), "audit_key should be created by _resolve_key()"
     finally:
-        sal._KEY_FILE = orig
-        sal._KEY_DIR = orig.parent
+        sal._KEY_FILE = orig_file
+        sal._KEY_DIR = orig_dir
 
 
 # ---------------------------------------------------------------------------
@@ -64,37 +67,31 @@ def test_init_enterprise_creates_audit_key(tmp_path, monkeypatch):
 
 def test_signed_log_failure_does_not_block(tmp_path):
     """_append_signed_log raises, but the caller swallows it — decision unchanged."""
-    # Import the _append_signed_log function from the hook script via exec
-    from aigis.adapters.claude_code import HOOK_SCRIPT
-
-    ns: dict = {}
-    exec(HOOK_SCRIPT, ns)  # noqa: S102 — executing generated hook script in test
+    ns = _load_hook_ns()
     _append = ns["_append_signed_log"]
 
     ev, decision = _make_event()
 
-    # Point to a read-only directory to trigger a write failure
     ro_dir = tmp_path / "readonly"
     ro_dir.mkdir()
     key_file = ro_dir / ".aigis" / "audit_key"
     key_file.parent.mkdir(parents=True)
     key_file.write_text("deadbeef" * 8)
 
-    # Make the log path's parent read-only (Unix only; skip on Windows)
+    # Make the .aigis dir read-only to trigger a write failure (Unix only)
     try:
         (ro_dir / ".aigis").chmod(0o555)
     except (OSError, NotImplementedError):
         pytest.skip("Cannot set read-only permissions on this platform")
 
     try:
-        # Must not raise — all exceptions are caught by the caller
         _append(ev, decision, str(ro_dir))
     except Exception as exc:
         pytest.fail(f"_append_signed_log raised unexpectedly: {exc}")
     finally:
         try:
             (ro_dir / ".aigis").chmod(0o755)
-        except OSError:
+        except OSError:  # best-effort cleanup
             pass
 
 
@@ -105,16 +102,11 @@ def test_signed_log_failure_does_not_block(tmp_path):
 
 def test_hook_skips_signed_log_without_key(tmp_path):
     """When audit_key does not exist, hook silently skips signed log."""
-    from aigis.adapters.claude_code import HOOK_SCRIPT
-
-    ns: dict = {}
-    exec(HOOK_SCRIPT, ns)  # noqa: S102
+    ns = _load_hook_ns()
     _append = ns["_append_signed_log"]
 
     ev, decision = _make_event()
-    cwd = str(tmp_path)  # no .aigis/audit_key here
-
-    _append(ev, decision, cwd)  # must not raise and must not create anything
+    _append(ev, decision, str(tmp_path))  # must not raise and must not create anything
     assert not (tmp_path / ".aigis" / "signed_audit.jsonl").exists()
 
 
@@ -125,16 +117,9 @@ def test_hook_skips_signed_log_without_key(tmp_path):
 
 def test_hook_writes_verifiable_entry(tmp_path):
     """A single hook invocation produces a valid HMAC-signed JSONL entry."""
-    import hashlib
-    import hmac as _hmac
-
-    from aigis.adapters.claude_code import HOOK_SCRIPT
-
-    ns: dict = {}
-    exec(HOOK_SCRIPT, ns)  # noqa: S102
+    ns = _load_hook_ns()
     _append = ns["_append_signed_log"]
 
-    # Set up key
     aig_dir = tmp_path / ".aigis"
     aig_dir.mkdir()
     key = "test-key-for-unit-test"
@@ -145,7 +130,7 @@ def test_hook_writes_verifiable_entry(tmp_path):
 
     log_file = aig_dir / "signed_audit.jsonl"
     assert log_file.exists(), "signed_audit.jsonl should be created"
-    lines = [l for l in log_file.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [ln for ln in log_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
     assert len(lines) == 1, "exactly one entry expected"
 
     entry = json.loads(lines[0])
@@ -165,12 +150,7 @@ def test_hook_writes_verifiable_entry(tmp_path):
 
 def test_hook_chains_entries(tmp_path):
     """Second entry's prev_hash equals SHA-256 of the first entry."""
-    import hashlib
-
-    from aigis.adapters.claude_code import HOOK_SCRIPT
-
-    ns: dict = {}
-    exec(HOOK_SCRIPT, ns)  # noqa: S102
+    ns = _load_hook_ns()
     _append = ns["_append_signed_log"]
 
     aig_dir = tmp_path / ".aigis"
@@ -184,11 +164,11 @@ def test_hook_chains_entries(tmp_path):
     _append(ev2, d2, str(tmp_path))
 
     lines = [
-        l
-        for l in (aig_dir / "signed_audit.jsonl")
+        ln
+        for ln in (aig_dir / "signed_audit.jsonl")
         .read_text(encoding="utf-8")
         .splitlines()
-        if l.strip()
+        if ln.strip()
     ]
     assert len(lines) == 2
 

@@ -1051,7 +1051,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
             _pol = _lp(str(policy_path))
             _policy_is_enterprise = "enterprise" in _pol.name.lower()
-        except Exception:
+        except Exception:  # policy file may be absent or unreadable; fall back to non-enterprise
             pass
 
     if key_file.exists():
