@@ -111,6 +111,13 @@ def main():
     except Exception:
         pass
 
+    # Append to signed audit log (enterprise policy — key must exist).
+    # Failures here MUST NOT change the allow/deny decision.
+    try:
+        _append_signed_log(event, decision, cwd)
+    except Exception:
+        pass
+
     # Block if policy denies
     if decision == "deny":
         reason = f"Aigis blocked: {event.policy_rule_id}"
@@ -175,6 +182,66 @@ def _get_scannable_text(tool_name: str, tool_input: dict) -> str:
     elif tool_name == "WebSearch":
         return tool_input.get("query", "")
     return ""
+
+
+def _append_signed_log(event, decision: str, cwd: str) -> None:
+    """Append one tamper-evident entry to the signed audit log.
+
+    No-op when the audit key has not been initialised (non-enterprise install).
+    The caller catches all exceptions so the tool-call decision path is never
+    blocked by a signed-log failure.
+    """
+    import hashlib
+    import hmac as _hmac
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    key_path = Path(cwd) / ".aigis" / "audit_key"
+    log_path = Path(cwd) / ".aigis" / "signed_audit.jsonl"
+
+    if not key_path.exists():
+        return  # Key not initialised — signed log is opt-in
+
+    key = key_path.read_text(encoding="utf-8").strip().encode("utf-8")
+
+    # Read only the last line to get prev_hash and next sequence number.
+    prev_hash = "0" * 64
+    sequence = 0
+    if log_path.exists():
+        last_line = ""
+        with open(log_path, encoding="utf-8") as fh:
+            for line in fh:
+                if line.strip():
+                    last_line = line.strip()
+        if last_line:
+            last = json.loads(last_line)
+            canon = json.dumps(last, sort_keys=True, ensure_ascii=False)
+            prev_hash = hashlib.sha256(canon.encode("utf-8")).hexdigest()
+            sequence = last.get("sequence", 0) + 1
+
+    entry_data = {
+        "sequence": sequence,
+        "timestamp": datetime.now(UTC).isoformat(),
+        "event_type": event.event_type,
+        "actor": "claude_code_agent",
+        "action": event.action,
+        "target": (event.target or "")[:500],
+        "risk_score": event.risk_score or 0,
+        "outcome": decision,
+        "details": {
+            "session_id": event.session_id or "",
+            "policy_rule_id": getattr(event, "policy_rule_id", "") or "",
+            "tool_name": (event.details or {}).get("tool_name", ""),
+        },
+        "prev_hash": prev_hash,
+    }
+    canonical = json.dumps(entry_data, sort_keys=True, ensure_ascii=False)
+    sig = _hmac.new(key, canonical.encode("utf-8"), hashlib.sha256).hexdigest()
+    entry_data["signature"] = sig
+
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(log_path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry_data, sort_keys=True, ensure_ascii=False) + "\\n")
 
 
 if __name__ == "__main__":
