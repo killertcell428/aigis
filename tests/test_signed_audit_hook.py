@@ -165,9 +165,7 @@ def test_hook_chains_entries(tmp_path):
 
     lines = [
         ln
-        for ln in (aig_dir / "signed_audit.jsonl")
-        .read_text(encoding="utf-8")
-        .splitlines()
+        for ln in (aig_dir / "signed_audit.jsonl").read_text(encoding="utf-8").splitlines()
         if ln.strip()
     ]
     assert len(lines) == 2

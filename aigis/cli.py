@@ -1058,10 +1058,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         if signed_log_file.exists() and signed_log_file.stat().st_size > 0:
             ok("Signed audit log: ACTIVE (.aigis/signed_audit.jsonl)")
         else:
-            warn(
-                "Signed audit log: key present but no entries yet "
-                "(run a tool call to populate)"
-            )
+            warn("Signed audit log: key present but no entries yet (run a tool call to populate)")
     elif _policy_is_enterprise:
         fail(
             "Signed audit log: INACTIVE — enterprise policy requires signed log. "
