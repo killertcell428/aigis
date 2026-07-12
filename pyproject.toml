@@ -63,7 +63,7 @@ server = [
     "passlib[bcrypt]>=1.7.4",
     "httpx>=0.27.0",
     "redis>=8.0.1",
-    "structlog>=24.1.0",
+    "structlog>=26.1.0",
     "stripe>=15.2.1",
     "reportlab>=5.0.0",
     "openpyxl>=3.1.5",
@@ -81,7 +81,7 @@ dev = [
     "httpx>=0.27.0",
     "anyio>=4.14.1",
     "ruff>=0.4.0",
-    "mypy>=1.10.0",
+    "mypy>=2.2.0",
 ]
 
 [project.scripts]
