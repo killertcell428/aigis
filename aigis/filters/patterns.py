@@ -3169,6 +3169,31 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "legitimate uses (line-break hints in long URLs) do not appear between letters."
         ),
     ),
+    DetectionPattern(
+        id="enc_ascii_art_instruction",
+        name="ASCII Art Instruction Interpretation",
+        category="encoding_bypass",
+        pattern=_p(
+            r"(?:interpret|recognize|read|understand|decode|tell\s+me\s+what)\s+(?:this\s+)?(?:ascii|text)\s+art"
+            r"|(?:the\s+following\s+(?:ascii\s+art|text\s+art|characters?)\s+(?:represents?|spells?|shows?|means?|says?)\b)"
+            r"|(?:ascii\s+art\s+(?:representing|that\s+(?:says|means|spells)))"
+        ),
+        base_score=35,
+        description=(
+            "Explicit instruction to interpret ASCII art as a keyword or message. "
+            "ArtPrompt (ACL 2024, arxiv:2402.11753) shows that spelling sensitive words "
+            "as ASCII art bypasses safety classifiers — the classifier sees random symbols "
+            "while the LLM recognizes the visual pattern. Five aligned LLMs (GPT-3.5, GPT-4, "
+            "Gemini, Claude, Llama-2) were all vulnerable, with a mean harmfulness of 3.6/5. "
+            "The explicit interpret/decode instruction is the reliable detection signal."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Reject or sandbox prompts that ask the model to interpret ASCII art as text. "
+            "If ASCII art handling is required, render it to an image and process via a "
+            "vision pipeline rather than feeding raw art characters to the text model."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
