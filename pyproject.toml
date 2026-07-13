@@ -64,7 +64,7 @@ server = [
     "httpx>=0.27.0",
     "redis>=8.0.1",
     "structlog>=26.1.0",
-    "stripe>=15.2.1",
+    "stripe>=15.3.0",
     "reportlab>=5.0.0",
     "openpyxl>=3.1.5",
 ]
