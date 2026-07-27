@@ -48,7 +48,7 @@ langchain = ["langchain-core>=0.1.0"]
 openai = ["openai>=2.45.0"]
 
 # Anthropic SDK integration
-anthropic = ["anthropic>=0.112.0"]
+anthropic = ["anthropic>=0.120.0"]
 
 # Full SaaS server (backend + all integrations)
 server = [
