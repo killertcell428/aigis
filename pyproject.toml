@@ -48,7 +48,7 @@ langchain = ["langchain-core>=0.1.0"]
 openai = ["openai>=2.45.0"]
 
 # Anthropic SDK integration
-anthropic = ["anthropic>=0.120.0"]
+anthropic = ["anthropic>=0.120.2"]
 
 # Full SaaS server (backend + all integrations)
 server = [
@@ -64,7 +64,7 @@ server = [
     "httpx>=0.28.1",
     "redis>=8.0.1",
     "structlog>=26.1.0",
-    "stripe>=15.3.0",
+    "stripe>=15.3.1",
     "reportlab>=5.0.0",
     "openpyxl>=3.1.5",
 ]
