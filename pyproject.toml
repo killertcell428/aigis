@@ -39,7 +39,7 @@ dependencies = []
 yaml = ["pyyaml>=6.0.3"]
 
 # FastAPI / Starlette middleware
-fastapi = ["fastapi>=0.139.0", "starlette>=1.3.1"]
+fastapi = ["fastapi>=0.141.1", "starlette>=1.3.1"]
 
 # LangChain callback
 langchain = ["langchain-core>=0.1.0"]
