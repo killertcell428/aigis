@@ -1,10 +1,11 @@
 FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6 AS build
 
 WORKDIR /src
+COPY requirements-build.txt ./
+RUN pip install --no-cache-dir --require-hashes -r requirements-build.txt
 COPY pyproject.toml README.md LICENSE NOTICE ./
 COPY aigis ./aigis
-RUN pip install --no-cache-dir --upgrade 'pip==26.1.1' 'build==1.5.0' \
-    && python -m build --wheel --outdir /wheels
+RUN python -m build --wheel --outdir /wheels
 
 FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6 AS runtime
 
