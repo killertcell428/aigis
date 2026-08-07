@@ -81,7 +81,7 @@ dev = [
     "httpx>=0.28.1",
     "anyio>=4.14.2",
     "ruff>=0.16.1",
-    "mypy>=2.2.0",
+    "mypy>=2.3.0",
 ]
 
 [project.scripts]
