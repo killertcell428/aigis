@@ -121,7 +121,7 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
         # No username/password needed — uses OIDC trusted publishing.
         # Configure at: https://pypi.org/manage/project/pyaigis/settings/publishing/
 
