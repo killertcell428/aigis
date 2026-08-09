@@ -356,6 +356,39 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
             "audit web-search tool inputs for base64/hex strings before execution."
         ),
     ),
+    DetectionPattern(
+        id="exfil_crypto_wallet_transfer",
+        name="Crypto Wallet Transfer Injection",
+        category="data_exfiltration",
+        pattern=_p(
+            # (a) transfer/send imperative + a crypto wallet address literal.
+            #     ETH (0x + 40 hex) and BTC bech32 (bc1...) are unambiguous, so the
+            #     verb + address combination in ingested content is a strong signal.
+            r"\b(?:send|transfer|pay|wire|deposit|forward|move|remit)\b[^\n]{0,80}?"
+            r"(?:0x[a-fA-F0-9]{40}|bc1[a-z0-9]{25,90})"
+            # (b) scam "verification/gas/activation fee" framing near a wallet address —
+            #     the Zscaler / Bankr in-the-wild pattern (fee-to-unlock crypto fraud).
+            r"|(?:verification|activation|gas|unlock|validation|processing|authentication)"
+            r"\s+fee\b[^\n]{0,100}?"
+            r"(?:0x[a-fA-F0-9]{40}|bc1[a-z0-9]{25,90})"
+        ),
+        base_score=70,
+        description=(
+            "Retrieved content instructs the agent to send cryptocurrency to an attacker "
+            "wallet address, or to pay a fake 'verification fee' to unlock funds. Zscaler "
+            "traced two live campaigns (payment scam hidden in API docs; a DeBank typosquat) "
+            "and the Bankr incident was reported as the first AI agent fooled into a crypto "
+            "action via prompt injection (2026-08). Distinct from ii_financial_transaction_"
+            "injection, which keys on fiat 'transfer $X to account/wallet' phrasing rather "
+            "than a literal on-chain address."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Data Exfiltration)",
+        remediation_hint=(
+            "Agents must never initiate on-chain transfers from instructions found in "
+            "retrieved web content, API docs, or tool output. Require explicit out-of-band "
+            "user confirmation for any transaction referencing a wallet address."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -3194,6 +3227,45 @@ ENCODING_BYPASS_PATTERNS: list[DetectionPattern] = [
             "vision pipeline rather than feeding raw art characters to the text model."
         ),
     ),
+    DetectionPattern(
+        id="enc_ansi_conceal_instruction",
+        name="ANSI Escape Concealed Instruction",
+        category="encoding_bypass",
+        pattern=_p(
+            # (a) SGR "conceal" (parameter 8) — hides text in terminals but the
+            #     model reads the raw bytes. Standalone "8" only: 38/48 (256-colour
+            #     foreground/background) must NOT match, so the parameter is bounded.
+            r"(?:\x1b|\\x1b|\\033|\\u001b|\\e)\[(?:[0-9]{1,2};)*8(?:;[0-9]{1,2})*m"
+            # (b) Any CSI/OSC escape byte co-located (same line, <=160 chars) with an
+            #     instruction or exfiltration directive. Implements Bright Security's
+            #     "escape byte + instruction phrase" two-signal confirmation.
+            r"|(?:\x1b|\\x1b|\\033|\\u001b|\\e)(?:\[[0-9;]*[A-Za-z]|\][0-9]{1,3};)"
+            r"[^\n]{0,160}?"
+            r"(?:SYSTEM\s*[:：]|ignore\s+(?:all\s+)?(?:previous|prior)"
+            r"|do\s+not\s+(?:tell|report|mention|reveal|show)"
+            r"|(?:send|post|upload|exfiltrate)\b[^\n]{0,40}"
+            r"(?:credential|password|secret|\.env|token|api[\s_-]?key)"
+            r"|https?://)"
+        ),
+        base_score=60,
+        description=(
+            "ANSI terminal escape sequence used to conceal or smuggle instructions in "
+            "MCP/tool output that the model consumes. ANSI Escape Sequence Injection (AESI, "
+            "Bright Security 2026-07-21; prior art Trail of Bits 2025-04) hides a payload "
+            "behind the SGR 'conceal' code (ESC[8m) or cursor/clear codes: the human approver "
+            "sees nothing in the terminal while the model reads the raw bytes and follows the "
+            "hidden instruction. An Island scan found ~0.8% of 33,000 MCP builds emit "
+            "manipulative terminal-control sequences. Detection targets model-consumable fields "
+            "(result.content[].text) BEFORE the terminal strips the codes."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Encoding Bypass)",
+        remediation_hint=(
+            "Strip all ANSI escape sequences from tool/MCP output before feeding it to the "
+            "model. A conceal (ESC[8m) or cursor-manipulation sequence carrying instruction "
+            "or exfiltration text almost always indicates an AESI attack — do not render or "
+            "forward it to the model."
+        ),
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -3792,6 +3864,41 @@ MEMORY_POISONING_PATTERNS: list[DetectionPattern] = [
             "do not instruct the agent to delete its existing safety configuration. "
             "Constraint removal must be an operator-level privileged action; user-supplied "
             "prompts and retrieved documents must not be able to modify stored safety policies."
+        ),
+    ),
+    DetectionPattern(
+        id="mem_recommendation_poisoning",
+        name="AI Recommendation / Citation Poisoning",
+        category="memory_poisoning",
+        pattern=_p(
+            # (a) persistence framing + "as a/the trusted source" citation directive
+            r"(?:remember|note|keep\s+in\s+mind|for\s+future\s+reference|going\s+forward|"
+            r"from\s+now\s+on|in\s+(?:all\s+)?future\s+(?:conversations?|responses?|answers?|chats?))"
+            r"[^\n]{0,80}?"
+            r"as\s+(?:a|an|the|your)\s+(?:trusted|reliable|authoritative|preferred|recommended|"
+            r"go-to|default|primary|only|best)\s+(?:source|provider|vendor|option|choice|reference)"
+            # (b) recommend/cite verb + "as a/the trusted source" (the LLM-SEO signature)
+            r"|(?:cite|recommend|reference|prefer|suggest|mention|promote|endorse)\s+"
+            r"[^\n]{0,60}?"
+            r"\bas\s+(?:a|an|the|your)\s+(?:trusted|reliable|authoritative|preferred|recommended|"
+            r"go-to|default|primary|only|best)\s+(?:source|provider|vendor|option|choice|reference)\b"
+        ),
+        base_score=50,
+        description=(
+            "Attempt to plant a persistent brand/citation preference into agent memory so the "
+            "agent recommends or cites an attacker-chosen source in future conversations. "
+            "Microsoft Security ('Manipulating AI memory for profit: AI Recommendation "
+            "Poisoning') documented 50+ examples across 31 companies in 14 industries selling "
+            "this as 'SEO for LLMs'; every confirmed payload combined a persistence directive "
+            "with an 'as a trusted source' citation phrase. Distinct from mem_persistent_"
+            "instruction, which flags generic 'remember for future sessions' without the "
+            "trusted-source citation angle."
+        ),
+        owasp_ref="OWASP LLM01: Prompt Injection (Memory Poisoning)",
+        remediation_hint=(
+            "Do not persist source-preference or citation instructions that arrive via "
+            "retrieved content, share-URL prompt parameters, or 'summarize with AI' buttons. "
+            "Brand/source trust must be operator-configured, not writable from ingested text."
         ),
     ),
 ]
