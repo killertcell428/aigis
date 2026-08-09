@@ -12,6 +12,19 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-09
+
+Minor release. Adds three new detection patterns from the 2026-08 AI-agent-
+security threat digest plus the externally-contributed ASCII-art rule (PR #180),
+and rolls up two CLI feature sets landed since 1.1.11 — the `aigis trust-pack`
+IT-approval generator and the `aigis audit verify/status` signed-log commands.
+Because those add new user-facing commands, this is a MINOR (1.2.0) bump rather
+than a patch. Version `1.1.12` is skipped: that tag was created off a branch
+HEAD (cycle 6 multi-agent) and never merged to master, leaving it unreachable
+and blocked by the orphan-tag guard in `.github/workflows/release.yml`; the
+cycle-6 product code already landed on master via a separate PR. `1.2.0` is the
+next reachable version.
+
 ### Added
 
 #### Detection patterns — 2026-08 AI-agent-security threat digest
