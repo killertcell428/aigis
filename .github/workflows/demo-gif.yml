@@ -27,10 +27,23 @@ jobs:
       - name: Install aigis (real CLI, from source)
         run: pip install -e .
 
+      - name: Install ffmpeg, ttyd, VHS
+        # Install the toolchain directly rather than via vhs-action, whose
+        # bundled ffmpeg installer is flaky on GitHub runners.
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          sudo curl -fsSL https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.x86_64 -o /usr/local/bin/ttyd
+          sudo chmod +x /usr/local/bin/ttyd
+          curl -fsSL https://github.com/charmbracelet/vhs/releases/download/v0.11.0/vhs_0.11.0_Linux_x86_64.tar.gz -o /tmp/vhs.tgz
+          mkdir -p /tmp/vhs && tar -xzf /tmp/vhs.tgz -C /tmp/vhs
+          sudo mv "$(find /tmp/vhs -type f -name vhs | head -1)" /usr/local/bin/vhs
+          sudo chmod +x /usr/local/bin/vhs
+          ffmpeg -version | head -1; ttyd --version; vhs --version
+
       - name: Render tape → GIF
-        uses: charmbracelet/vhs-action@59641cdc7fadf3978db65eb8c6937ea2752f4ec3 # v2
-        with:
-          path: docs/demo/aigis-demo.tape
+        run: vhs docs/demo/aigis-demo.tape
 
       - name: Open PR with the regenerated GIF
         uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6
