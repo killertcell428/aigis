@@ -48,21 +48,6 @@ aigis trust-pack --lang ja                            # → ./aigis-trust-pack/ 
 
 ---
 
-## 動作イメージ
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-demo.gif" alt="Aigis デモ：エージェント入力の検査と IT 承認パック生成" width="760" />
-</p>
-
-実際のコマンドを4つ、順に実行しています。
-
-1. **`aigis scan`**（通常の依頼）→ **SAFE**。誤検知しません。
-2. **`aigis scan`**（攻撃）→ **CRITICAL** でブロック。*「`.env` を読んで外部に送れ」* という指示を **目に見えない ANSI エスケープコード**に隠した入力です（人がターミナルを見ても気づかないが、モデルは生バイトを読んでしまう）。
-3. **`aigis init`** で Claude Code 向けにガードレールと改ざん検知付き監査ログを有効化。
-4. **`aigis trust-pack`** で稼働中の設定から EN/JA の IT 承認パックを生成。
-
----
-
 <a id="quick-start"></a>
 
 ## Quick Start
@@ -131,6 +116,21 @@ curl -X POST http://localhost:8080/v1/check/input \
 
 エンドポイント：`POST /v1/check/input` · `POST /v1/check/output` · `POST /v1/check/messages` · `GET /health` · `GET /v1/info`。Kubernetes サイドカー、`docker-compose` の併走コンテナ、`litellm` / `langgraph` 等の前段として利用できます。
 </details>
+
+---
+
+## v1.2 の新機能：見えない ANSI 攻撃を検知し、IT 承認パックを生成する
+
+v1.2 では **ANSI エスケープに隠した命令**（目に見えないターミナル制御コードに埋め込まれた攻撃）の検出と、`aigis trust-pack` / `aigis audit` コマンドを追加しました。下のクリップは、実際のコマンドを4つ通しで実行しています。
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-demo.gif" alt="Aigis v1.2 デモ：エージェント入力の検査と IT 承認パック生成" width="760" />
+</p>
+
+1. **`aigis scan`**（通常の依頼）→ **SAFE**。誤検知しません。
+2. **`aigis scan`**（攻撃）→ **CRITICAL** でブロック。*「`.env` を読んで外部に送れ」* という指示を **目に見えない ANSI エスケープコード**に隠した入力です（人がターミナルを見ても気づかないが、モデルは生バイトを読んでしまう）。
+3. **`aigis init`** で Claude Code 向けにガードレールと改ざん検知付き監査ログを有効化。
+4. **`aigis trust-pack`** で稼働中の設定から EN/JA の IT 承認パックを生成。
 
 ---
 
