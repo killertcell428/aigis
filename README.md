@@ -341,16 +341,6 @@ Every template is a readable regex rule you can inspect, test, and modify.
 
 Benchmarks: [**reproducible results**](docs/benchmarks/REPRODUCIBLE_RESULTS.md) (real measured numbers + exact repro commands — incl. an honest latency-tail finding) · [all benchmarks](docs/benchmarks/) · Dashboard & web UI: [docs/](docs/) (`docker compose up -d`)
 
----
-
-## Learn More
-
-| Article | What you'll learn |
-|---|---|
-| [**AI エージェントのセキュリティを理解する**](https://qiita.com/sharu389no/items/ab5bf50d9f68e7c8de56) | Prompt injection, MCP attacks, and memory poisoning explained with diagrams. Covers the design thinking behind Aigis. (70K views) |
-| [**買収で消えゆく AI セキュリティ OSS**](https://qiita.com/sharu389no/items/ede7d1c0be4a14024857) | Why independent OSS AI firewalls matter now — major players acquired in 2025–2026. (40K views) |
-
-Technical docs: [docs/](docs/) · API reference: [docs/api-reference.md](docs/api-reference.md) · Full changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
