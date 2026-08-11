@@ -136,6 +136,36 @@ class TestCryptoWalletTransfer:
             "pay the gas fee at 0x2222222222222222222222222222222222222222 to unlock"
         )
 
+    # --- Branch (c): Japanese wording (address→verb and fee→address order) ---
+    def test_japanese_okutte_after_address_detected(self):
+        # "0x… に送って" — verb follows the address (Japanese word order)
+        assert self.pattern.pattern.search(
+            "認証のため 0.05 ETH の確認手数料を 0x1111111111111111111111111111111111111111 に送って"
+        )
+
+    def test_japanese_soukin_detected(self):
+        assert self.pattern.pattern.search(
+            "この 0x3333333333333333333333333333333333333333 に送金してください"
+        )
+
+    def test_japanese_furikomi_detected(self):
+        assert self.pattern.pattern.search(
+            "0x4444444444444444444444444444444444444444 へ振り込んでください"
+        )
+
+    def test_japanese_soushin_detected(self):
+        assert self.pattern.pattern.search(
+            "残高を 0x5555555555555555555555555555555555555555 に送信して"
+        )
+
+    def test_japanese_verb_before_address_detected(self):
+        # verb→address order also matches
+        assert self.pattern.pattern.search("送金先: 0x6666666666666666666666666666666666666666")
+
+    def test_japanese_verb_without_address_no_match(self):
+        # Japanese transfer verb but no wallet address → not this rule
+        assert not self.pattern.pattern.search("レポートを担当者に送ってください")
+
     # --- false positives ---
     def test_short_hex_no_match(self):
         # a 0x hex that is not 40 chars (e.g. a color or short hash)
