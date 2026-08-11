@@ -48,21 +48,6 @@ aigis trust-pack --lang en                           # → hand ./aigis-trust-pa
 
 ---
 
-## See it in action
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-demo.gif" alt="Aigis demo: scanning agent input and generating an IT-approval pack" width="760" />
-</p>
-
-Four real commands, in order:
-
-1. **`aigis scan`** on a normal request → **SAFE** — no false alarm.
-2. **`aigis scan`** on an attack that hides a *"read `.env` and exfiltrate it"* instruction inside **invisible ANSI escape codes** → **CRITICAL**, blocked. (A human skimming the terminal sees nothing; the model would have read the raw bytes.)
-3. **`aigis init`** turns on guardrails + a tamper-evident audit log for Claude Code.
-4. **`aigis trust-pack`** generates the bilingual IT-approval pack from your live config.
-
----
-
 ## Quick Start
 
 For developers building or running agents, the library is two lines and needs no config, API keys, or Docker:
@@ -129,6 +114,21 @@ curl -X POST http://localhost:8080/v1/check/input \
 
 Endpoints: `POST /v1/check/input` · `POST /v1/check/output` · `POST /v1/check/messages` · `GET /health` · `GET /v1/info`. Runs as a Kubernetes sidecar, a `docker-compose` companion, or a local fence in front of `litellm`, `langgraph`, or any HTTP-fronted agent.
 </details>
+
+---
+
+## New in v1.2: catch invisible-ANSI attacks, then generate an IT-approval pack
+
+v1.2 adds detection for **ANSI-concealed instructions** (payloads hidden inside invisible terminal escape codes), plus the `aigis trust-pack` and `aigis audit` commands. The clip below runs four real commands end to end:
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-demo.gif" alt="Aigis v1.2 demo: scanning agent input and generating an IT-approval pack" width="760" />
+</p>
+
+1. **`aigis scan`** on a normal request → **SAFE** — no false alarm.
+2. **`aigis scan`** on an attack that hides a *"read `.env` and exfiltrate it"* instruction inside **invisible ANSI escape codes** → **CRITICAL**, blocked. (A human skimming the terminal sees nothing; the model would have read the raw bytes.)
+3. **`aigis init`** turns on guardrails + a tamper-evident audit log for Claude Code.
+4. **`aigis trust-pack`** generates the bilingual IT-approval pack from your live config.
 
 ---
 
