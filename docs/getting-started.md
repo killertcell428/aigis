@@ -114,12 +114,31 @@ guard = Guard(policy_file="policy_templates/healthcare.yaml")
 
 Available templates: `finance` / `healthcare` / `ecommerce` / `internal_tools` / `education` / `customer_support` / `developer_tools`
 
-## Japan AI Business Operator Guidelines v1.2 Compliance
+## Japan AI Business Operator Guidelines v1.2 — control mapping
 
-As of v0.8.0, Aigis fully complies with the **AI Business Operator Guidelines v1.2** (published March 31, 2026). All 37 requirements introduced in v1.2 are covered, including AI agent governance, mandatory Human-in-the-Loop, hallucination-driven malfunction prevention, synthetic content controls, and more.
+Aigis ships a mapping against the **AI Business Operator Guidelines v1.2**
+(published 2026-03-31): **25 requirements** extracted from the guideline text, each
+paired with the Aigis feature that addresses it — AI agent governance,
+Human-in-the-Loop, hallucination-driven malfunction prevention, synthetic content
+controls, and more.
+
+Two things to be explicit about, because they matter the moment you hand this to a
+security reviewer:
+
+- The requirement IDs (`GL-AGENT-01`, `GL-POISON-01`, …) are **defined by Aigis**,
+  derived from the guideline text. They are **not official clause numbers**, so
+  "which part of the guideline is GL-POISON-01?" has no answer outside this repo.
+- The assessment is **ours**. Aigis is a control implementation, not a certification
+  body, and no third party has reviewed the mapping.
+
+Read it as "here are the controls we implement, and which part of the guideline each
+one speaks to" — useful as input to your own assessment, not as a compliance
+certificate. Earlier versions of this page claimed "fully complies … all 37
+requirements"; both the number and the word "complies" were wrong.
 
 ```bash
-# Generate a compliance report (verify all 37 v1.2 requirement mappings)
+# Print the mapping: 25 AI Business Operator Guideline items
+# (39 in total across the six Japanese regulations in compliance.py)
 aig report
 ```
 
