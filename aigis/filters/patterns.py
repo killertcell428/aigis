@@ -371,6 +371,14 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
             r"|(?:verification|activation|gas|unlock|validation|processing|authentication)"
             r"\s+fee\b[^\n]{0,100}?"
             r"(?:0x[a-fA-F0-9]{40}|bc1[a-z0-9]{25,90})"
+            # (c) Japanese phrasing: a wallet address co-located with a Japanese transfer
+            #     verb or "fee" term, in EITHER order — Japanese places the verb after the
+            #     object (e.g. "0x… に送って"). \b word boundaries do not work around CJK
+            #     characters, so this branch is address-anchored instead.
+            r"|(?:送金|送信|送付|送っ|送る|送れ|振り込|振込|転送|入金|支払|手数料)"
+            r"[^\n]{0,80}?(?:0x[a-fA-F0-9]{40}|bc1[a-z0-9]{25,90})"
+            r"|(?:0x[a-fA-F0-9]{40}|bc1[a-z0-9]{25,90})[^\n]{0,80}?"
+            r"(?:送金|送信|送付|送っ|送る|送れ|振り込|振込|転送|入金|支払)"
         ),
         base_score=70,
         description=(
@@ -378,9 +386,10 @@ DATA_EXFIL_PATTERNS: list[DetectionPattern] = [
             "wallet address, or to pay a fake 'verification fee' to unlock funds. Zscaler "
             "traced two live campaigns (payment scam hidden in API docs; a DeBank typosquat) "
             "and the Bankr incident was reported as the first AI agent fooled into a crypto "
-            "action via prompt injection (2026-08). Distinct from ii_financial_transaction_"
-            "injection, which keys on fiat 'transfer $X to account/wallet' phrasing rather "
-            "than a literal on-chain address."
+            "action via prompt injection (2026-08). Matches English verb+address phrasing and "
+            "Japanese transfer wording (送金 / 送って / 振り込んで / 送信 / 手数料) around a "
+            "literal address. Distinct from ii_financial_transaction_injection, which keys on "
+            "fiat 'transfer $X to account/wallet' phrasing rather than a literal on-chain address."
         ),
         owasp_ref="OWASP LLM01: Prompt Injection (Data Exfiltration)",
         remediation_hint=(

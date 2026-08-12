@@ -12,6 +12,17 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Changed
+
+- **`exfil_crypto_wallet_transfer`** — added Japanese-language coverage. The rule
+  previously keyed only on English verbs (`send`/`transfer`/`pay`), so a Japanese
+  crypto-transfer instruction such as `…を 0x… に送って` slipped through at
+  MEDIUM (score 45) instead of CRITICAL (100). Added an address-anchored branch
+  that matches Japanese transfer wording (送金 / 送って / 送る / 送信 / 振り込 /
+  振込 / 転送 / 入金 / 支払 / 手数料) in either word order — Japanese places the
+  verb after the object. Benign Japanese like "レポートを送ってください" (no
+  wallet address) still passes. 6 new tests.
+
 ## [1.2.0] - 2026-08-09
 
 Minor release. Adds three new detection patterns from the 2026-08 AI-agent-
