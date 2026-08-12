@@ -12,9 +12,20 @@ name: Auto-improvement / Daily paper review
 # the issue + pending files visible.
 
 on:
-  schedule:
-    # 00:15 UTC daily — well clear of cflite/codeql peak times.
-    - cron: "15 0 * * *"
+  # The daily schedule was removed on 2026-08-13, for two reasons:
+  #
+  #   1. ANTHROPIC_API_KEY was never configured for this repository, so every
+  #      scheduled run failed at the verify step in ~20s. A red X every
+  #      morning that carried no information.
+  #   2. This loop's output is *new detector candidates*, and ROADMAP.md now
+  #      states Aigis is out of the pattern-count race — 260+ patterns against
+  #      agent-threat-rules' 768, with Cisco and Meta shipping free OSS. Adding
+  #      rules is no longer a goal, so a machine that proposes them daily is
+  #      pointed the wrong way.
+  #
+  # Left dispatchable on purpose: the paper corpus is still a good way to spot
+  # gaps in *existing* rules (rotation domain 3, `detector-gaps`). Configure the
+  # secret before running, or use dry_run=true to parse without API calls.
   workflow_dispatch:
     inputs:
       dry_run:
