@@ -3,7 +3,7 @@
 **Organisation:** Example Corp（サンプル株式会社）
 **Prepared for:** [TO FILL: IT / Information Security Department]
 **Security contact:** security@example.com
-**Generated:** 2026-06-14T03:51:20.796904+00:00 (Aigis v1.1.11)
+**Generated:** 2026-08-12T16:58:30.268907+00:00 (Aigis v1.2.0)
 
 ## What Claude Code is
 
@@ -55,7 +55,7 @@ allowed to do on your machine.
   Default decision when no rule matches: `allow`.
 - **Hook status:** installed and configured.
 - **Log status:** no events recorded yet.
-- **Signed audit log:** available but not yet enabled.
+- **Signed audit log:** enabled.
 - **SIEM forwarding:** not detected (forwarders are configured in code; see docs/forwarders.md).
 
 

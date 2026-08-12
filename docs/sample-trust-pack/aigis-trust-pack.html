@@ -37,7 +37,7 @@
 <body>
 <header>
   <h1>Aigis Trust Pack — AI Agent Adoption Approval / AIエージェント導入承認パック</h1>
-  <div class="meta">Generated 2026-06-14T03:52:27.279551+00:00 · Aigis v1.1.11 · Policy: Aigis Enterprise Policy (v1.0)</div>
+  <div class="meta">Generated 2026-08-12T16:59:06.641882+00:00 · Aigis v1.2.0 · Policy: Aigis Enterprise Policy (v1.0)</div>
 </header>
 <nav><a href="#01_executive_summary-en">1. Executive Summary (en)</a> · <a href="#02_control_matrix-en">2. Control Matrix (en)</a> · <a href="#03_policy_snapshot-en">3. Policy Snapshot (en)</a> · <a href="#04_audit_log_evidence-en">4. Audit Log Evidence (en)</a> · <a href="#05_incident_runbook-en">5. Incident Runbook (en)</a> · <a href="#06_rollout_plan-en">6. Rollout Plan (en)</a> · <a href="#01_executive_summary-ja">1. エグゼクティブサマリ (ja)</a> · <a href="#02_control_matrix-ja">2. コントロールマトリクス (ja)</a> · <a href="#03_policy_snapshot-ja">3. ポリシースナップショット (ja)</a> · <a href="#04_audit_log_evidence-ja">4. 監査ログの証跡 (ja)</a> · <a href="#05_incident_runbook-ja">5. インシデント対応手順 (ja)</a> · <a href="#06_rollout_plan-ja">6. 展開計画 (ja)</a></nav>
 <section id="01_executive_summary-en">
@@ -45,7 +45,7 @@
 <p><strong>Organisation:</strong> Example Corp（サンプル株式会社）</p>
 <p><strong>Prepared for:</strong> [TO FILL: IT / Information Security Department]</p>
 <p><strong>Security contact:</strong> security@example.com</p>
-<p><strong>Generated:</strong> 2026-06-14T03:52:27.279551+00:00 (Aigis v1.1.11)</p>
+<p><strong>Generated:</strong> 2026-08-12T16:59:06.641882+00:00 (Aigis v1.2.0)</p>
 <h2>What Claude Code is</h2>
 <p>Claude Code is Anthropic's command-line coding agent. It reads and edits</p>
 <p>files, runs shell commands, fetches web content, and can call external</p>
@@ -100,13 +100,14 @@
 <ul>
 <li><strong>Hook status:</strong> installed and configured.</li>
 <li><strong>Log status:</strong> no events recorded yet.</li>
-<li><strong>Signed audit log:</strong> available but not yet enabled.</li>
+<li><strong>Signed audit log:</strong> enabled.</li>
 <li><strong>SIEM forwarding:</strong> not detected (forwarders are configured in code; see docs/forwarders.md).</li>
 </ul>
 </section>
 <section id="02_control_matrix-en">
 <h1>2. Control Matrix</h1>
 <p>This table maps each control Aigis implements to the major security and AI-governance frameworks. ISO/IEC 27001 item numbers are listed as "supports evidence for" — Aigis is a control implementation, not a certification body, and does not guarantee compliance.</p>
+<p><strong>Two things to know before reading the table.</strong> First, the IDs in the *AI Business Operator GL* column (<code>GL-*</code>, <code>SEC-*</code>, <code>APPI-*</code>) are <strong>defined by Aigis</strong>, derived from the guideline text — they are not official clause numbers, so asking which guideline clause <code>GL-POISON-01</code> refers to has no answer outside this repository. The requirement text behind each ID lives in <code>aigis/compliance.py</code>. Second, every mapping here is <strong>self-assessed</strong>: no third party has reviewed it, and the list contains no partial or uncovered entries — so read it as a statement of what we implement, not as a measured coverage figure.</p>
 <table><thead><tr>
 <th>Aigis control</th>
 <th>What it does</th>
@@ -128,21 +129,21 @@
 <td>Scans model output for leaked secrets, PII, and system-prompt disclosure before it is returned.</td>
 <td>A.8.12 (Data leakage prevention), A.5.34 (Privacy and PII)</td>
 <td>MEASURE 2.7, MANAGE 4.1</td>
-<td>LLM02 Sensitive Information Disclosure, LLM06 Excessive Agency</td>
+<td>LLM02 Sensitive Information Disclosure, LLM05 Improper Output Handling</td>
 <td>APPI-PII-01, GL-DATA-01</td>
 </tr>
 <tr>
 <td>Tool-call policy enforcement</td>
 <td>Deterministic allow/deny/review decision on every tool call (shell, file, network) before execution.</td>
-<td>A.8.2 (Privileged access rights), A.8.18 (Use of privileged utility programs)</td>
+<td>A.8.18 (Use of privileged utility programs)</td>
 <td>GOVERN 1.1, MANAGE 2.1</td>
-<td>LLM06 Excessive Agency, LLM08 Vector and Embedding Weaknesses</td>
+<td>LLM06 Excessive Agency</td>
 <td>GL-HUMAN-03 (最小権限), SEC-PRIV-01</td>
 </tr>
 <tr>
 <td>MCP tool-definition scanning</td>
 <td>Detects tool-poisoning and rug-pull changes in Model Context Protocol server definitions.</td>
-<td>A.5.21 (ICT supply chain security), A.8.30 (Outsourced development)</td>
+<td>A.5.21 (ICT supply chain security), A.5.19 (Information security in supplier relationships)</td>
 <td>MAP 4.1, MANAGE 3.1</td>
 <td>LLM03 Supply Chain, LLM01 Prompt Injection</td>
 <td>GL-SEC-03 (攻撃対象面の管理)</td>
@@ -160,7 +161,7 @@
 <td>Append-only log; each entry HMAC-SHA256 signed and hash-chained so deletion/modification is detectable.</td>
 <td>A.8.15 (Logging), A.8.16 (Monitoring activities), A.5.28 (Collection of evidence)</td>
 <td>MEASURE 2.8, MANAGE 4.1</td>
-<td>LLM09 Misinformation (audit trail), LLM06 Excessive Agency</td>
+<td>LLM06 Excessive Agency (logging &amp; monitoring)</td>
 <td>GL-AUDIT-01 (追跡可能性), GL-RISK-02 (インシデントDB)</td>
 </tr>
 <tr>
@@ -176,7 +177,7 @@
 <td>Automated weekly report of scans, blocks, OWASP coverage, and week-over-week trend for review meetings.</td>
 <td>A.5.36 (Compliance review), A.8.16 (Monitoring activities)</td>
 <td>MEASURE 4.1, GOVERN 4.1</td>
-<td>LLM09 Misinformation (reporting)</td>
+<td>— (cross-cutting; not an OWASP risk category)</td>
 <td>GL-TRANS-01 (ドキュメント化), GL-RISK-02</td>
 </tr>
 </tbody></table>
@@ -449,7 +450,7 @@ rules:
 <h2>Where logs live</h2>
 <p>Aigis keeps audit logs in three tiers (all append-only JSONL, one event per line):</p>
 <ul>
-<li><strong>Local logs:</strong> <code>.aigis/logs</code> (per-project, developer-visible)</li>
+<li><strong>Local logs:</strong> <code>.aigis\logs</code> (per-project, developer-visible)</li>
 <li><strong>Global logs:</strong> <code>~/.aigis/global/</code> (cross-project, for audit / CISO)</li>
 <li><strong>Alert archive:</strong> <code>~/.aigis/alerts/</code> (deny / review events, permanent)</li>
 </ul>
@@ -506,7 +507,34 @@ rules:
 <p>Use <code>--log PATH</code> to point at a specific log file and <code>--json</code> for a</p>
 <p>machine-readable result. Use <code>aigis audit status</code> for a quick health check.</p>
 <p>Current state: signed audit log is</p>
-<p>available but not yet enabled.</p>
+<p>enabled.</p>
+<h2>Key management — read this before relying on tamper-evidence</h2>
+<p>The HMAC key is resolved in this order (see <code>aigis/audit/signed_log.py</code>):</p>
+<p>1. An explicit <code>secret_key</code> supplied by the caller.</p>
+<p>2. An existing key file at <code>.aigis/audit_key</code>.</p>
+<p>3. Otherwise a fresh key is generated (<code>secrets.token_hex(32)</code>) and written there.</p>
+<p><strong>What this means for a reviewer.</strong> In the default configuration the signing key</p>
+<p>sits on the same machine as the agent and the logs, owned by the same user. The</p>
+<p>signature therefore detects tampering by anything *other than* the log's own</p>
+<p>author — a later process, another user, file corruption. It does <strong>not</strong> detect</p>
+<p>the author editing an entry and re-signing it, because they hold the key.</p>
+<p>If your threat model includes the developer whose activity is being recorded —</p>
+<p>which is usually the reason an audit trail exists at all — combine the signed log</p>
+<p>with at least one of the following:</p>
+<ul>
+<li><strong>SIEM forwarding</strong> (next section). Events mirrored to Splunk, Sentinel, Elastic,</li>
+</ul>
+<p>or Datadog land outside the developer's reach. This is the strongest option</p>
+<p>available today, and it requires no change to Aigis.</p>
+<ul>
+<li><strong>An externally-held key.</strong> Pass <code>secret_key</code> from a secret manager the developer</li>
+</ul>
+<p>cannot read, so local forgery is not possible.</p>
+<ul>
+<li><strong>Off-box export</strong> of <code>~/.aigis/alerts/</code> to storage the developer cannot write to.</li>
+</ul>
+<p>One platform note: the key file is set to <code>0600</code> on POSIX, but Windows does not</p>
+<p>enforce POSIX permissions — set NTFS ACLs explicitly there.</p>
 <h2>SIEM forwarding</h2>
 <p>Events can optionally be forwarded to an external SIEM (Elastic Common Schema,</p>
 <p>over HTTP). Forwarding is non-blocking and never delays an agent tool call. A</p>
@@ -630,7 +658,7 @@ Escalate to: security@example.com</code></pre>
 <p><strong>組織:</strong> Example Corp（サンプル株式会社）</p>
 <p><strong>提出先:</strong> 【要記入: 情報システム部門】</p>
 <p><strong>セキュリティ窓口:</strong> security@example.com</p>
-<p><strong>生成日時:</strong> 2026-06-14T03:52:27.279551+00:00（Aigis v1.1.11）</p>
+<p><strong>生成日時:</strong> 2026-08-12T16:59:06.641882+00:00（Aigis v1.2.0）</p>
 <h2>Claude Codeとは</h2>
 <p>Claude CodeはAnthropic社が提供するコマンドライン型のコーディングエージェントです。</p>
 <p>ファイルの読み書き、シェルコマンドの実行、Webコンテンツの取得を行い、外部ツール</p>
@@ -678,13 +706,14 @@ Escalate to: security@example.com</code></pre>
 <ul>
 <li><strong>フックの状態:</strong> 導入・設定済み。</li>
 <li><strong>ログの状態:</strong> まだイベントは記録されていません。</li>
-<li><strong>署名付き監査ログ:</strong> 利用可能ですが未有効化。</li>
+<li><strong>署名付き監査ログ:</strong> 有効。</li>
 <li><strong>SIEM転送:</strong> not detected (forwarders are configured in code; see docs/forwarders.md)。</li>
 </ul>
 </section>
 <section id="02_control_matrix-ja">
 <h1>2. コントロールマトリクス</h1>
 <p>本表は、Aigisが実装する各コントロールを、主要なセキュリティ・AIガバナンスフレームワークへ対応付けたものです。ISO/IEC 27001の項番は「証跡を補強するもの（supports evidence for）」として記載しており、Aigisが認証や準拠を保証するものではありません。</p>
+<p><strong>表を読む前に知っておいていただきたい点が2つあります。</strong> 1つ目は、「AI事業者GL v1.2」列のID（<code>GL-*</code> / <code>SEC-*</code> / <code>APPI-*</code>）は<strong>Aigisが独自に定義したもの</strong>で、ガイドライン本文から要件を抽出して番号を振ったものです。ガイドラインの公式項番ではないため、<code>GL-POISON-01</code> がガイドラインのどの条項に当たるかという問いには、本リポジトリの外では答えがありません。各IDの要件文は <code>aigis/compliance.py</code> に記載しています。2つ目は、本表の対応付けはすべて<strong>自己評価</strong>であり、第三者のレビューを受けていないことです。部分対応・未対応の項目が1件も存在しないため、測定されたカバレッジ率ではなく、「何を実装しているかの表明」として読んでください。</p>
 <table><thead><tr>
 <th>Aigisコントロール</th>
 <th>概要</th>
@@ -706,21 +735,21 @@ Escalate to: security@example.com</code></pre>
 <td>モデルの出力を返す前に、秘密情報・個人情報・システムプロンプトの漏洩がないか検査します。</td>
 <td>A.8.12 (Data leakage prevention), A.5.34 (Privacy and PII)</td>
 <td>MEASURE 2.7, MANAGE 4.1</td>
-<td>LLM02 Sensitive Information Disclosure, LLM06 Excessive Agency</td>
+<td>LLM02 Sensitive Information Disclosure, LLM05 Improper Output Handling</td>
 <td>APPI-PII-01, GL-DATA-01</td>
 </tr>
 <tr>
 <td>ツール呼び出しポリシー強制</td>
 <td>すべてのツール呼び出し（シェル・ファイル・ネットワーク）を実行前に許可/拒否/レビュー判定します。</td>
-<td>A.8.2 (Privileged access rights), A.8.18 (Use of privileged utility programs)</td>
+<td>A.8.18 (Use of privileged utility programs)</td>
 <td>GOVERN 1.1, MANAGE 2.1</td>
-<td>LLM06 Excessive Agency, LLM08 Vector and Embedding Weaknesses</td>
+<td>LLM06 Excessive Agency</td>
 <td>GL-HUMAN-03 (最小権限), SEC-PRIV-01</td>
 </tr>
 <tr>
 <td>MCPツール定義スキャン</td>
 <td>Model Context Protocolサーバー定義に含まれるツールポイズニングや定義改ざん（ラグプル）を検出します。</td>
-<td>A.5.21 (ICT supply chain security), A.8.30 (Outsourced development)</td>
+<td>A.5.21 (ICT supply chain security), A.5.19 (Information security in supplier relationships)</td>
 <td>MAP 4.1, MANAGE 3.1</td>
 <td>LLM03 Supply Chain, LLM01 Prompt Injection</td>
 <td>GL-SEC-03 (攻撃対象面の管理)</td>
@@ -738,7 +767,7 @@ Escalate to: security@example.com</code></pre>
 <td>追記専用ログ。各エントリをHMAC-SHA256で署名しハッシュチェーンで連結するため、削除・改ざんを検知できます。</td>
 <td>A.8.15 (Logging), A.8.16 (Monitoring activities), A.5.28 (Collection of evidence)</td>
 <td>MEASURE 2.8, MANAGE 4.1</td>
-<td>LLM09 Misinformation (audit trail), LLM06 Excessive Agency</td>
+<td>LLM06 Excessive Agency (logging &amp; monitoring)</td>
 <td>GL-AUDIT-01 (追跡可能性), GL-RISK-02 (インシデントDB)</td>
 </tr>
 <tr>
@@ -754,7 +783,7 @@ Escalate to: security@example.com</code></pre>
 <td>スキャン数・ブロック数・OWASPカバレッジ・前週比トレンドを集計した週次レポートを自動生成します。</td>
 <td>A.5.36 (Compliance review), A.8.16 (Monitoring activities)</td>
 <td>MEASURE 4.1, GOVERN 4.1</td>
-<td>LLM09 Misinformation (reporting)</td>
+<td>— (cross-cutting; not an OWASP risk category)</td>
 <td>GL-TRANS-01 (ドキュメント化), GL-RISK-02</td>
 </tr>
 </tbody></table>
@@ -1027,7 +1056,7 @@ rules:
 <h2>ログの保存場所</h2>
 <p>Aigisは監査ログを3階層で保持します（いずれも追記専用のJSONL形式、1行1イベント）。</p>
 <ul>
-<li><strong>ローカルログ:</strong> <code>.aigis/logs</code>（プロジェクト単位、開発者が確認可能）</li>
+<li><strong>ローカルログ:</strong> <code>.aigis\logs</code>（プロジェクト単位、開発者が確認可能）</li>
 <li><strong>グローバルログ:</strong> <code>~/.aigis/global/</code>（全プロジェクト横断、監査・CISO向け）</li>
 <li><strong>アラート保管:</strong> <code>~/.aigis/alerts/</code>（拒否・レビューイベントを恒久保存）</li>
 </ul>
@@ -1078,7 +1107,33 @@ rules:
 <pre><code>aigis audit verify</code></pre>
 <p><code>--log PATH</code> でログファイルを指定でき、<code>--json</code> で機械可読な結果を出力します。</p>
 <p>状態確認には <code>aigis audit status</code> を使用します。</p>
-<p>現状: 署名付き監査ログは利用可能（未有効化）です。</p>
+<p>現状: 署名付き監査ログは有効です。</p>
+<h2>鍵の管理 — 改ざん検知を信頼する前に確認すること</h2>
+<p>HMAC鍵は次の順序で解決されます（<code>aigis/audit/signed_log.py</code>）。</p>
+<p>1. 呼び出し側が明示的に渡した <code>secret_key</code></p>
+<p>2. 既存の鍵ファイル <code>.aigis/audit_key</code></p>
+<p>3. いずれも無ければ新規生成（<code>secrets.token_hex(32)</code>）して同ファイルに保存</p>
+<p><strong>審査する側が知っておくべきこと。</strong> 既定構成では、署名鍵はエージェントとログと</p>
+<p>同じマシン上に、同じユーザー権限で置かれます。したがって署名が検知できるのは</p>
+<p>「ログを書いた本人以外」による改変です — 後続プロセス、別ユーザー、ファイル破損。</p>
+<p><strong>本人がエントリを書き換えて再署名した場合は検知できません。</strong> 鍵を本人が持って</p>
+<p>いるからです。</p>
+<p>記録対象である開発者本人を脅威モデルに含める場合 — 監査ログを置く理由は通常</p>
+<p>そこにあります — 署名ログを次のいずれかと組み合わせてください。</p>
+<ul>
+<li><strong>SIEM転送</strong>（次節）。Splunk / Sentinel / Elastic / Datadog に複製されたイベントは</li>
+</ul>
+<p>開発者の手が届かない場所に残ります。現時点で最も強い選択肢で、Aigis側の変更は</p>
+<p>不要です。</p>
+<ul>
+<li><strong>外部で保持する鍵。</strong> 開発者が読めないシークレットマネージャから <code>secret_key</code> を</li>
+</ul>
+<p>渡せば、ローカルでの偽造ができなくなります。</p>
+<ul>
+<li><strong><code>~/.aigis/alerts/</code> の外部エクスポート。</strong> 開発者が書き込めない保管先へ定期的に出す。</li>
+</ul>
+<p>プラットフォーム注記: 鍵ファイルはPOSIXでは <code>0600</code> を設定しますが、Windowsは</p>
+<p>POSIX権限を強制しません。Windows環境ではNTFS ACLを明示的に設定してください。</p>
 <h2>SIEM転送</h2>
 <p>イベントは任意で外部SIEMへ転送できます（Elastic Common Schema形式、HTTP）。転送は</p>
 <p>非ブロッキングで、エージェントのツール呼び出しを遅延させません。送信前に個人情報の</p>
