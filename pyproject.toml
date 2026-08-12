@@ -53,7 +53,7 @@ anthropic = ["anthropic>=0.120.2"]
 # Full SaaS server (backend + all integrations)
 server = [
     "pyaigis[yaml,fastapi,openai]",
-    "uvicorn[standard]>=0.51.0",
+    "uvicorn[standard]>=0.52.1",
     "sqlalchemy>=2.0.51",
     "alembic>=1.19.0",
     "asyncpg>=0.31.0",
