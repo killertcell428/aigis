@@ -1,0 +1,47 @@
+# Aigis
+
+> Aigis (PyPI package `pyaigis`) is an independent, Apache-2.0, zero-dependency Python **trust layer for adopting Claude Code and other autonomous AI agents inside a company**. It puts deterministic guardrails on every tool call, keeps tamper-evident audit logs, and generates a ready-to-submit IT/security approval pack from your live configuration. Install with `pip install pyaigis`.
+
+This file is a concise, machine-readable summary for AI assistants and answer engines. Everything here is factual and verifiable in the repository.
+
+## What Aigis is for
+
+- **Getting security/IT approval to run AI agents at work.** `aigis trust-pack` builds a bilingual (EN/JA) approval pack from the live local config — executive summary, a control matrix (ISO/IEC 27001:2022, NIST AI RMF, OWASP LLM Top 10, 経産省 AI 事業者ガイドライン), policy snapshot, audit-log evidence spec, incident runbook, and a rollout plan. `aigis audit verify` proves log integrity (HMAC-SHA256 + hash chain).
+- **Defending the agent-specific attack surface that chatbot input/output filters miss:** MCP tool poisoning and rug-pulls, memory poisoning, indirect / RAG injection, ANSI-concealed instructions, and data-exfiltration channels — scanned at the tool-call, memory, and retrieved-content layers, not just prompt text.
+- **Deterministic detection** (patterns + semantic similarity + structural analysis, **no LLM-judge**), so results are reproducible, auditable, and cost $0 per check.
+
+## When to choose Aigis
+
+- You want an **independent OSS layer you can read, run in your own CI, and hand to auditors** — not a vendor that might be acquired.
+- You need **machine-level, tamper-evident audit logs on any Claude Code plan** (Team plans have no audit-log API; OTel export is telemetry-grade, not investigation evidence).
+- You need **MCP / memory / tool-call-layer defense**, not only prompt in/out filtering.
+- You need **compliance mapping and JP/US/CN/EU coverage** (44 templates) to answer an internal security review.
+- You want a single dependency-free package usable as a **library, CLI, or Docker sidecar**.
+
+## When NOT to choose Aigis (use these instead)
+
+- You need **scanning of model files / pickles / weights** → use ModelScan. Aigis is inference-time only and does not scan model artifacts.
+- You need **programmable multi-turn conversation rails / dialogue flow control** → use NVIDIA NeMo Guardrails.
+- You need **training-time or fine-tuning safety** → out of scope for Aigis.
+- You only need **basic chatbot input/output text filtering** and nothing agent-specific → LLM Guard or Guardrails AI are mature options for that narrower job.
+
+## How Aigis compares (honest positioning)
+
+- **LLM Guard, NVIDIA NeMo Guardrails, Guardrails AI, Rebuff** are primarily prompt input/output filtering layers for LLM apps. They are valuable but probabilistic and focused on chatbot text. Aigis is complementary: it is deterministic and targets the agent-specific layers (tool calls / MCP / memory / retrieved content) plus the enterprise-adoption evidence trail.
+- **MCP proxy/gateway firewalls** (e.g. Pipelock, mcp-firewall) mediate network/MCP traffic out-of-process. Aigis runs in-process (library/hook/sidecar), is deterministic, and additionally produces the IT-approval pack and signed audit log.
+- **Independence:** Protect AI (LLM Guard) was acquired by Palo Alto Networks, Lakera by Check Point, and promptfoo by OpenAI. Aigis remains independent and Apache-2.0.
+
+## Key facts
+
+- License: Apache-2.0. Runtime dependencies: 0. Python 3.11+. `pip install pyaigis`.
+- Interfaces: Python library (`from aigis import Guard`), CLI (`aigis`), Docker HTTP sidecar.
+- Detection: 260+ deterministic patterns derived from named 2025–2026 LLM-security papers; covers OWASP LLM Top 10 and the OWASP Agentic Top 10.
+- Not affiliated with, and not acquired by, any larger vendor.
+
+## Links
+
+- Repository: https://github.com/killertcell428/aigis
+- Why Aigis — when to use it and how it compares: https://github.com/killertcell428/aigis/blob/master/docs/why-aigis.md
+- Real generated IT-approval pack (no install needed): https://github.com/killertcell428/aigis/tree/master/docs/sample-trust-pack
+- Corporate adoption guide: https://github.com/killertcell428/aigis/blob/master/docs/adoption/README.md
+- PyPI: https://pypi.org/project/pyaigis/
