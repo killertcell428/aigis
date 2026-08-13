@@ -38,46 +38,59 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-# OWASP LLM Top 10 (2025) mapping
+# OWASP LLM Top 10 (2025) mapping.
+#
+# Corrected 2026-08-13. This table held the **2023** list while the detection
+# patterns (aigis/patterns.py, aigis/filters/patterns.py) and the trust pack were
+# already on the 2025 list, so the same id meant two different risks depending on
+# which part of Aigis you read: the scorecard printed "LLM02 Insecure Output
+# Handling" over findings the patterns had tagged "LLM02: Sensitive Information
+# Disclosure". The patterns are the source of truth, so this follows them.
 OWASP_LLM_TOP10: dict[str, str] = {
     "LLM01": "Prompt Injection",
-    "LLM02": "Insecure Output Handling",
-    "LLM03": "Training Data Poisoning",
-    "LLM04": "Model Denial of Service",
-    "LLM05": "Supply-Chain Vulnerabilities",
-    "LLM06": "Sensitive Information Disclosure",
-    "LLM07": "Insecure Plugin Design",
-    "LLM08": "Excessive Agency",
-    "LLM09": "Overreliance",
-    "LLM10": "Model Theft",
+    "LLM02": "Sensitive Information Disclosure",
+    "LLM03": "Supply Chain",
+    "LLM04": "Data and Model Poisoning",
+    "LLM05": "Improper Output Handling",
+    "LLM06": "Excessive Agency",
+    "LLM07": "System Prompt Leakage",
+    "LLM08": "Vector and Embedding Weaknesses",
+    "LLM09": "Misinformation",
+    "LLM10": "Unbounded Consumption",
 }
 
-# Map aigis categories to OWASP LLM Top 10
+# Map aigis categories to OWASP LLM Top 10 (2025). Grouped by target id.
 CATEGORY_TO_OWASP: dict[str, str] = {
     "prompt_injection": "LLM01",
     "jailbreak": "LLM01",
-    "system_prompt_leak": "LLM01",
     "multi_turn_escalation": "LLM01",
-    "output_manipulation": "LLM02",
-    "xss_injection": "LLM02",
-    "sql_injection": "LLM02",
-    "code_injection": "LLM02",
-    "training_data": "LLM03",
-    "resource_abuse": "LLM04",
-    "dos_attack": "LLM04",
-    "supply_chain": "LLM05",
-    "mcp_poisoning": "LLM05",
-    "mcp_tool_shadow": "LLM05",
-    "mcp_rug_pull": "LLM05",
-    "pii_leak": "LLM06",
-    "credential_leak": "LLM06",
-    "data_exfiltration": "LLM06",
-    "confidential_data": "LLM06",
-    "insecure_plugin": "LLM07",
-    "excessive_agency": "LLM08",
-    "privilege_escalation": "LLM08",
+    # System-prompt leakage became its own risk in 2025; it was folded into
+    # LLM01 under the 2023 list.
+    "system_prompt_leak": "LLM07",
+    "pii_leak": "LLM02",
+    "credential_leak": "LLM02",
+    "data_exfiltration": "LLM02",
+    "confidential_data": "LLM02",
+    "supply_chain": "LLM03",
+    "mcp_poisoning": "LLM03",
+    "mcp_tool_shadow": "LLM03",
+    "mcp_rug_pull": "LLM03",
+    "training_data": "LLM04",
+    "output_manipulation": "LLM05",
+    "xss_injection": "LLM05",
+    "sql_injection": "LLM05",
+    "code_injection": "LLM05",
+    "excessive_agency": "LLM06",
+    "privilege_escalation": "LLM06",
+    # 2023's "LLM07 Insecure Plugin Design" has no 2025 counterpart; the risk it
+    # described (over-permissioned tools/plugins) sits under Excessive Agency.
+    "insecure_plugin": "LLM06",
     "overreliance": "LLM09",
-    "model_theft": "LLM10",
+    "resource_abuse": "LLM10",
+    "dos_attack": "LLM10",
+    # "model_theft" is deliberately absent: 2023's LLM10 Model Theft was dropped
+    # from the 2025 list and has no equivalent. Better unmapped than pointed at an
+    # unrelated id.
 }
 
 

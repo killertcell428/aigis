@@ -188,7 +188,7 @@ v1.2 では **ANSI エスケープに隠した命令**（目に見えないタ�
 
 | 標準 | カバレッジ |
 |---|---|
-| OWASP LLM Top 10 | LLM01 Prompt Injection, LLM02 Output Handling, LLM05–09 |
+| OWASP LLM Top 10 (2025) | LLM01–03、LLM05–07、LLM09–10 · 対象外: LLM04（学習時）と LLM08（ベクトルストア） |
 | OWASP Agentic Top 10 | ツール汚染、メモリ攻撃、間接インジェクション |
 | MITRE ATLAS | 回避、流出、偵察（部分） |
 | NIST AI RMF (AI 600-1) | リスク特定・測定（部分） |
@@ -331,8 +331,8 @@ jobs:
 ```bash
 aigis monitor --owasp
 # OWASP LLM Top 10 Scorecard
-# LLM01  Prompt Injection           ACTIVE    118 detections
-# LLM02  Insecure Output Handling   ACTIVE     36 detections
+# LLM01  Prompt Injection                  ACTIVE    118 detections
+# LLM02  Sensitive Information Disclosure  ACTIVE     36 detections
 # ...
 ```
 

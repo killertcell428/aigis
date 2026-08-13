@@ -528,7 +528,7 @@ Standard Mode (aig redteam)               Adaptive Mode (aig redteam --adaptive)
 
 | Framework | Coverage |
 |-------------|-----------|
-| OWASP LLM Top 10 (2025) | 8/10 risks (LLM03 Supply Chain and LLM09 Misinformation are out of scope) |
+| OWASP LLM Top 10 (2025) | 8/10 risks — LLM01–03, LLM05–07, LLM09–10. LLM06 is enforced by the policy engine rather than by patterns, and LLM09 has only 4 rules. Out of scope: LLM04 (training/fine-tuning is not inference-time) and LLM08 (Aigis does not inspect vector stores or embeddings). |
 | NIST AI RMF 1.0 | 4/4 functions (Govern, Map, Measure, Manage) |
 | MITRE ATLAS | 40/67 techniques (remaining 27 are infrastructure/pre-attack stages) |
 | CSA STAR for AI | 8/10 domains (AI Model Dev and Fairness are N/A) |
