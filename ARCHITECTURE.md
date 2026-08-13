@@ -185,7 +185,7 @@ aigis/
 │   ├── load_policy()       #   YAML/JSON loader
 │   └── evaluate()          #   Prefix-match rule evaluation → allow/deny/review
 │
-├── compliance.py           # Compliance mapping (AI Business Operator Guidelines v1.2: 37/37)
+├── compliance.py           # Compliance mapping (39 self-assessed items, 6 JP regulations)
 │
 ├── cli.py                  # CLI (aig command)
 │   ├── aig scan            #   Text scan
@@ -528,11 +528,26 @@ Standard Mode (aig redteam)               Adaptive Mode (aig redteam --adaptive)
 
 | Framework | Coverage |
 |-------------|-----------|
-| OWASP LLM Top 10 (2025) | 8/10 risks (LLM03 Supply Chain and LLM09 Misinformation are out of scope) |
+| OWASP LLM Top 10 (2025) | 8/10 risks — LLM01–03, LLM05–07, LLM09–10. LLM06 is enforced by the policy engine rather than by patterns, and LLM09 has only 4 rules. Out of scope: LLM04 (training/fine-tuning is not inference-time) and LLM08 (Aigis does not inspect vector stores or embeddings). |
 | NIST AI RMF 1.0 | 4/4 functions (Govern, Map, Measure, Manage) |
 | MITRE ATLAS | 40/67 techniques (remaining 27 are infrastructure/pre-attack stages) |
 | CSA STAR for AI | 8/10 domains (AI Model Dev and Fairness are N/A) |
-| AI Business Operator Guidelines v1.2 | 37/37 requirements (100%) |
+| AI Business Operator Guidelines v1.2 | 25 requirements mapped, self-assessed (see note) |
+
+> **On the compliance numbers.** Earlier revisions of this file, `docs/getting-started.md`,
+> and the launch articles said "37/37 requirements (100%)". The actual count in
+> [`aigis/compliance.py`](aigis/compliance.py) is **25** items for AI Business Operator
+> Guidelines v1.2 (39 across all six Japanese regulations it covers). Two further
+> caveats matter more than the count:
+>
+> - The requirement IDs (`GL-AGENT-01`, `GL-POISON-01`, `SEC-PI-01`, …) are **defined
+>   by Aigis**, derived from the guideline text. They are not official clause numbers.
+> - Every mapped item is marked `covered` **by us**. No third party has assessed the
+>   mapping, and there are no `partial` or `not_covered` entries — so a "100%" figure
+>   was a property of how we wrote the list, not a measured coverage ratio.
+>
+> Read the mapping as "controls we implement, and which part of the guideline each one
+> speaks to" — input to your own assessment, not a compliance certificate.
 
 ## Log Architecture (3 Tiers)
 

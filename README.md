@@ -182,7 +182,7 @@ Detection is grounded in 260+ patterns drawn from named 2025–26 LLM-security p
 
 | Standard | Coverage |
 |---|---|
-| OWASP LLM Top 10 | LLM01 Prompt Injection, LLM02 Output Handling, LLM05–09 |
+| OWASP LLM Top 10 (2025) | LLM01–03, LLM05–07, LLM09–10 · out of scope: LLM04 (training-time) and LLM08 (vector stores) |
 | OWASP Agentic Top 10 | Tool poisoning, memory attacks, indirect injection |
 | MITRE ATLAS | Evasion, exfiltration, reconnaissance (partial) |
 | NIST AI RMF (AI 600-1) | Risk identification and measurement (partial) |
@@ -323,8 +323,8 @@ Each detector is grounded in a named result from the 2025–2026 LLM-security li
 ```bash
 aigis monitor --owasp
 # OWASP LLM Top 10 Scorecard
-# LLM01  Prompt Injection           ACTIVE    118 detections
-# LLM02  Insecure Output Handling   ACTIVE     36 detections
+# LLM01  Prompt Injection                  ACTIVE    118 detections
+# LLM02  Sensitive Information Disclosure  ACTIVE     36 detections
 # ...
 ```
 

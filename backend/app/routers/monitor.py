@@ -20,7 +20,18 @@ from app.models.request import Request
 
 router = APIRouter(prefix="/api/v1/monitor", tags=["monitor"])
 
-# OWASP LLM Top 10 mapping
+# OWASP LLM Top 10 mapping — **2023 edition, deliberately not migrated.**
+#
+# aigis/monitor/__init__.py was corrected to the 2025 edition on 2026-08-13 (it had
+# held the 2023 list while the detection patterns already used 2025 ids, so the
+# scorecard mislabelled its own findings). This module was left alone: it belongs to
+# the dormant SaaS backend — see ROADMAP.md, where the Cloud/Business/Enterprise
+# tiers are dropped — and UNIQUE_FEATURES below is keyed by these 2023 ids with copy
+# describing the 2023 risks. Renumbering only the two dicts would silently attach
+# every feature blurb to the wrong risk.
+#
+# If this backend is ever revived, migrate all three structures together, using
+# aigis/monitor/__init__.py as the reference.
 OWASP_LLM_TOP10 = {
     "LLM01": "Prompt Injection",
     "LLM02": "Insecure Output Handling",

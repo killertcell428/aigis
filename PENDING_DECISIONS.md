@@ -1,7 +1,25 @@
-# Pending Design Decisions — Phase 3-4 (v1.5.0)
+# Pending Design Decisions — Phase 3-4
 
-> Status: **ALL PHASES COMPLETE — v1.5.0 RELEASED**
-> Updated: 2026-04-11
+> Status: **Decisions settled, code on master — but never released as "v1.5.0".**
+> Updated: 2026-08-13 (status corrected)
+
+## Version note (corrected 2026-08-13)
+
+This file read "ALL PHASES COMPLETE — v1.5.0 RELEASED" from 2026-04-11 until
+2026-08-13. **No such release exists.** The tag list tops out at **v1.2.0**
+(2026-08-09); v1.3.0, v1.3.1, v1.4.0 and v1.5.0 were never tagged either, even
+though the April ROADMAP credited shipped features to them.
+
+What actually happened: the decisions below were settled and the code landed on
+master, but version numbers in the planning docs ran ahead of the tags. The
+`v1.1.12` note in [CHANGELOG.md](CHANGELOG.md) records a related failure — a tag
+cut from a branch HEAD that never reached master, caught by the orphan-tag guard
+in `release.yml`.
+
+So: treat the **decisions** below as authoritative and the **version numbers** as
+not. [pyproject.toml](pyproject.toml) is the only source of truth for the current
+version (1.2.0). The root `package.json` still says 1.3.1; it is unrelated to the
+published package and is not the version anyone should read.
 
 ## Phase 1-2 (v1.4.0): COMPLETED AND RELEASED
 

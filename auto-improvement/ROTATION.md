@@ -1,41 +1,52 @@
 # Research Rotation
 
-aigis 自動強化ループのリサーチ領域。6 時間ごとに 1 領域ずつ進む。
-10 領域 × 6h = 60h で 1 周。数週間で複数周し、各領域の変化を時系列で捉える。
+aigis 自動強化ループのリサーチ領域。1 回の実行で 1 領域ずつ進む。
 
-## 現在のカウンタ
+## 状態: 停止中（2026-08-13 時点）
 
 ```
 NEXT_INDEX: 6
 LAST_RUN_UTC: 2026-06-02T06-10
+STATUS: dormant — 2026-06-02 以降、実行されていない
 ```
 
-> 保守エージェントは実行開始時に `NEXT_INDEX` を読み、終了時に `(NEXT_INDEX + 1) % 10` に更新し、`LAST_RUN_UTC` を当回の開始 UTC に書き換える。
+2 ヶ月半動いていない。再開は未定。再開する場合は、下の領域定義が
+**2026-08-13 の方針転換後のもの**であることを確認してから走らせる。
+旧定義（10 領域中 8 領域が攻撃手法調査 → 新規検出ルール追加）で再開すると、
+[ROADMAP.md](../ROADMAP.md) で降りると決めたパターン数競争に自動で戻る。
 
-## 領域定義
+> 保守エージェントは実行開始時に `NEXT_INDEX` を読み、終了時に
+> `(NEXT_INDEX + 1) % 7` に更新し、`LAST_RUN_UTC` を当回の開始 UTC に書き換える。
 
-| # | キー | 主たる調査対象 |
-|---|------|--------------|
-| 0 | `prompt-injection` | プロンプトインジェクション最新手法（直接/間接/multi-modal）。論文・PoC・実例 |
-| 1 | `agent-tool-abuse` | エージェントの tool / MCP 濫用。tool poisoning、関数偽装、confused deputy |
-| 2 | `data-exfiltration` | データ漏洩・PII 流出パターン。出力チャンネル悪用、URL exfil、log leak |
-| 3 | `jailbreak-extraction` | jailbreak / system prompt 抽出技術。レッドチーム手法、universal adversarial |
-| 4 | `memory-context` | メモリ汚染／コンテキスト操作／long-context attack／RAG poisoning |
-| 5 | `supply-chain-llm` | LLM サプライチェーン（model/dataset/dep）攻撃。typosquatting、weight tampering |
-| 6 | `multi-agent` | マルチエージェント間攻撃。agent-to-agent prompt smuggling、coordination abuse |
-| 7 | `evasion-obfuscation` | 検知回避・敵対的難読化。encoding、homoglyph、policy bypass |
-| 8 | `compliance-regulation` | 各国規制・ガイドライン更新（NIST AI RMF、EU AI Act、ISO/IEC、各国 AI 安全機関） |
-| 9 | `incident-postmortems` | 実インシデント・CVE・ベンダーアドバイザリ・公表されたポストモーテム |
+## 領域定義（2026-08-13 改訂）
+
+旧版は 10 領域のうち 8 つが攻撃手法の調査で、成果物が「新規検出ルール」に
+固定されていた。agent-threat-rules（768 ルール）や Cisco / Meta と
+ルール数で競う構造だったため、7 領域に組み替えて trust-pack の実用性を軸にする。
+
+| # | キー | 主たる調査対象 | 成果物の形 |
+|---|------|--------------|-----------|
+| 0 | `compliance-regulation` | 各国規制・ガイドライン更新（**経産省 AI 事業者ガイドライン**、NIST AI RMF、EU AI Act、ISO/IEC、各国 AI 安全機関） | 統制マトリクスの更新、`policy_templates/` の追補 |
+| 1 | `approval-evidence` | 実際のセキュリティ審査・内部監査が要求する証跡の形（監査ログの保持期間、証明可能性、インシデント報告の様式） | `trust-pack` 出力の改善、`docs/trust-pack.md` |
+| 2 | `audit-integrity` | 監査ログの完全性・改竄検知の実務要件（署名、ハッシュチェーン、検証手順の説明可能性） | `aigis audit` の改善、検証手順ドキュメント |
+| 3 | `detector-gaps` | **既存**検出器の誤検知・取りこぼし。特に日本語／韓国語／中国語の言語カバレッジ落ち | 既存ルールの是正（新規追加ではない） |
+| 4 | `incident-postmortems` | 実インシデント・CVE・ベンダーアドバイザリ・公表されたポストモーテム | 記事の материал、必要なら既存ルールの是正 |
+| 5 | `agent-runtime-threats` | エージェント固有の攻撃面の変化（MCP rug-pull、memory poisoning、間接注入）。**既存の守備範囲が陳腐化していないかの確認が目的** | 守備範囲の妥当性評価。新規ルールは原則作らない |
+| 6 | `adoption-friction` | 導入時に実際に詰まる箇所（hook が動かない、CI で落ちる、ポリシーが厳しすぎる） | ドキュメント、既定ポリシーの調整 |
 
 ## 各領域からの引き出し方針
 
-リサーチで見つけた事象は、以下のいずれかの形で aigis に落とし込む：
+リサーチで見つけた事象は、以下のいずれかの形で aigis に落とし込む。
+**優先順位はこの順序**（上が高い）:
 
-- 新規検出ルール（`aigis/policies/` 等の YAML / コード）
-- 既存検出器の improvement（誤検知/取りこぼしの是正）
-- 新規 compliance template（`policy_templates/` 配下）
-- 監査ログ可視化／レポート上の表示項目追加
-- ドキュメントベースの hardening guide（`docs/` 配下）
+1. `trust-pack` / 監査ログ出力の実用性向上（審査で通るかどうかに直結するもの）
+2. 新規 compliance template（`policy_templates/` 配下）
+3. 既存検出器の是正（誤検知・取りこぼし・言語カバレッジ）
+4. ドキュメントベースの hardening / adoption guide（`docs/` 配下）
+
+**新規検出ルールの追加は、原則として成果物に含めない。** 例外は
+「既存ルールが構造的に見落とす攻撃面で、かつ trust-pack の統制マトリクス上の
+空白を埋めるもの」に限る。その場合も pending/ に積んで人間の判断を待つ。
 
 実装可能な落とし込みが見つからない回は CHANGELOG への追記なしで終わってよい
 （`research/` と `INDEX.md` には必ず痕跡を残す）。

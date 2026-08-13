@@ -89,7 +89,13 @@ class ControlMapping:
     """OWASP LLM Top 10 (2025) identifiers."""
 
     ai_gl: str
-    """経済産業省・総務省 AI事業者ガイドライン v1.2 reference."""
+    """Aigis-defined requirement IDs for the METI/MIC AI Business Operator
+    Guidelines v1.2 (`GL-*`, `SEC-*`, `APPI-*`).
+
+    These identifiers are **ours**, derived from the guideline text — they are not
+    official clause numbers, and a reviewer cannot look them up in the guideline
+    itself. The requirement text behind each ID is in ``aigis/compliance.py``.
+    """
 
 
 def control_matrix() -> list[ControlMapping]:
@@ -115,7 +121,7 @@ def control_matrix() -> list[ControlMapping]:
             what_it_does_ja="モデルの出力を返す前に、秘密情報・個人情報・システムプロンプトの漏洩がないか検査します。",
             iso27001="A.8.12 (Data leakage prevention), A.5.34 (Privacy and PII)",
             nist_ai_rmf="MEASURE 2.7, MANAGE 4.1",
-            owasp_llm="LLM02 Sensitive Information Disclosure, LLM06 Excessive Agency",
+            owasp_llm="LLM02 Sensitive Information Disclosure, LLM05 Improper Output Handling",
             ai_gl="APPI-PII-01, GL-DATA-01",
         ),
         ControlMapping(
@@ -123,9 +129,9 @@ def control_matrix() -> list[ControlMapping]:
             control_ja="ツール呼び出しポリシー強制",
             what_it_does="Deterministic allow/deny/review decision on every tool call (shell, file, network) before execution.",
             what_it_does_ja="すべてのツール呼び出し（シェル・ファイル・ネットワーク）を実行前に許可/拒否/レビュー判定します。",
-            iso27001="A.8.2 (Privileged access rights), A.8.18 (Use of privileged utility programs)",
+            iso27001="A.8.18 (Use of privileged utility programs)",
             nist_ai_rmf="GOVERN 1.1, MANAGE 2.1",
-            owasp_llm="LLM06 Excessive Agency, LLM08 Vector and Embedding Weaknesses",
+            owasp_llm="LLM06 Excessive Agency",
             ai_gl="GL-HUMAN-03 (最小権限), SEC-PRIV-01",
         ),
         ControlMapping(
@@ -133,7 +139,7 @@ def control_matrix() -> list[ControlMapping]:
             control_ja="MCPツール定義スキャン",
             what_it_does="Detects tool-poisoning and rug-pull changes in Model Context Protocol server definitions.",
             what_it_does_ja="Model Context Protocolサーバー定義に含まれるツールポイズニングや定義改ざん（ラグプル）を検出します。",
-            iso27001="A.5.21 (ICT supply chain security), A.8.30 (Outsourced development)",
+            iso27001="A.5.21 (ICT supply chain security), A.5.19 (Information security in supplier relationships)",
             nist_ai_rmf="MAP 4.1, MANAGE 3.1",
             owasp_llm="LLM03 Supply Chain, LLM01 Prompt Injection",
             ai_gl="GL-SEC-03 (攻撃対象面の管理)",
@@ -155,7 +161,7 @@ def control_matrix() -> list[ControlMapping]:
             what_it_does_ja="追記専用ログ。各エントリをHMAC-SHA256で署名しハッシュチェーンで連結するため、削除・改ざんを検知できます。",
             iso27001="A.8.15 (Logging), A.8.16 (Monitoring activities), A.5.28 (Collection of evidence)",
             nist_ai_rmf="MEASURE 2.8, MANAGE 4.1",
-            owasp_llm="LLM09 Misinformation (audit trail), LLM06 Excessive Agency",
+            owasp_llm="LLM06 Excessive Agency (logging & monitoring)",
             ai_gl="GL-AUDIT-01 (追跡可能性), GL-RISK-02 (インシデントDB)",
         ),
         ControlMapping(
@@ -175,7 +181,7 @@ def control_matrix() -> list[ControlMapping]:
             what_it_does_ja="スキャン数・ブロック数・OWASPカバレッジ・前週比トレンドを集計した週次レポートを自動生成します。",
             iso27001="A.5.36 (Compliance review), A.8.16 (Monitoring activities)",
             nist_ai_rmf="MEASURE 4.1, GOVERN 4.1",
-            owasp_llm="LLM09 Misinformation (reporting)",
+            owasp_llm="— (cross-cutting; not an OWASP risk category)",
             ai_gl="GL-TRANS-01 (ドキュメント化), GL-RISK-02",
         ),
     ]
@@ -801,6 +807,15 @@ Aigisは完全にローカルで動作し、新たな実行時依存関係を追
                 "フレームワークへ対応付けたものです。ISO/IEC 27001の項番は「証跡を補強する"
                 "もの（supports evidence for）」として記載しており、Aigisが認証や準拠を保証"
                 "するものではありません。\n\n"
+                "**表を読む前に知っておいていただきたい点が2つあります。** 1つ目は、"
+                "「AI事業者GL v1.2」列のID（`GL-*` / `SEC-*` / `APPI-*`）は**Aigisが独自に"
+                "定義したもの**で、ガイドライン本文から要件を抽出して番号を振ったものです。"
+                "ガイドラインの公式項番ではないため、`GL-POISON-01` がガイドラインのどの条項に"
+                "当たるかという問いには、本リポジトリの外では答えがありません。各IDの要件文は "
+                "`aigis/compliance.py` に記載しています。2つ目は、本表の対応付けはすべて"
+                "**自己評価**であり、第三者のレビューを受けていないことです。部分対応・未対応の"
+                "項目が1件も存在しないため、測定されたカバレッジ率ではなく、"
+                "「何を実装しているかの表明」として読んでください。\n\n"
             )
             col = "| Aigisコントロール | 概要 | ISO/IEC 27001:2022 附属書A | NIST AI RMF | OWASP LLM Top 10 | AI事業者GL v1.2 |\n"
             sep = "|---|---|---|---|---|---|\n"
@@ -821,6 +836,16 @@ Aigisは完全にローカルで動作し、新たな実行時依存関係を追
             "and AI-governance frameworks. ISO/IEC 27001 item numbers are listed "
             'as "supports evidence for" — Aigis is a control implementation, not a '
             "certification body, and does not guarantee compliance.\n\n"
+            "**Two things to know before reading the table.** First, the IDs in the "
+            "*AI Business Operator GL* column (`GL-*`, `SEC-*`, `APPI-*`) are "
+            "**defined by Aigis**, derived from the guideline text — they are not "
+            "official clause numbers, so asking which guideline clause "
+            "`GL-POISON-01` refers to has no answer outside this repository. The "
+            "requirement text behind each ID lives in `aigis/compliance.py`. "
+            "Second, every mapping here is **self-assessed**: no third party has "
+            "reviewed it, and the list contains no partial or uncovered entries — "
+            "so read it as a statement of what we implement, not as a measured "
+            "coverage figure.\n\n"
         )
         col = "| Aigis control | What it does | ISO/IEC 27001:2022 Annex A | NIST AI RMF | OWASP LLM Top 10 | AI Business Operator GL v1.2 |\n"
         sep = "|---|---|---|---|---|---|\n"
@@ -925,6 +950,33 @@ aigis audit verify
 状態確認には `aigis audit status` を使用します。
 現状: 署名付き監査ログは{"有効" if ev.signed_audit_enabled else "利用可能（未有効化）"}です。
 
+## 鍵の管理 — 改ざん検知を信頼する前に確認すること
+
+HMAC鍵は次の順序で解決されます（`aigis/audit/signed_log.py`）。
+
+1. 呼び出し側が明示的に渡した `secret_key`
+2. 既存の鍵ファイル `.aigis/audit_key`
+3. いずれも無ければ新規生成（`secrets.token_hex(32)`）して同ファイルに保存
+
+**審査する側が知っておくべきこと。** 既定構成では、署名鍵はエージェントとログと
+同じマシン上に、同じユーザー権限で置かれます。したがって署名が検知できるのは
+「ログを書いた本人以外」による改変です — 後続プロセス、別ユーザー、ファイル破損。
+**本人がエントリを書き換えて再署名した場合は検知できません。** 鍵を本人が持って
+いるからです。
+
+記録対象である開発者本人を脅威モデルに含める場合 — 監査ログを置く理由は通常
+そこにあります — 署名ログを次のいずれかと組み合わせてください。
+
+- **SIEM転送**（次節）。Splunk / Sentinel / Elastic / Datadog に複製されたイベントは
+  開発者の手が届かない場所に残ります。現時点で最も強い選択肢で、Aigis側の変更は
+  不要です。
+- **外部で保持する鍵。** 開発者が読めないシークレットマネージャから `secret_key` を
+  渡せば、ローカルでの偽造ができなくなります。
+- **`~/.aigis/alerts/` の外部エクスポート。** 開発者が書き込めない保管先へ定期的に出す。
+
+プラットフォーム注記: 鍵ファイルはPOSIXでは `0600` を設定しますが、Windowsは
+POSIX権限を強制しません。Windows環境ではNTFS ACLを明示的に設定してください。
+
 ## SIEM転送
 
 イベントは任意で外部SIEMへ転送できます（Elastic Common Schema形式、HTTP）。転送は
@@ -982,6 +1034,34 @@ Use `--log PATH` to point at a specific log file and `--json` for a
 machine-readable result. Use `aigis audit status` for a quick health check.
 Current state: signed audit log is
 {"enabled" if ev.signed_audit_enabled else "available but not yet enabled"}.
+
+## Key management — read this before relying on tamper-evidence
+
+The HMAC key is resolved in this order (see `aigis/audit/signed_log.py`):
+
+1. An explicit `secret_key` supplied by the caller.
+2. An existing key file at `.aigis/audit_key`.
+3. Otherwise a fresh key is generated (`secrets.token_hex(32)`) and written there.
+
+**What this means for a reviewer.** In the default configuration the signing key
+sits on the same machine as the agent and the logs, owned by the same user. The
+signature therefore detects tampering by anything *other than* the log's own
+author — a later process, another user, file corruption. It does **not** detect
+the author editing an entry and re-signing it, because they hold the key.
+
+If your threat model includes the developer whose activity is being recorded —
+which is usually the reason an audit trail exists at all — combine the signed log
+with at least one of the following:
+
+- **SIEM forwarding** (next section). Events mirrored to Splunk, Sentinel, Elastic,
+  or Datadog land outside the developer's reach. This is the strongest option
+  available today, and it requires no change to Aigis.
+- **An externally-held key.** Pass `secret_key` from a secret manager the developer
+  cannot read, so local forgery is not possible.
+- **Off-box export** of `~/.aigis/alerts/` to storage the developer cannot write to.
+
+One platform note: the key file is set to `0600` on POSIX, but Windows does not
+enforce POSIX permissions — set NTFS ACLs explicitly there.
 
 ## SIEM forwarding
 
