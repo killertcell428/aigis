@@ -12,6 +12,50 @@ what got documented across releases.
 
 ## [Unreleased]
 
+### Added
+
+- **`aigis settings`** — derives *Claude Code's own* permission rules from
+  `aigis-policy.yaml`, so the hook layer and Claude Code's gate come from one
+  file instead of two hand-maintained ones. Emits `permissions.deny` / `ask` /
+  `allow`, and with `--managed` also `disableAutoMode` plus the OS install paths
+  for `managed-settings.json`.
+
+  Why it matters: Claude Code evaluates its deny and ask rules **regardless of
+  what a PreToolUse hook returns**, so its permission list is the outer gate and
+  Aigis's hook only sees what passes through it. Until now Aigis left writing
+  that list to the operator, and the settings circulating in write-ups drift —
+  `disableBypassPermissionsMode`, widely quoted as the official key, does not
+  appear in the current docs; the documented key is `disableAutoMode`.
+
+  **The conversion refuses to approximate.** Aigis matches with fnmatch globs;
+  Claude Code anchors `Bash()` specifiers at the start of the command and uses
+  gitignore syntax for `Read()`/`Edit()` paths. So `*mkfs*` (leading wildcard),
+  `*| bash*` (shell metacharacters — documented as bypassable by compound
+  commands), and `*.ssh/*` (crosses a path separator) cannot be translated
+  without changing what they match. Each is excluded and reported with the
+  reason and a hand-written alternative, rather than emitted as a rule that
+  looks equivalent but is looser. Conditional rules (`risk_above`, etc.) are
+  excluded too, since permission rules cannot carry conditions.
+
+  **Example:**
+  ```
+  $ aigis settings --managed
+  {
+    "permissions": {
+      "deny": ["Bash(rm -rf *)", "Edit(.env*)", "Write(.env*)"],
+      "ask": ["Bash(sudo *)", "Read(*secrets*)"]
+    },
+    "disableAutoMode": "disable"
+  }
+
+    Converted 6 of 16 policy rule(s) into 10 permission rule(s).
+
+    10 policy rule(s) could NOT be expressed as Claude Code permissions...
+      [ssh_key_protection] file:*  *.ssh/*  -> deny
+        why: target spans a path separator; ...
+        fix: Write the rule by hand, e.g. Read(**/.ssh/**).
+  ```
+
 ### Changed
 
 - **`exfil_crypto_wallet_transfer`** — added Japanese-language coverage. The rule

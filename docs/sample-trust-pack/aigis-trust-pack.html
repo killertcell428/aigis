@@ -37,7 +37,7 @@
 <body>
 <header>
   <h1>Aigis Trust Pack — AI Agent Adoption Approval / AIエージェント導入承認パック</h1>
-  <div class="meta">Generated 2026-08-12T16:59:06.641882+00:00 · Aigis v1.2.0 · Policy: Aigis Enterprise Policy (v1.0)</div>
+  <div class="meta">Generated 2026-08-14T05:57:54.895914+00:00 · Aigis v1.2.0 · Policy: Aigis Enterprise Policy (v1.0)</div>
 </header>
 <nav><a href="#01_executive_summary-en">1. Executive Summary (en)</a> · <a href="#02_control_matrix-en">2. Control Matrix (en)</a> · <a href="#03_policy_snapshot-en">3. Policy Snapshot (en)</a> · <a href="#04_audit_log_evidence-en">4. Audit Log Evidence (en)</a> · <a href="#05_incident_runbook-en">5. Incident Runbook (en)</a> · <a href="#06_rollout_plan-en">6. Rollout Plan (en)</a> · <a href="#01_executive_summary-ja">1. エグゼクティブサマリ (ja)</a> · <a href="#02_control_matrix-ja">2. コントロールマトリクス (ja)</a> · <a href="#03_policy_snapshot-ja">3. ポリシースナップショット (ja)</a> · <a href="#04_audit_log_evidence-ja">4. 監査ログの証跡 (ja)</a> · <a href="#05_incident_runbook-ja">5. インシデント対応手順 (ja)</a> · <a href="#06_rollout_plan-ja">6. 展開計画 (ja)</a></nav>
 <section id="01_executive_summary-en">
@@ -45,7 +45,7 @@
 <p><strong>Organisation:</strong> Example Corp（サンプル株式会社）</p>
 <p><strong>Prepared for:</strong> [TO FILL: IT / Information Security Department]</p>
 <p><strong>Security contact:</strong> security@example.com</p>
-<p><strong>Generated:</strong> 2026-08-12T16:59:06.641882+00:00 (Aigis v1.2.0)</p>
+<p><strong>Generated:</strong> 2026-08-14T05:57:54.895914+00:00 (Aigis v1.2.0)</p>
 <h2>What Claude Code is</h2>
 <p>Claude Code is Anthropic's command-line coding agent. It reads and edits</p>
 <p>files, runs shell commands, fetches web content, and can call external</p>
@@ -97,6 +97,21 @@
 </ul>
 <p>rules — 10 deny, 5 review, 1 allow.</p>
 <p>Default decision when no rule matches: <code>allow</code>.</p>
+<p><strong>Read this before approving.</strong> The rule set is a <strong>deny-list</strong>: it enumerates</p>
+<p>known-dangerous operations (recursive deletion, raw disk writes, credential and</p>
+<p>SSH-key access, piping a download into a shell) and lets everything else</p>
+<p>proceed — an agent that cannot run <code>ls</code> is not usable. So the default above is</p>
+<p>**fail-open by design, not by oversight: an operation nobody wrote a rule for</p>
+<p>will run.** If your review requires the opposite posture — deny unless</p>
+<p>explicitly permitted — set <code>default_decision: deny</code> in <code>aigis-policy.yaml</code> and</p>
+<p>add allow rules for the operations your team actually needs. That is a real</p>
+<p>piece of work, and it is the honest price of a fail-closed configuration.</p>
+<p>Note also that the profile name above comes from <code>aigis init --policy &lt;name&gt;</code>,</p>
+<p>which currently selects a <strong>label rather than a distinct rule set</strong>: the</p>
+<p><code>developer</code> and <code>enterprise</code> profiles generate identical rules today, and only</p>
+<p><code>enterprise</code> additionally initialises the signed audit-log key. Judge the</p>
+<p>configuration by the rule counts and the policy snapshot in section 3, not by</p>
+<p>the profile name.</p>
 <ul>
 <li><strong>Hook status:</strong> installed and configured.</li>
 <li><strong>Log status:</strong> no events recorded yet.</li>
@@ -658,7 +673,7 @@ Escalate to: security@example.com</code></pre>
 <p><strong>組織:</strong> Example Corp（サンプル株式会社）</p>
 <p><strong>提出先:</strong> 【要記入: 情報システム部門】</p>
 <p><strong>セキュリティ窓口:</strong> security@example.com</p>
-<p><strong>生成日時:</strong> 2026-08-12T16:59:06.641882+00:00（Aigis v1.2.0）</p>
+<p><strong>生成日時:</strong> 2026-08-14T05:57:54.895914+00:00（Aigis v1.2.0）</p>
 <h2>Claude Codeとは</h2>
 <p>Claude CodeはAnthropic社が提供するコマンドライン型のコーディングエージェントです。</p>
 <p>ファイルの読み書き、シェルコマンドの実行、Webコンテンツの取得を行い、外部ツール</p>
@@ -703,6 +718,20 @@ Escalate to: security@example.com</code></pre>
 </ul>
 <p>— 拒否10件、レビュー5件、許可1件。</p>
 <p>どのルールにも一致しない場合の既定判定: <code>allow</code>。</p>
+<p><strong>承認判断の前にお読みください。</strong> 本ルールセットは<strong>拒否リスト方式</strong>です。既知の</p>
+<p>危険な操作（再帰的削除、ローディスク書き込み、認証情報やSSH鍵へのアクセス、</p>
+<p>ダウンロード内容のシェルへのパイプ等）を列挙して止め、それ以外は通します。<code>ls</code> すら</p>
+<p>実行できないエージェントは実用に耐えないためです。したがって上記の既定判定は</p>
+<p>**設計上の fail-open であり、見落としではありません。つまり、誰もルールを書いていない</p>
+<p>操作は実行されます。** 「明示的に許可されたもの以外は拒否する」姿勢が貴社の審査要件で</p>
+<p>ある場合は、<code>aigis-policy.yaml</code> で <code>default_decision: deny</code> を設定し、業務に必要な</p>
+<p>操作を許可ルールとして列挙する必要があります。これは相応の作業量を伴いますが、</p>
+<p>fail-closed 構成の正直な対価です。</p>
+<p>また、上記のプロファイル名は <code>aigis init --policy &lt;名前&gt;</code> で指定したものですが、</p>
+<p>現時点でこれは<strong>ラベルの選択であり、ルールセットの違いではありません</strong>。<code>developer</code></p>
+<p>と <code>enterprise</code> は同一のルールを生成し、<code>enterprise</code> のみ署名付き監査ログの鍵を</p>
+<p>追加で初期化します。プロファイル名ではなく、上記のルール件数と第3章のポリシー</p>
+<p>スナップショットで構成をご判断ください。</p>
 <ul>
 <li><strong>フックの状態:</strong> 導入・設定済み。</li>
 <li><strong>ログの状態:</strong> まだイベントは記録されていません。</li>

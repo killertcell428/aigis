@@ -298,6 +298,29 @@ def main(argv: list[str] | None = None) -> int:
         "--contact", metavar="EMAIL", help="Security contact email to substitute into the pack"
     )
 
+    # aigis settings
+    set_p = sub.add_parser(
+        "settings",
+        help="Export Claude Code permission settings derived from the Aigis policy",
+    )
+    set_p.add_argument(
+        "--policy-file",
+        metavar="PATH",
+        default="aigis-policy.yaml",
+        help="Policy file to convert (default: aigis-policy.yaml)",
+    )
+    set_p.add_argument(
+        "--output",
+        "-o",
+        metavar="PATH",
+        help="Write the settings JSON here (default: print to stdout)",
+    )
+    set_p.add_argument(
+        "--managed",
+        action="store_true",
+        help="Emit the managed-settings.json form: adds disableAutoMode and prints install paths",
+    )
+
     # aigis audit
     audit_p = sub.add_parser("audit", help="Signed audit-log integrity verification")
     audit_sub = audit_p.add_subparsers(dest="audit_command")
@@ -348,6 +371,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_serve(args)
     elif args.command == "trust-pack":
         return cmd_trust_pack(args)
+    elif args.command == "settings":
+        return cmd_settings(args)
     elif args.command == "audit":
         return cmd_audit(args, audit_p)
     else:
@@ -389,6 +414,63 @@ def cmd_trust_pack(args: argparse.Namespace) -> int:
     if not gen.evidence.settings_hook_configured:
         print("\n  Note: Claude Code hook is not yet configured in this project.")
         print("        Run 'aigis init --agent claude-code' for a complete posture.")
+    return 0
+
+
+def cmd_settings(args: argparse.Namespace) -> int:
+    """Export Claude Code permission settings from the Aigis policy."""
+    from aigis.policy import load_policy
+    from aigis.settings_export import MANAGED_SETTINGS_PATHS, export_permissions
+
+    policy_path = Path(args.policy_file)
+    if not policy_path.exists():
+        # load_policy() falls back to the built-in policy for a missing file.
+        # Exporting that silently would hand someone a settings file that has
+        # nothing to do with their project, so stop instead.
+        print(f"Policy file not found: {policy_path}")
+        print("  Run 'aigis init' first, or pass --policy-file PATH.")
+        return 1
+
+    policy = load_policy(str(policy_path))
+    result = export_permissions(policy, managed=args.managed)
+    body = json.dumps(result.to_settings_dict(), indent=2, ensure_ascii=False) + "\n"
+
+    if args.output:
+        out_path = Path(args.output)
+        if out_path.parent != Path(""):
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(body, encoding="utf-8")
+        print(f"Wrote {out_path}")
+    else:
+        print(body, end="")
+
+    # One policy rule can produce several specifiers (file:write becomes both
+    # Edit() and Write()), so report the two counts separately rather than
+    # implying they are the same number.
+    specifiers = sum(len(v) for v in result.permissions.values())
+    converted_rules = len(policy.rules) - len(result.excluded)
+    print(
+        f"\n  Converted {converted_rules} of {len(policy.rules)} policy rule(s) "
+        f"into {specifiers} permission rule(s)."
+    )
+
+    if result.excluded:
+        print(f"\n  {len(result.excluded)} policy rule(s) could NOT be expressed as Claude Code")
+        print("  permissions. Aigis still enforces them through its PreToolUse hook, but")
+        print("  they are NOT in this file:")
+        for ex in result.excluded:
+            print(f"\n    [{ex.rule_id}] {ex.action}  {ex.target}  -> {ex.decision}")
+            print(f"      why: {ex.reason}")
+            if ex.suggestion:
+                print(f"      fix: {ex.suggestion}")
+
+    if args.managed:
+        print("\n  Install as managed settings (highest precedence, not user-overridable):")
+        for os_name, path in MANAGED_SETTINGS_PATHS.items():
+            print(f"    {os_name:<8} {path}")
+        print("\n  A managed permission rule cannot be overridden by any other settings")
+        print("  level, including command line arguments.")
+
     return 0
 
 

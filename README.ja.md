@@ -90,7 +90,7 @@ aigis init --agent claude-code --policy developer
 # ブロックされたアクションは exit 2 を返し、Claude Code はそれを実行せず停止します。
 ```
 
-ポリシー: `developer`（軽め）· `reviewer` · `restricted` · `enterprise`（ガードレール + 監査ログ ON。`trust-pack` の土台になります）。
+ポリシー: `developer` · `reviewer` · `restricted` · `enterprise`。現時点でこれらは**ラベルの選択であり、ルールセットの違いではありません** — 4つとも同一の拒否リストを生成し、`enterprise` のみ署名付き監査ログの鍵を追加で初期化します（`trust-pack` の土台になります）。`init` 後に `aigis-policy.yaml` を編集するか、[`policy_templates/`](policy_templates/) の業種別テンプレートから始めてください。
 </details>
 
 <details>
@@ -142,7 +142,8 @@ v1.2 では **ANSI エスケープに隠した命令**（目に見えないタ�
 
 | 情シスの問い | Aigis の答え | コマンド |
 |---|---|---|
-| **何を実行できるのか？** | 決定論的ポリシーがすべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、許可されない操作はブロック（exit 2）されシェルに到達しません。 | `aigis init --agent claude-code --policy enterprise` |
+| **何を実行できるのか？** | 決定論的ポリシーがすべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、拒否された操作はブロック（exit 2）されシェルに到達しません。同梱ルールは**拒否リスト方式**のため、どのルールにも該当しない操作は通ります。fail-closed が要件なら `default_decision: deny` と許可ルールの設定が必要です。 | `aigis init --agent claude-code --policy enterprise` |
+| **組織全体にどう強制するのか？** | `aigis settings --managed` が Aigis のポリシーから *Claude Code 自身の*権限ルールを生成します。2つのファイルを別々に手で保守するのではなく、1つの設定から両層を導出できます。managed ルールはコマンドライン引数を含むどの設定レベルからも上書きできません。正確に表現できないルールは、近似せず警告して除外します。 | `aigis settings --managed` |
 | **ログはどこにあるのか？** | ツール呼び出し層の、スキーマが安定したマシンレベル監査ログ。Claude Code のどのプランでも残せます。 | `aigis logs --export-excel` |
 | **ログは改ざんできないか？** | 各レコードは HMAC 署名 + ハッシュチェーンで連結され、1 行でも改変・削除されると検証が明確に失敗します。 | `aigis audit verify` |
 | **どの標準に対応しているか？** | ISO/IEC 27001:2022 附属書 A・NIST AI RMF・OWASP LLM Top 10・経産省 AI 事業者ガイドラインへのコントロールマトリクスと、ライブの OWASP スコアカード。 | `aigis trust-pack` · `aigis monitor --owasp` |
@@ -150,8 +151,10 @@ v1.2 では **ANSI エスケープに隠した命令**（目に見えないタ�
 
 **二層防御 — Aigis は Claude Code 自身のエンタープライズ機能を「置き換える」のではなく「補完」します。**
 
-- **第 1 層 — Claude Code の機能。** `managed-settings.json` と権限ルールが、エージェントに*許可する*操作を定義し、Anthropic のクライアントが強制します。
-- **第 2 層 — Aigis のランタイムフック + 監査。** すべてのツール呼び出しを実行時に独立して決定論的にスキャンし、改ざん検知つきのエビデンスを残します。第 1 層がポリシーを定め、第 2 層が実際の挙動を検査・記録します。
+- **第 1 層 — Claude Code の機能。** `managed-settings.json` と権限ルールが、エージェントに*許可する*操作を定義し、Anthropic のクライアントが強制します。**`aigis settings` がこれを Aigis のポリシーから生成する**ため、2つのファイルを別々に手で保守して食い違う事態を避けられます。
+- **第 2 層 — Aigis のランタイムフック + 監査。** すべてのツール呼び出しを実行時に独立して決定論的にスキャンし、改ざん検知つきのエビデンスを残します。
+
+順序が重要です。Claude Code は自身の deny / ask ルールを**フックの戻り値に関わらず**評価するため、第 1 層が外側のゲートで、第 2 層はそこを通過したものを検査・記録します。
 
 **監査ギャップについて。** Claude Code の Team プランには監査ログ API がなく、Enterprise の OpenTelemetry エクスポートはメトリクス用途——ダッシュボードには有用ですが、調査に耐えるエビデンスとして設計されたものではありません。Aigis のフックは、プランに関わらずマシンレベルでスキーマ安定・改ざん検知つきのログを生成するため、プラットフォーム側が記録を提供しない場面でも防御可能な記録を手元に残せます。
 
