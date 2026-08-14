@@ -3,7 +3,7 @@
 **Organisation:** Example Corp（サンプル株式会社）
 **Prepared for:** [TO FILL: IT / Information Security Department]
 **Security contact:** security@example.com
-**Generated:** 2026-08-12T16:58:30.268907+00:00 (Aigis v1.2.0)
+**Generated:** 2026-08-14T05:57:54.555056+00:00 (Aigis v1.2.0)
 
 ## What Claude Code is
 
@@ -53,6 +53,23 @@ allowed to do on your machine.
 - **Policy profile:** Aigis Enterprise Policy (v1.0), 16
   rules — 10 deny, 5 review, 1 allow.
   Default decision when no rule matches: `allow`.
+
+  **Read this before approving.** The rule set is a **deny-list**: it enumerates
+  known-dangerous operations (recursive deletion, raw disk writes, credential and
+  SSH-key access, piping a download into a shell) and lets everything else
+  proceed — an agent that cannot run `ls` is not usable. So the default above is
+  **fail-open by design, not by oversight: an operation nobody wrote a rule for
+  will run.** If your review requires the opposite posture — deny unless
+  explicitly permitted — set `default_decision: deny` in `aigis-policy.yaml` and
+  add allow rules for the operations your team actually needs. That is a real
+  piece of work, and it is the honest price of a fail-closed configuration.
+
+  Note also that the profile name above comes from `aigis init --policy <name>`,
+  which currently selects a **label rather than a distinct rule set**: the
+  `developer` and `enterprise` profiles generate identical rules today, and only
+  `enterprise` additionally initialises the signed audit-log key. Judge the
+  configuration by the rule counts and the policy snapshot in section 3, not by
+  the profile name.
 - **Hook status:** installed and configured.
 - **Log status:** no events recorded yet.
 - **Signed audit log:** enabled.

@@ -708,6 +708,23 @@ allowed to do on your machine.
 - **Policy profile:** {ev.policy_name} (v{ev.policy_version}), {ev.total_rules}
   rules — {ev.deny_rules} deny, {ev.review_rules} review, {ev.allow_rules} allow.
   Default decision when no rule matches: `{ev.default_decision}`.
+
+  **Read this before approving.** The rule set is a **deny-list**: it enumerates
+  known-dangerous operations (recursive deletion, raw disk writes, credential and
+  SSH-key access, piping a download into a shell) and lets everything else
+  proceed — an agent that cannot run `ls` is not usable. So the default above is
+  **fail-open by design, not by oversight: an operation nobody wrote a rule for
+  will run.** If your review requires the opposite posture — deny unless
+  explicitly permitted — set `default_decision: deny` in `aigis-policy.yaml` and
+  add allow rules for the operations your team actually needs. That is a real
+  piece of work, and it is the honest price of a fail-closed configuration.
+
+  Note also that the profile name above comes from `aigis init --policy <name>`,
+  which currently selects a **label rather than a distinct rule set**: the
+  `developer` and `enterprise` profiles generate identical rules today, and only
+  `enterprise` additionally initialises the signed audit-log key. Judge the
+  configuration by the rule counts and the policy snapshot in section 3, not by
+  the profile name.
 - **Hook status:** {hook_state}.
 - **Log status:** {log_state}.
 - **Signed audit log:** {"enabled" if ev.signed_audit_enabled else "available but not yet enabled"}.
@@ -774,6 +791,22 @@ Aigisは完全にローカルで動作し、新たな実行時依存関係を追
 - **ポリシープロファイル:** {ev.policy_name}（v{ev.policy_version}）、ルール{ev.total_rules}件
   — 拒否{ev.deny_rules}件、レビュー{ev.review_rules}件、許可{ev.allow_rules}件。
   どのルールにも一致しない場合の既定判定: `{ev.default_decision}`。
+
+  **承認判断の前にお読みください。** 本ルールセットは**拒否リスト方式**です。既知の
+  危険な操作（再帰的削除、ローディスク書き込み、認証情報やSSH鍵へのアクセス、
+  ダウンロード内容のシェルへのパイプ等）を列挙して止め、それ以外は通します。`ls` すら
+  実行できないエージェントは実用に耐えないためです。したがって上記の既定判定は
+  **設計上の fail-open であり、見落としではありません。つまり、誰もルールを書いていない
+  操作は実行されます。** 「明示的に許可されたもの以外は拒否する」姿勢が貴社の審査要件で
+  ある場合は、`aigis-policy.yaml` で `default_decision: deny` を設定し、業務に必要な
+  操作を許可ルールとして列挙する必要があります。これは相応の作業量を伴いますが、
+  fail-closed 構成の正直な対価です。
+
+  また、上記のプロファイル名は `aigis init --policy <名前>` で指定したものですが、
+  現時点でこれは**ラベルの選択であり、ルールセットの違いではありません**。`developer`
+  と `enterprise` は同一のルールを生成し、`enterprise` のみ署名付き監査ログの鍵を
+  追加で初期化します。プロファイル名ではなく、上記のルール件数と第3章のポリシー
+  スナップショットで構成をご判断ください。
 - **フックの状態:** {hook_state}。
 - **ログの状態:** {log_state}。
 - **署名付き監査ログ:** {audit_state}。

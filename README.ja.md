@@ -90,7 +90,7 @@ aigis init --agent claude-code --policy developer
 # ブロックされたアクションは exit 2 を返し、Claude Code はそれを実行せず停止します。
 ```
 
-ポリシー: `developer`（軽め）· `reviewer` · `restricted` · `enterprise`（ガードレール + 監査ログ ON。`trust-pack` の土台になります）。
+ポリシー: `developer` · `reviewer` · `restricted` · `enterprise`。現時点でこれらは**ラベルの選択であり、ルールセットの違いではありません** — 4つとも同一の拒否リストを生成し、`enterprise` のみ署名付き監査ログの鍵を追加で初期化します（`trust-pack` の土台になります）。`init` 後に `aigis-policy.yaml` を編集するか、[`policy_templates/`](policy_templates/) の業種別テンプレートから始めてください。
 </details>
 
 <details>
@@ -142,7 +142,7 @@ v1.2 では **ANSI エスケープに隠した命令**（目に見えないタ�
 
 | 情シスの問い | Aigis の答え | コマンド |
 |---|---|---|
-| **何を実行できるのか？** | 決定論的ポリシーがすべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、許可されない操作はブロック（exit 2）されシェルに到達しません。 | `aigis init --agent claude-code --policy enterprise` |
+| **何を実行できるのか？** | 決定論的ポリシーがすべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、拒否された操作はブロック（exit 2）されシェルに到達しません。同梱ルールは**拒否リスト方式**のため、どのルールにも該当しない操作は通ります。fail-closed が要件なら `default_decision: deny` と許可ルールの設定が必要です。 | `aigis init --agent claude-code --policy enterprise` |
 | **ログはどこにあるのか？** | ツール呼び出し層の、スキーマが安定したマシンレベル監査ログ。Claude Code のどのプランでも残せます。 | `aigis logs --export-excel` |
 | **ログは改ざんできないか？** | 各レコードは HMAC 署名 + ハッシュチェーンで連結され、1 行でも改変・削除されると検証が明確に失敗します。 | `aigis audit verify` |
 | **どの標準に対応しているか？** | ISO/IEC 27001:2022 附属書 A・NIST AI RMF・OWASP LLM Top 10・経産省 AI 事業者ガイドラインへのコントロールマトリクスと、ライブの OWASP スコアカード。 | `aigis trust-pack` · `aigis monitor --owasp` |

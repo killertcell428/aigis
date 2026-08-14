@@ -88,7 +88,7 @@ aigis init --agent claude-code --policy developer
 # A blocked action returns exit 2, so Claude Code stops instead of executing it.
 ```
 
-Policies: `developer` (light touch) · `reviewer` · `restricted` · `enterprise` (guardrails + audit log on, the basis for `trust-pack`).
+Policies: `developer` · `reviewer` · `restricted` · `enterprise`. Be aware that these currently select a **label, not a distinct rule set** — all four generate the same deny-list, and only `enterprise` additionally initialises the signed audit-log key (the basis for `trust-pack`). Tailor `aigis-policy.yaml` after `init`, or start from an industry template in [`policy_templates/`](policy_templates/).
 </details>
 
 <details>
@@ -138,7 +138,7 @@ Approving an autonomous agent comes down to a handful of questions. Aigis is bui
 
 | What IT asks | Aigis answer | Command |
 |---|---|---|
-| **What can it execute?** | A deterministic policy scans every Bash/Edit/Write/WebFetch *before* it runs; disallowed actions are blocked (exit 2) and never reach the shell. | `aigis init --agent claude-code --policy enterprise` |
+| **What can it execute?** | A deterministic policy scans every Bash/Edit/Write/WebFetch *before* it runs; denied actions are blocked (exit 2) and never reach the shell. The shipped rules are a **deny-list**, so an operation no rule covers proceeds — set `default_decision: deny` plus allow rules if your review requires fail-closed. | `aigis init --agent claude-code --policy enterprise` |
 | **Where are the logs?** | Schema-stable, machine-level audit logs at the tool-call layer — on any Claude Code plan. | `aigis logs --export-excel` |
 | **Can the logs be tampered with?** | Each record is HMAC-signed and hash-chained; verification fails loudly if a line was altered or removed. | `aigis audit verify` |
 | **What standards does this map to?** | A control matrix across ISO/IEC 27001:2022 Annex A, NIST AI RMF, OWASP LLM Top 10, and 経産省 AI 事業者ガイドライン, plus a live OWASP scorecard. | `aigis trust-pack` · `aigis monitor --owasp` |
