@@ -139,6 +139,7 @@ Approving an autonomous agent comes down to a handful of questions. Aigis is bui
 | What IT asks | Aigis answer | Command |
 |---|---|---|
 | **What can it execute?** | A deterministic policy scans every Bash/Edit/Write/WebFetch *before* it runs; denied actions are blocked (exit 2) and never reach the shell. The shipped rules are a **deny-list**, so an operation no rule covers proceeds — set `default_decision: deny` plus allow rules if your review requires fail-closed. | `aigis init --agent claude-code --policy enterprise` |
+| **How do we enforce it org-wide?** | `aigis settings --managed` derives *Claude Code's own* permission rules from your Aigis policy, so both layers come from one file instead of two hand-maintained ones. Managed rules cannot be overridden by any other settings level — not even command line arguments. Rules that can't be expressed exactly are reported, never approximated. | `aigis settings --managed` |
 | **Where are the logs?** | Schema-stable, machine-level audit logs at the tool-call layer — on any Claude Code plan. | `aigis logs --export-excel` |
 | **Can the logs be tampered with?** | Each record is HMAC-signed and hash-chained; verification fails loudly if a line was altered or removed. | `aigis audit verify` |
 | **What standards does this map to?** | A control matrix across ISO/IEC 27001:2022 Annex A, NIST AI RMF, OWASP LLM Top 10, and 経産省 AI 事業者ガイドライン, plus a live OWASP scorecard. | `aigis trust-pack` · `aigis monitor --owasp` |
@@ -146,8 +147,10 @@ Approving an autonomous agent comes down to a handful of questions. Aigis is bui
 
 **Two-layer defense — Aigis complements Claude Code's own enterprise controls, it does not replace them.**
 
-- **Layer 1 — Claude Code's controls.** `managed-settings.json` and permission rules define what the agent is *allowed* to attempt, enforced by Anthropic's client.
-- **Layer 2 — Aigis runtime hooks + audit.** Independent, deterministic scanning of every tool call at execution time, plus the tamper-evident evidence trail. Layer 1 sets policy; layer 2 inspects and records the actual behaviour.
+- **Layer 1 — Claude Code's controls.** `managed-settings.json` and permission rules define what the agent is *allowed* to attempt, enforced by Anthropic's client. **`aigis settings` generates these from your Aigis policy**, so the two layers come from one source instead of drifting apart as two hand-maintained files.
+- **Layer 2 — Aigis runtime hooks + audit.** Independent, deterministic scanning of every tool call at execution time, plus the tamper-evident evidence trail.
+
+The order matters: Claude Code evaluates its own deny and ask rules *regardless of what a hook returns*, so Layer 1 is the outer gate and Layer 2 inspects and records what gets through it.
 
 **On the audit gap.** The Claude Code Team plan exposes no audit-log API, and Enterprise's OpenTelemetry export is metrics-grade — useful for dashboards, but not designed as audit-grade evidence for an investigation. Aigis hooks produce schema-stable, tamper-evident logs at the machine level regardless of plan, so you have a defensible record even where the platform doesn't provide one.
 
