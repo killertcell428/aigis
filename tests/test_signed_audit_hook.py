@@ -1,7 +1,7 @@
 """Tests for signed audit log integration in the Claude Code hook (issue #129).
 
 Acceptance criteria:
-  AC1. init --policy enterprise initialises .aigis/audit_key
+  AC1. the signed-audit key is created on demand (aigis init --signed-audit)
   AC2. hook append failure never changes allow/deny behaviour
   AC3. developer policy behaviour unchanged (no key auto-created)
   AC4. hook writes a verifiable entry to signed_audit.jsonl
@@ -40,11 +40,11 @@ def _load_hook_ns():
 
 
 # ---------------------------------------------------------------------------
-# AC1 — init --policy enterprise initialises audit key
+# AC1 — the signed-audit key is created on demand
 # ---------------------------------------------------------------------------
 
 
-def test_init_enterprise_creates_audit_key(tmp_path):
+def test_signed_audit_key_is_created_on_demand(tmp_path):
     import aigis.audit.signed_log as sal
 
     orig_file = sal._KEY_FILE

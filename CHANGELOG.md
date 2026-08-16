@@ -122,6 +122,22 @@ what got documented across releases.
 
 ### Removed
 
+- **`aigis init --policy`** — the flag is gone. Its four values (`developer`,
+  `reviewer`, `restricted`, `enterprise`) generated identical rules and changed
+  only the policy's *name*, which the previous release disclosed rather than
+  fixed. The one real behaviour behind it — `enterprise` initialising the signed
+  audit-log key — is now `aigis init --signed-audit`.
+
+  Passing `--policy` still parses, but prints where each part went and exits 1,
+  instead of argparse's bare "unrecognized arguments". Per-department rules are
+  what `aigis profile build` does, which is what `--policy` looked like it was
+  doing.
+
+  `aigis doctor` changed with it: it used to fail when the policy *name*
+  contained "enterprise" but no key existed. That check stopped meaning anything
+  once all four values produced the same policy, so the report is now based on
+  whether the key is actually present.
+
 - **`backend/` and `frontend/`** — the self-hosted SaaS API (FastAPI + PostgreSQL +
   Redis + Stripe) and its Next.js dashboard. ROADMAP.md withdrew the
   Cloud/Business/Enterprise tiers, which left these as dormant code with no path

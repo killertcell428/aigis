@@ -107,7 +107,7 @@ Claude Code の managed-settings.json は**エージェントが試みること�
 
 | 機能 | 詳細 |
 |------|------|
-| 展開方法 | `aigis init --agent claude-code --policy enterprise` で `aig-guard.py` をインストール |
+| 展開方法 | `aigis init --agent claude-code --signed-audit` で `aig-guard.py` をインストール |
 | 登録先 | `.claude/settings.json` の hooks セクション；全ツール呼び出しの前に実行 |
 | 検査深度 | 引数内容全体 + ファイル内容（Edit/Write）+ レスポンス内容（WebFetch） |
 | パターン網羅性 | 165以上の決定論的パターン：インジェクション、外部送信、認証情報アクセス、権限昇格、破壊的操作 |
@@ -193,7 +193,7 @@ cat /etc/claude-code/managed-settings.json | python3 -m json.tool
 
 ```bash
 # フックとポリシーを初期化（未設定の場合）
-aigis init --agent claude-code --policy enterprise
+aigis init --agent claude-code --signed-audit
 
 # ヘルスチェックを実行
 aigis doctor

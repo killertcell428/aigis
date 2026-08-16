@@ -113,7 +113,7 @@ The two layers must be deployed together and verified jointly.
 
 | Capability | Detail |
 |-----------|--------|
-| Deployment | `aigis init --agent claude-code --policy enterprise` installs `aig-guard.py` |
+| Deployment | `aigis init --agent claude-code --signed-audit` installs `aig-guard.py` |
 | Registration | `.claude/settings.json` hooks section; runs before every tool call |
 | Inspection depth | Full argument content + file content (for Edit/Write) + response content (for WebFetch) |
 | Pattern coverage | 165+ deterministic patterns: injection, exfiltration, credential access, privilege escalation, destructive operations |
@@ -203,7 +203,7 @@ Expected: file owned by root, not writable by the user account;
 
 ```bash
 # Initialise hook and policy (if not already done)
-aigis init --agent claude-code --policy enterprise
+aigis init --agent claude-code --signed-audit
 
 # Run the health check
 aigis doctor

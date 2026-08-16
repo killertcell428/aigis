@@ -44,11 +44,13 @@ def main(argv: list[str] | None = None) -> int:
     init_p = sub.add_parser("init", help="Initialize Aigis in current project")
     init_p.add_argument("--agent", choices=["claude-code"], help="Configure agent adapter")
     init_p.add_argument(
-        "--policy",
-        choices=["developer", "reviewer", "restricted", "enterprise"],
-        default="developer",
-        help="Policy template to use",
+        "--signed-audit",
+        action="store_true",
+        help="Initialise the signed audit-log key (.aigis/audit_key)",
     )
+    # Removed in v2.0. Still accepted so the error can say where it went, instead
+    # of argparse's bare "unrecognized arguments".
+    init_p.add_argument("--policy", help=argparse.SUPPRESS)
 
     # aig logs
     logs_p = sub.add_parser("logs", help="View activity stream")
@@ -709,6 +711,18 @@ def cmd_init(args: argparse.Namespace) -> int:
     """Initialize Aigis in the current project."""
     from aigis.policy import _default_policy, save_policy
 
+    if args.policy:
+        print("--policy was removed in v2.0.")
+        print()
+        print("  The four values only changed the policy's *name*: developer,")
+        print("  reviewer, restricted and enterprise all generated identical rules.")
+        print()
+        print("  Instead:")
+        print("    aigis init --agent claude-code            # the same rules as before")
+        print("    aigis init --signed-audit                 # what --policy enterprise added")
+        print("    aigis profile build profiles/<name>.json  # per-department rules, for real")
+        return 1
+
     print("Aigis -Initializing project governance...")
 
     # Create .aigis directory
@@ -722,7 +736,6 @@ def cmd_init(args: argparse.Namespace) -> int:
         print(f"  Policy file already exists: {policy_path}")
     else:
         policy = _default_policy()
-        policy.name = f"Aigis {args.policy.title()} Policy"
         save_policy(policy, str(policy_path))
         print(f"  Created policy: {policy_path} ({len(policy.rules)} rules)")
 
@@ -733,8 +746,8 @@ def cmd_init(args: argparse.Namespace) -> int:
         install_hooks(".")
         print("  Configured Claude Code hooks")
 
-    # Enterprise policy: initialise signed audit log key
-    if args.policy == "enterprise":
+    # Signed audit log is opt-in; the key is what turns it on.
+    if args.signed_audit:
         from aigis.audit.signed_log import _resolve_key
 
         _resolve_key(None)  # generates .aigis/audit_key if absent
@@ -1218,31 +1231,22 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     else:
         warn("Global log directory not found (~/.aigis/global/)")
 
-    # 9. Signed audit log (required under enterprise policy; opt-in otherwise)
+    # 9. Signed audit log (opt-in)
+    #
+    # This used to escalate to a failure when the policy's *name* contained
+    # "enterprise", which stopped meaning anything once --policy was removed in
+    # v2.0: all four values produced the same rules and differed only by name.
+    # Presence of the key is the honest signal, so that is what gets reported.
     key_file = Path(".aigis") / "audit_key"
     signed_log_file = Path(".aigis") / "signed_audit.jsonl"
-    _policy_is_enterprise = False
-    if policy_path.exists():
-        try:
-            from aigis.policy import load_policy as _lp
-
-            _pol = _lp(str(policy_path))
-            _policy_is_enterprise = "enterprise" in _pol.name.lower()
-        except Exception:  # policy file may be absent or unreadable; fall back to non-enterprise
-            pass
 
     if key_file.exists():
         if signed_log_file.exists() and signed_log_file.stat().st_size > 0:
             ok("Signed audit log: ACTIVE (.aigis/signed_audit.jsonl)")
         else:
             warn("Signed audit log: key present but no entries yet (run a tool call to populate)")
-    elif _policy_is_enterprise:
-        fail(
-            "Signed audit log: INACTIVE — enterprise policy requires signed log. "
-            "Run 'aigis init --policy enterprise' to initialise."
-        )
     else:
-        ok("Signed audit log: not enabled (opt-in via 'aigis init --policy enterprise')")
+        ok("Signed audit log: not enabled (opt-in via 'aigis init --signed-audit')")
 
     # Summary
     print()

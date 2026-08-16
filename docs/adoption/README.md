@@ -69,7 +69,7 @@ fastest path to a structured answer:
 pip install 'pyaigis[all]'
 
 # 2. Initialise the Claude Code integration with enterprise policy
-aigis init --agent claude-code --policy enterprise
+aigis init --agent claude-code --signed-audit
 
 # 3. Generate the approval package (English + Japanese, HTML)
 aigis trust-pack --lang both --format html
@@ -88,7 +88,7 @@ require org-specific decisions are marked `[TO FILL]`.
 
 ```bash
 pip install 'pyaigis[all]'
-aigis init --agent claude-code --policy enterprise
+aigis init --agent claude-code --signed-audit
 # → installs .claude/hooks/aig-guard.py
 # → creates aigis-policy.yaml
 # Restart Claude Code — every tool call is now scanned before execution.
