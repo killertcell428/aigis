@@ -1,11 +1,17 @@
-# Aigis Architecture (v1.3.1)
+# Aigis Architecture
 
-> Last updated: 2026-04-10
-> Version: v1.3.1 — 165+ patterns, 25+ threat categories, 6-layer detection, CaMeL capabilities, AEP, Safety Specs
+> Last updated: 2026-08-14
+> Version: v1.2.0 — 260+ patterns, 25+ threat categories, 4-layer detection, CaMeL capabilities
+>
+> **On the previous header.** This file called itself v1.3.1 and described six
+> detection layers. v1.3.x was never released — the tag list tops out at v1.2.0 —
+> and the two extra layers it claimed (Atomic Execution Pipeline, Safety
+> Specification & Verifier) were removed in the v2.0 cleanup. Both were imported
+> by no other module, exported from no public API, and never reached a release.
 
 ## Overview
 
-Aigis is a **general-purpose security layer for AI agents**. It monitors inputs, outputs, and MCP tool definitions of LLM applications, detecting, blocking, and reporting with remediation guidance across 25+ threat categories — from prompt injection to data exfiltration. In v1.3.1, in addition to the conventional 3-layer detection (pattern, similarity, decoding), Capability-based access control powered by CaMeL (L4), Atomic Execution Pipeline (L5), and Safety Specification & Verifier (L6) have been added, achieving 6-layer defense. Zero external dependencies (Python standard library only).
+Aigis is the **trust layer for adopting Claude Code and other autonomous agents inside a company** — see [ROADMAP.md](ROADMAP.md) for the positioning and what was dropped to reach it. It monitors inputs, outputs, and MCP tool definitions, detecting and blocking across 25+ threat categories, and it generates the settings and approval documents a security review asks for. Detection runs in four layers: regex patterns, semantic similarity, active decoding, and capability-based access control powered by CaMeL. Zero external dependencies (Python standard library only).
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -26,7 +32,7 @@ Aigis is a **general-purpose security layer for AI agents**. It monitors inputs,
 │  │  └─────────┬──────────────────────────────────────────────┘ │     │
 │  │            │                                                 │     │
 │  │  ┌─────────▼──────────────────────────────────────────────┐ │     │
-│  │  │  Detection & Enforcement Pipeline (6 layers)            │ │     │
+│  │  │  Detection & Enforcement Pipeline (4 layers)            │ │     │
 │  │  │                                                         │ │     │
 │  │  │  L1. Regex Pattern Matching (165+ patterns)             │ │     │
 │  │  │      25+ categories × 4 languages (EN/JA/KO/ZH)        │ │     │
@@ -44,15 +50,6 @@ Aigis is a **general-purpose security layer for AI agents**. It monitors inputs,
 │  │  │      CaMeL: control flow / data flow separation         │ │     │
 │  │  │      Taint tracking + capability tokens + policy        │ │     │
 │  │  │      enforcement                                        │ │     │
-│  │  │                                                         │ │     │
-│  │  │  L5. Atomic Execution Pipeline (AEP) ★v1.3              │ │     │
-│  │  │      Scan → Execute → Vaporize (atomic execution)       │ │     │
-│  │  │      Sandbox isolation + trace elimination              │ │     │
-│  │  │                                                         │ │     │
-│  │  │  L6. Safety Specification & Verifier ★v1.3.1            │ │     │
-│  │  │      Declarative safety specs + proof certificate       │ │     │
-│  │  │      verification                                       │ │     │
-│  │  │      Built-in specs (no_exfil, no_exec, pii_guard, etc.)│ │     │
 │  │  └─────────┬──────────────────────────────────────────────┘ │     │
 │  │            │                                                 │     │
 │  │  ┌─────────▼──────────────────────────────────────────────┐ │     │
@@ -143,19 +140,6 @@ aigis/
 │   ├── taint.py            #   Taint tracking (data flow contamination propagation)
 │   └── tokens.py           #   Capability tokens (control flow / data flow separation)
 │
-├── aep/                    # ★v1.3 L5: Atomic Execution Pipeline
-│   ├── __init__.py
-│   ├── pipeline.py         #   Scan → Execute → Vaporize pipeline
-│   ├── sandbox.py          #   Sandboxed isolated execution
-│   └── vaporizer.py        #   Secure erasure of execution traces
-│
-├── safety/                 # ★v1.3.1 L6: Safety Specification & Verifier
-│   ├── __init__.py
-│   ├── spec.py             #   Declarative safety specification definition (SafetySpec)
-│   ├── builtin_specs.py    #   Built-in specs (no_exfil, no_exec, pii_guard, etc.)
-│   ├── loader.py           #   Load specs from YAML/JSON
-│   └── verifier.py         #   Proof certificate verification (Guaranteed Safe AI compliant)
-│
 ├── guard.py                # OOP API (Guard class)
 │   ├── Guard               #   check_input() / check_output() / check_messages()
 │   └── CheckResult         #   blocked / risk_level / reasons / remediation
@@ -224,7 +208,7 @@ aigis/
 
 ## Detection Pipeline Details
 
-The complete flow of how input text is processed through 6 layers:
+The complete flow of how input text is processed through 4 layers:
 
 ```
 Input Text
@@ -283,39 +267,6 @@ Input Text
 │     Automatically blocks privileged operations by tainted data │
 │                                                                 │
 │  Reference: CaMeL (Debenedetti et al., 2025)                   │
-└───────┬────────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─── L5: Atomic Execution Pipeline (AEP) ★v1.3 ─────────────────┐
-│  Isolates tool execution in 3 atomic phases                     │
-│                                                                 │
-│  ① Scan — Pre-execution inspection of commands/arguments       │
-│     via L1-L4                                                   │
-│  ② Execute — Isolated execution within a sandbox (sandbox.py)  │
-│     Runs in an environment with restricted filesystem/network  │
-│  ③ Vaporize — Secure erasure of execution traces               │
-│     (vaporizer.py)                                              │
-│     Ensures removal of temporary files and in-memory           │
-│     sensitive data                                              │
-│                                                                 │
-│  Reference: AEP / CIV (Scan-Execute-Vaporize pattern)          │
-└───────┬────────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─── L6: Safety Specification & Verifier ★v1.3.1 ───────────────┐
-│  Formal guarantees through declarative safety specifications    │
-│                                                                 │
-│  ① Safety Spec Definition (spec.py / builtin_specs.py)         │
-│     no_exfil: Prohibit external data exfiltration              │
-│     no_exec: Prohibit arbitrary code execution                 │
-│     pii_guard: Prevent PII leakage                             │
-│     Custom specs can also be defined in YAML/JSON (loader.py)  │
-│  ② Verifier (verifier.py)                                      │
-│     Verifies whether execution results satisfy the safety spec │
-│     Issues proof certificates                                   │
-│     On violation: blocks with reason + remediation guidance     │
-│                                                                 │
-│  Reference: Guaranteed Safe AI (Dalrymple et al., 2024)         │
 └───────┬────────────────────────────────────────────────────────┘
         │
         ▼
@@ -433,7 +384,7 @@ aig mcp --file tools.json --trust --diff
    user_id: "tanaka", agent_type: "claude_code"
        │
        ▼
-4. Execute detection pipeline (L1→L2→L3→L4→L5→L6)
+4. Execute detection pipeline (L1→L2→L3→L4)
    → risk_score: 90, risk_level: "critical"
    → matched_rules: [cmdi_shell, ...]
        │
@@ -628,8 +579,7 @@ ActivityEvent includes fields designed for future governance extensions.
 4. **Policy as Code** — YAML managed in git for version control and auditing
 5. **Agent Agnostic** — Supports any agent through the adapter pattern
 6. **Detection + Remediation** — Every block includes OWASP references and remediation guidance
-7. **Defense in Depth** — 6-layer detection and defense (pattern → similarity → decoding → capability → AEP → safety spec) making evasion extremely difficult
-8. **Formal Safety Guarantees** — Declarative specifications and proof certificate verification via Safety Specification provide not just detection but formal safety assurance
+7. **Defense in Depth** — 4-layer detection and defense (pattern → similarity → decoding → capability), which raises the bar for evasion without claiming to make it impossible (see [Limits](README.md#limits))
 
 ## Academic Paper References
 
@@ -638,6 +588,3 @@ The architecture layers introduced in v1.2 and later are based on the following 
 | Layer | Paper | Authors | Summary |
 |----|------|------|------|
 | L4 | **CaMeL: Design and Evaluation of a Capability-Based Agent Security Framework** | Debenedetti et al., 2025 | A framework that separates LLM agent control flow (trusted) from data flow (untrusted), defending against prompt injection through taint tracking and capability tokens |
-| L5 | **Atomic Execution Pipeline (AEP)** | — | A pattern that isolates tool execution in 3 atomic phases — Scan → Execute → Vaporize — and securely erases execution traces |
-| L5 | **CIV: Confidentiality, Integrity, and Vaporization** | — | An execution model that guarantees secure processing and erasure of sensitive data |
-| L6 | **Guaranteed Safe AI** | Dalrymple et al., 2024 | A framework that guarantees AI system safety through declarative specifications (Safety Specification) and formal verification (Proof Certificate). A tripartite architecture of World Model + Safety Spec + Verifier |

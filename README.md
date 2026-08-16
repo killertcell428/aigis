@@ -311,7 +311,7 @@ The agent attack surface has four layers, each requiring a different defense:
 1. **Input / output text** — prompt injection, jailbreak, encoded payloads, indirect injection from RAG. Aigis's **Wall 1–3** (pattern · semantic similarity · encoded-payload normalisation) plus **Input Shaping** handle these.
 2. **Tool calls (MCP, function-calling)** — rug-pull, cross-tool shadowing, confused-deputy credential abuse. Aigis's **MCP 3-stage scanner** (definition + invocation + response) plus **capability-based** taint-tracking handle these.
 3. **Memory across sessions** — sleeper injections, false-preference impersonation, plan poisoning. Aigis's **memory imitation detector** and **MemoryGraft-style write filters** handle these.
-4. **Agent runtime behaviour** — goal drift, FSM violations, sub-agent collusion, audit-trail tampering. Aigis's **atomic execution sandbox**, **safety-spec verifier**, and **goal-conditioned FSM** handle these.
+4. **Agent runtime behaviour** — sub-agent collusion, sleeper instructions that fire in a later session, audit-trail tampering. Aigis records every tool call to a **tamper-evident audit log** and correlates activity **across sessions** to surface delayed-trigger patterns.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_2_architecture_en.png" alt="Aigis Architecture" width="800" />
@@ -342,7 +342,7 @@ aigis monitor --owasp
 Every template is a readable regex rule you can inspect, test, and modify.
 </details>
 
-Benchmarks: [**reproducible results**](docs/benchmarks/REPRODUCIBLE_RESULTS.md) (real measured numbers + exact repro commands — incl. an honest latency-tail finding) · [all benchmarks](docs/benchmarks/) · Dashboard & web UI: [docs/](docs/) (`docker compose up -d`)
+Benchmarks: [**reproducible results**](docs/benchmarks/REPRODUCIBLE_RESULTS.md) (real measured numbers + exact repro commands — incl. an honest latency-tail finding) · [all benchmarks](docs/benchmarks/)
 
 
 ---

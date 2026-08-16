@@ -116,6 +116,18 @@ Ordered by cost, cheapest first.
    its output yet. Development effort moves here from pattern work.
 4. **Keep publishing.** The two winning articles share a shape: a felt threat, a
    simple fix, a cited basis. One per month is enough to show the project is alive.
+5. **Cover the rollout, not just the approval.** Getting the pack signed is half the
+   job; the other half is configuring and distributing the agent afterwards, which is
+   what the published enterprise rollouts (Mercari's MDM-distributed settings,
+   WINTICKET's setup script) actually spend their effort on. `aigis settings` covers
+   the first piece by deriving Claude Code's own permission rules from the Aigis
+   policy. The next piece is **composable role profiles**: rather than shipping fixed
+   profiles that encode our assumptions about what "marketing" means, express a role
+   as a combination of six capabilities — `web`, `files`, `shell`, `git`, `packages`,
+   `mcp` — over a baseline no combination can weaken. A company then composes its own
+   departments instead of adopting ours. See
+   [docs/what-aigis-replaces.md](docs/what-aigis-replaces.md) for the reasoning and
+   for an honest split of which rollout work a tool can take over.
 
 ---
 

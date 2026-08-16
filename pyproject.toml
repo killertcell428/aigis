@@ -50,25 +50,6 @@ openai = ["openai>=2.53.0"]
 # Anthropic SDK integration
 anthropic = ["anthropic>=0.120.2"]
 
-# Full SaaS server (backend + all integrations)
-server = [
-    "pyaigis[yaml,fastapi,openai]",
-    "uvicorn[standard]>=0.52.1",
-    "sqlalchemy>=2.0.51",
-    "alembic>=1.19.0",
-    "asyncpg>=0.31.0",
-    "pydantic>=2.13.4",
-    "pydantic-settings>=2.14.2",
-    "PyJWT>=2.13.0",
-    "passlib[bcrypt]>=1.7.4",
-    "httpx>=0.28.1",
-    "redis>=8.1.0",
-    "structlog>=26.1.0",
-    "stripe>=15.4.0",
-    "reportlab>=5.0.0",
-    "openpyxl>=3.1.5",
-]
-
 # Everything
 all = ["pyaigis[yaml,fastapi,langchain,openai,anthropic]"]
 

@@ -184,156 +184,14 @@ class Capability:
 
 ---
 
-## `aigis.aep`
-
-Atomic Execution Pipeline (AEP) added in v1.3.0. Executes tools atomically inside a sandbox and controls side effects.
-
-### `AtomicPipeline`
-
-Wraps tool execution as an atomic transaction.
-
-```python
-from aigis.aep import AtomicPipeline, Vaporizer
-
-pipeline = AtomicPipeline(
-    vaporize=True,      # Erase side effects on failure
-    sandbox=True,       # Execute in a sandbox
-    timeout=30.0,       # Timeout in seconds
-)
-
-result = await pipeline.execute(tool_fn, args={"path": "/data/report.csv"})
-print(result.success)       # True
-print(result.return_value)  # return value of tool_fn
-print(result.side_effects)  # list of detected side effects
-```
-
-### `ProcessSandbox`
-
-Runs tool execution in an isolated process.
-
-```python
-from aigis.aep import ProcessSandbox
-
-sandbox = ProcessSandbox(
-    allowed_paths=["/data/**"],
-    network=False,        # network access disabled
-    max_memory_mb=256,
-)
-result = await sandbox.run(tool_fn, args)
-```
-
-### `Vaporizer`
-
-Rolls back side effects (file creation, network sends, etc.) on execution failure.
-
-```python
-from aigis.aep import Vaporizer
-
-vaporizer = Vaporizer()
-async with vaporizer.track():
-    # Side effects within this block are auto-erased on failure
-    write_file("/tmp/output.txt", data)
-    # If an exception occurs -> /tmp/output.txt is automatically deleted
-```
-
-### `AEPResult`
-
-Represents the result of a pipeline execution.
-
-```python
-@dataclass
-class AEPResult:
-    success: bool                    # whether execution succeeded
-    return_value: Any                # return value of the tool
-    side_effects: list[str]          # detected side effects
-    duration_ms: float               # execution time in milliseconds
-    sandbox_violations: list[str]    # sandbox violations (if any)
-```
-
----
-
-## `aigis.safety`
-
-Formal safety verification layer added in v1.3.0. Verifies that tool side effects comply with a safety specification.
-
-### `SafetyVerifier`
-
-Verifies tool execution safety based on a safety specification.
-
-```python
-from aigis.safety import SafetyVerifier, DEFAULT_SAFETY_SPEC
-
-verifier = SafetyVerifier(spec=DEFAULT_SAFETY_SPEC)
-cert = verifier.verify(tool_name="file_writer", effects=[
-    EffectSpec(type="file_write", target="/data/output.csv"),
-])
-print(cert.verified)     # True
-print(cert.proof_hash)   # verification proof hash
-```
-
-### `SafetySpec`
-
-Defines a safety specification.
-
-```python
-from aigis.safety import SafetySpec, Invariant
-
-spec = SafetySpec(
-    name="production-safety",
-    invariants=[
-        Invariant(
-            name="no_system_write",
-            description="Prohibit writes to system directories",
-            condition="effect.target not matches '/etc/**'",
-        ),
-        Invariant(
-            name="no_network_exfil",
-            description="Prohibit sending data to external networks",
-            condition="effect.type != 'network_send' or effect.target in allowed_hosts",
-        ),
-    ],
-)
-```
-
-### `EffectSpec` / `Invariant` / `ProofCertificate`
-
-```python
-@dataclass
-class EffectSpec:
-    type: str          # "file_write", "network_send", "db_query", etc.
-    target: str        # target resource
-    metadata: dict     # additional metadata
-
-@dataclass
-class Invariant:
-    name: str          # invariant name
-    description: str   # human-readable description
-    condition: str     # verification condition expression
-
-@dataclass
-class ProofCertificate:
-    verified: bool             # whether all invariants were satisfied
-    proof_hash: str            # SHA-256 hash of the verification proof
-    checked_invariants: int    # number of invariants checked
-    violations: list[str]      # violated invariants (if any)
-    timestamp: datetime        # verification timestamp
-```
-
-### Pre-defined Safety Specifications
-
-```python
-from aigis.safety import DEFAULT_SAFETY_SPEC, STRICT_SAFETY_SPEC
-
-# DEFAULT_SAFETY_SPEC — for general-purpose applications
-# STRICT_SAFETY_SPEC — for finance/healthcare (stricter constraints)
-verifier = SafetyVerifier(spec=STRICT_SAFETY_SPEC)
-```
-
----
-
 ## `Guard.authorize_tool()`
 
-Added in v1.3.0. A single entry point integrating capability verification + safety verification + AEP.
+Capability-based authorization for a single tool call. Requires a `CapabilityStore` passed to `Guard(capabilities=...)`; raises `RuntimeError` otherwise.
+
+> Earlier revisions of this page described this method as integrating "capability
+> verification + safety verification + AEP" and dated it to v1.3.0. It only ever
+> called the capability enforcer, and v1.3.0 was never released. The safety and AEP
+> modules were removed in the v2.0 cleanup.
 
 ```python
 from aigis import Guard
@@ -348,15 +206,14 @@ store.grant("data_tool", Capability(
 
 guard = Guard(policy="strict", capabilities=store)
 
-# Authorize a tool call (capability + safety spec verified in one step)
+# Authorize a tool call against the capability store
 auth = guard.authorize_tool(
     tool_name="data_tool",
-    action="read",
-    resource="filesystem",
-    target="/data/report.csv",
+    tool_input={"path": "/data/report.csv", "mode": "read"},
 )
-print(auth.authorized)    # True
-print(auth.certificate)   # ProofCertificate
+print(auth.allowed)          # True
+print(auth.capability_used)  # the capability that permitted the call
+print(auth.reason)           # why it was allowed or refused
 ```
 
 ---

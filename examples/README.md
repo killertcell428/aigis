@@ -81,8 +81,6 @@ python examples/custom_policy.py
 - `Guard.authorize_tool()` — Capability-Based Access Control (CaMeL-inspired)
 - `CapabilityStore` with scoped grants and automatic expiry
 - `TaintLabel` (TRUSTED / UNTRUSTED / SANITIZED) enforcement
-- `AtomicPipeline` — Scan → Execute → Vaporize as indivisible operation
-- `SafetyVerifier` with `ProofCertificate` for audit trails
 
 ### `openai_proxy.py`
 
@@ -98,9 +96,7 @@ python examples/custom_policy.py
 - YAML policy file with custom rules
 - Combining built-in patterns with custom regex rules
 
-## v1.3.1 New Features (Layers 4-6)
-
-### Capability-Based Access Control (Layer 4)
+## Capability-Based Access Control (Layer 4)
 
 ```python
 from aigis import Guard
@@ -118,38 +114,4 @@ result = guard.authorize_tool(
     taint=TaintLabel.UNTRUSTED,
 )
 print(result.allowed)  # False — UNTRUSTED data cannot execute shell commands
-```
-
-### Atomic Execution Pipeline (Layer 5)
-
-```python
-from aigis.aep import AtomicPipeline
-
-pipeline = AtomicPipeline(guard=guard)
-
-# Scan → Execute → Vaporize (indivisible)
-result = pipeline.run(
-    command="python script.py",
-    timeout=30,
-    vaporize=True,  # destroy artifacts after execution
-)
-print(result.stdout)
-print(result.sandbox_used)    # True
-print(result.artifacts_clean) # True
-```
-
-### Safety Verifier (Layer 6)
-
-```python
-from aigis.safety import SafetyVerifier, DEFAULT_SAFETY_SPEC
-
-verifier = SafetyVerifier(spec=DEFAULT_SAFETY_SPEC)
-certificate = verifier.verify(
-    action="file:write",
-    target="output.txt",
-    content="safe content",
-)
-print(certificate.passed)      # True
-print(certificate.certificate_id)  # UUID4
-print(certificate.timestamp)       # UTC timestamp
 ```
