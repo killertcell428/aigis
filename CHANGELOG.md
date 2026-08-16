@@ -67,6 +67,49 @@ what got documented across releases.
   verb after the object. Benign Japanese like "レポートを送ってください" (no
   wallet address) still passes. 6 new tests.
 
+### Removed
+
+- **`backend/` and `frontend/`** — the self-hosted SaaS API (FastAPI + PostgreSQL +
+  Redis + Stripe) and its Next.js dashboard. ROADMAP.md withdrew the
+  Cloud/Business/Enterprise tiers, which left these as dormant code with no path
+  back. `docker-compose.yml` went with them — all four of its services (postgres,
+  redis, backend, frontend) existed only to run them — as did the `server` extra in
+  `pyproject.toml`, which declared 15 dependencies (uvicorn, sqlalchemy, alembic,
+  asyncpg, PyJWT, passlib, redis, structlog, stripe, reportlab, openpyxl, …) that no
+  module under `aigis/` imports.
+
+- **`aigis/aep/`, `aigis/spec_lang/`, `aigis/safety/`** — the Atomic Execution
+  Pipeline, the policy DSL with its goal-conditioned FSM, and the Safety
+  Specification Verifier. Each one was:
+
+  - imported by no other module under `aigis/`
+  - absent from the public API — `aigis/__init__.py` never exported them
+  - never released: no tag exists for v1.3.0 through v1.5.0, the versions that
+    introduced them
+
+  `Guard.authorize_tool()` was documented as "capability verification + safety
+  verification + AEP in one step". Reading it showed it only ever called the
+  capability enforcer. `capabilities/` therefore stays, as do `supply_chain/` and
+  `cross_session/`, which are exported and reachable from the public API.
+
+### Fixed
+
+- Documentation that presented the removed modules as shipping features:
+  ARCHITECTURE.md (the v1.3.1 header, the 6-layer pipeline diagram, the module tree,
+  the L5/L6 detail sections, and two academic references), `docs/api-reference.md`,
+  `docs/configuration.md`, `docs/getting-started.md`, `examples/README.md`, and both
+  READMEs.
+
+- **Published API examples that could not have run.** `docs/api-reference.md` and
+  `docs/getting-started.md` showed `authorize_tool()` taking
+  `action` / `resource` / `target` and returning `.authorized` and `.certificate`.
+  The real signature takes `tool_input: dict` and returns `.allowed`,
+  `.capability_used`, `.reason`, `.taint_level`, and `.scan_result`.
+
+- `docs/human-in-the-loop.md` and `docs/BRAND_STRATEGY_2026.md` now open with
+  notices stating, respectively, that they document a removed component and a
+  withdrawn strategy. Both are kept as records rather than deleted.
+
 ## [1.2.0] - 2026-08-09
 
 Minor release. Adds three new detection patterns from the 2026-08 AI-agent-

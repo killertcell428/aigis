@@ -319,7 +319,7 @@ jobs:
 1. **入出力テキスト** — プロンプトインジェクション、jailbreak、エンコード済ペイロード、RAG 経由の間接インジェクション。**Wall 1–3**（パターン・意味類似度・エンコード正規化）と **Input Shaping** 層が担当。
 2. **ツール呼出し（MCP・function calling）** — rug-pull、クロスツール shadowing、confused-deputy。**MCP 3 段スキャナ**（定義 + 呼出し + 応答）と**ケイパビリティベース** taint 追跡が担当。
 3. **セッション横断のメモリ** — 休眠注入、偽嗜好なりすまし、プラン汚染。**メモリ模倣検出器**と **MemoryGraft 系書込みフィルタ**が担当。
-4. **エージェントランタイム挙動** — ゴールドリフト、FSM 違反、サブエージェント結託。**アトミック実行サンドボックス**、**安全仕様 Verifier**、**ゴール条件付き FSM** が担当。
+4. **エージェントランタイム挙動** — サブエージェント結託、後続セッションで発火するスリーパー命令、監査証跡の改ざん。すべてのツール呼び出しを**改ざん検知つき監査ログ**に記録し、**セッション横断**で相関を取って時限発動パターンを検出します。
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_2_architecture_ja.png" alt="Aigis Architecture" width="800" />
@@ -350,7 +350,7 @@ aigis monitor --owasp
 すべて読める正規表現ルール。ブラックボックスなし。
 </details>
 
-ベンチマーク: [**再現可能な実測結果**](docs/benchmarks/REPRODUCIBLE_RESULTS.md)（実際に計測した数値＋再現コマンド。レイテンシ末尾の正直な所見も記載）· [全ベンチ](docs/benchmarks/) · ダッシュボード & Web UI: [docs/](docs/)（`docker compose up -d`）
+ベンチマーク: [**再現可能な実測結果**](docs/benchmarks/REPRODUCIBLE_RESULTS.md)（実際に計測した数値＋再現コマンド。レイテンシ末尾の正直な所見も記載）· [全ベンチ](docs/benchmarks/)
 
 ---
 

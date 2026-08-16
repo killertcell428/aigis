@@ -164,50 +164,17 @@ guard = Guard(policy="strict", capabilities=store)
 # 3. Authorize a tool call
 auth = guard.authorize_tool(
     tool_name="data_reader",
-    action="read",
-    resource="filesystem",
-    target="/data/report.csv",
+    tool_input={"path": "/data/report.csv", "mode": "read"},
 )
-print(auth.authorized)  # True
+print(auth.allowed)  # True
 
-# Unauthorized operations are blocked
+# Calls the store does not cover are refused
 auth = guard.authorize_tool(
     tool_name="data_reader",
-    action="write",          # write not granted
-    resource="filesystem",
-    target="/data/report.csv",
+    tool_input={"path": "/data/report.csv", "mode": "write"},
 )
-print(auth.authorized)  # False
-```
-
-### Atomic Execution Pipeline (AEP)
-
-Execute tools atomically inside a sandbox with automatic rollback of side effects on failure.
-
-```python
-from aigis.aep import AtomicPipeline
-
-pipeline = AtomicPipeline(vaporize=True, sandbox=True, timeout=30.0)
-result = await pipeline.execute(my_tool_fn, args={"path": "/data/input.csv"})
-if result.success:
-    print(result.return_value)
-else:
-    print("Failed — side effects rolled back")
-```
-
-### Safety Verification
-
-Formally verify that tool side effects comply with a safety specification.
-
-```python
-from aigis.safety import SafetyVerifier, STRICT_SAFETY_SPEC, EffectSpec
-
-verifier = SafetyVerifier(spec=STRICT_SAFETY_SPEC)
-cert = verifier.verify(tool_name="file_writer", effects=[
-    EffectSpec(type="file_write", target="/data/output.csv"),
-])
-print(cert.verified)     # True
-print(cert.proof_hash)   # verification proof hash
+print(auth.allowed)  # False
+print(auth.reason)   # why it was refused
 ```
 
 See the [API Reference](api-reference.md) for full details.

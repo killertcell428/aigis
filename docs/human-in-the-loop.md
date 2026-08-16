@@ -1,6 +1,13 @@
 # Human-in-the-Loop (Self-Hosted Dashboard)
 
 The open-source core library automatically makes block/allow decisions based on risk scores.
+> **This page describes a component that was removed.** The self-hosted backend
+> (`backend/`) and its dashboard (`frontend/`) were deleted on 2026-08-14 together
+> with the SaaS tiers — see [ROADMAP.md](../ROADMAP.md). None of the commands below
+> currently work. The page is kept as a record of the design, because human review
+> of medium-risk actions is still relevant to the approval workflow Aigis is now
+> built around, and a future implementation would start from here.
+
 The **self-hosted backend** adds Human-in-the-Loop (HITL) review capabilities for cases that cannot be handled by automated decisions alone. This covers medium-risk requests requiring human judgment, compliance audit trails, and multi-tenant policy management.
 
 ## Architecture
