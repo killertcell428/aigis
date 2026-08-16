@@ -56,7 +56,60 @@ what got documented across releases.
         fix: Write the rule by hand, e.g. Read(**/.ssh/**).
   ```
 
+- **`aigis profile`** — composes a role from six capabilities (`web`, `files`,
+  `shell`, `git`, `packages`, `mcp`) and derives *both* layers from it: the Aigis
+  policy and Claude Code's own permission settings. `profile show` prints what a
+  profile allows and blocks in plain language; `profile build` writes
+  `aigis-policy.yaml` and `.claude/settings.json`, or the managed form.
+
+  Capabilities rather than fixed role profiles, because shipping a `marketing`
+  profile ships *our* assumptions about what marketing does — it means one thing
+  where marketers query the warehouse and another where they write copy. A company
+  composes its own departments instead. Three starter files live in `profiles/`,
+  labelled as starting points rather than answers.
+
+  Three properties are deliberate and pinned by tests:
+
+  - **An axis a profile does not name gets the most restrictive value.** Silence
+    must not grant capability, so a half-written profile fails closed.
+  - **The capability layer never emits `review`.** A prompt only protects someone
+    who can judge it; in practice a non-engineer either approves everything, which
+    defeats the prompt, or refuses everything, which stops the work. Judgement
+    happens once, at profile-design time, for the whole group. This is also why
+    `shell` has no `allowlist` value and `packages` no `approved` value — both
+    would have put per-command questions in front of end users.
+  - **The baseline cannot be weakened** (`.env`, `~/.ssh`, credentials, `rm -rf`,
+    pipe-to-shell). Capability rules are evaluated *before* the baseline, so the
+    single `allow` the layer emits — `git push*`, cancelling the baseline's review
+    for a role explicitly granted push — is paired with denies for the force
+    variants placed ahead of it. `git` has no `unrestricted` value for the same
+    reason: it would have opened a path past the floor.
+
+  **Example:**
+  ```
+  $ aigis profile build profiles/marketing.json
+  Profile: Marketing
+
+    web       read          Can fetch web pages and search the web
+    shell     none          Cannot run shell commands
+    git       none          Cannot use git
+    packages  none          Cannot install dependencies
+
+    Wrote aigis-policy.yaml (30 rules)
+    Wrote .claude/settings.json (24 permission rules)
+  ```
+
 ### Changed
+
+- **`aigis settings`** now converts `network:fetch` → `WebFetch`,
+  `network:search` → `WebSearch`, and `file:search` → `Glob`/`Grep`, so a profile
+  that denies web access reaches Claude Code's own permission list instead of
+  being reported as unconvertible. `file:*` now covers all five file tools.
+
+  `mcp:tool_call` is still reported rather than converted, on purpose: Claude Code
+  names MCP tools `mcp__<server>__<tool>`, and which servers exist at all is
+  decided by `managed-mcp.json`. Approximating that with a wildcard would be a
+  guess about a spec, which is the failure mode this exporter exists to avoid.
 
 - **`exfil_crypto_wallet_transfer`** — added Japanese-language coverage. The rule
   previously keyed only on English verbs (`send`/`transfer`/`pay`), so a Japanese
