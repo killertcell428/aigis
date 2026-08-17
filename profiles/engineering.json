@@ -1,0 +1,12 @@
+{
+  "name": "Engineering",
+  "description": "Full development. Everything the baseline permits; the baseline itself still applies.",
+  "capabilities": {
+    "web": "read",
+    "files": "unrestricted",
+    "shell": "unrestricted",
+    "git": "push",
+    "packages": "unrestricted",
+    "mcp": "unrestricted"
+  }
+}

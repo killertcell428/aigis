@@ -20,6 +20,9 @@ Usage:
     aigis mcp '{"name":"add",...}'  # Scan MCP tool definition for poisoning
     aigis mcp --file tools.json    # Scan MCP tools from JSON file
     aigis trust-pack               # Generate IT/security adoption-approval pack
+    aigis profile show <file>      # Show what a role profile allows and blocks
+    aigis profile build <file>     # Derive policy + Claude Code settings from it
+    aigis settings                 # Export Claude Code permissions from the policy
     aigis audit verify             # Verify signed audit-log integrity
     aigis audit status             # Show signed audit-log status
 """
@@ -41,11 +44,13 @@ def main(argv: list[str] | None = None) -> int:
     init_p = sub.add_parser("init", help="Initialize Aigis in current project")
     init_p.add_argument("--agent", choices=["claude-code"], help="Configure agent adapter")
     init_p.add_argument(
-        "--policy",
-        choices=["developer", "reviewer", "restricted", "enterprise"],
-        default="developer",
-        help="Policy template to use",
+        "--signed-audit",
+        action="store_true",
+        help="Initialise the signed audit-log key (.aigis/audit_key)",
     )
+    # Removed in v2.0. Still accepted so the error can say where it went, instead
+    # of argparse's bare "unrecognized arguments".
+    init_p.add_argument("--policy", help=argparse.SUPPRESS)
 
     # aig logs
     logs_p = sub.add_parser("logs", help="View activity stream")
@@ -298,6 +303,36 @@ def main(argv: list[str] | None = None) -> int:
         "--contact", metavar="EMAIL", help="Security contact email to substitute into the pack"
     )
 
+    # aigis profile
+    prof_p = sub.add_parser(
+        "profile",
+        help="Compose a role profile from capabilities and derive policy + settings",
+    )
+    prof_sub = prof_p.add_subparsers(dest="profile_command")
+
+    prof_build = prof_sub.add_parser("build", help="Generate policy and settings from a profile")
+    prof_build.add_argument("path", help="Profile file (.json, or .yaml with the yaml extra)")
+    prof_build.add_argument(
+        "--policy-out",
+        metavar="PATH",
+        default="aigis-policy.yaml",
+        help="Where to write the Aigis policy (default: aigis-policy.yaml)",
+    )
+    prof_build.add_argument(
+        "--settings-out",
+        metavar="PATH",
+        default=".claude/settings.json",
+        help="Where to write Claude Code settings (default: .claude/settings.json)",
+    )
+    prof_build.add_argument(
+        "--managed",
+        action="store_true",
+        help="Emit the managed-settings.json form and print the OS install paths",
+    )
+
+    prof_show = prof_sub.add_parser("show", help="Print what a profile allows and blocks")
+    prof_show.add_argument("path", help="Profile file")
+
     # aigis settings
     set_p = sub.add_parser(
         "settings",
@@ -371,6 +406,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_serve(args)
     elif args.command == "trust-pack":
         return cmd_trust_pack(args)
+    elif args.command == "profile":
+        return cmd_profile(args, prof_p)
     elif args.command == "settings":
         return cmd_settings(args)
     elif args.command == "audit":
@@ -414,6 +451,66 @@ def cmd_trust_pack(args: argparse.Namespace) -> int:
     if not gen.evidence.settings_hook_configured:
         print("\n  Note: Claude Code hook is not yet configured in this project.")
         print("        Run 'aigis init --agent claude-code' for a complete posture.")
+    return 0
+
+
+def cmd_profile(args: argparse.Namespace, profile_parser: argparse.ArgumentParser) -> int:
+    """Compose a role profile and derive the policy plus Claude Code settings."""
+    from aigis.policy import save_policy
+    from aigis.profiles import ProfileError, build_policy, describe, load_profile
+    from aigis.settings_export import MANAGED_SETTINGS_PATHS, export_permissions
+
+    if args.profile_command not in ("build", "show"):
+        profile_parser.print_help()
+        return 0
+
+    path = Path(args.path)
+    if not path.exists():
+        print(f"Profile not found: {path}")
+        return 1
+
+    try:
+        profile = load_profile(path)
+    except ProfileError as exc:
+        print(f"Invalid profile: {exc}")
+        return 1
+
+    print(f"Profile: {profile.name}")
+    if profile.description:
+        print(f"  {profile.description}")
+    print()
+    for line in describe(profile):
+        print(f"  {line}")
+
+    if args.profile_command == "show":
+        return 0
+
+    policy = build_policy(profile)
+    save_policy(policy, args.policy_out)
+    print(f"\n  Wrote {args.policy_out} ({len(policy.rules)} rules)")
+
+    result = export_permissions(policy, managed=args.managed)
+    settings_path = Path(args.settings_out)
+    if str(settings_path.parent) not in ("", "."):
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text(
+        json.dumps(result.to_settings_dict(), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    specifiers = sum(len(v) for v in result.permissions.values())
+    print(f"  Wrote {settings_path} ({specifiers} permission rules)")
+
+    if result.excluded:
+        print(f"\n  {len(result.excluded)} policy rule(s) could not be expressed as Claude Code")
+        print("  permissions. The Aigis hook still enforces them:")
+        for ex in result.excluded:
+            print(f"    [{ex.rule_id}] {ex.action}  {ex.target}  -> {ex.decision}")
+
+    if args.managed:
+        print("\n  Install as managed settings (not overridable by any other level):")
+        for os_name, install_path in MANAGED_SETTINGS_PATHS.items():
+            print(f"    {os_name:<8} {install_path}")
+
     return 0
 
 
@@ -614,6 +711,18 @@ def cmd_init(args: argparse.Namespace) -> int:
     """Initialize Aigis in the current project."""
     from aigis.policy import _default_policy, save_policy
 
+    if args.policy:
+        print("--policy was removed in v2.0.")
+        print()
+        print("  The four values only changed the policy's *name*: developer,")
+        print("  reviewer, restricted and enterprise all generated identical rules.")
+        print()
+        print("  Instead:")
+        print("    aigis init --agent claude-code            # the same rules as before")
+        print("    aigis init --signed-audit                 # what --policy enterprise added")
+        print("    aigis profile build profiles/<name>.json  # per-department rules, for real")
+        return 1
+
     print("Aigis -Initializing project governance...")
 
     # Create .aigis directory
@@ -627,7 +736,6 @@ def cmd_init(args: argparse.Namespace) -> int:
         print(f"  Policy file already exists: {policy_path}")
     else:
         policy = _default_policy()
-        policy.name = f"Aigis {args.policy.title()} Policy"
         save_policy(policy, str(policy_path))
         print(f"  Created policy: {policy_path} ({len(policy.rules)} rules)")
 
@@ -638,8 +746,8 @@ def cmd_init(args: argparse.Namespace) -> int:
         install_hooks(".")
         print("  Configured Claude Code hooks")
 
-    # Enterprise policy: initialise signed audit log key
-    if args.policy == "enterprise":
+    # Signed audit log is opt-in; the key is what turns it on.
+    if args.signed_audit:
         from aigis.audit.signed_log import _resolve_key
 
         _resolve_key(None)  # generates .aigis/audit_key if absent
@@ -1123,31 +1231,22 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     else:
         warn("Global log directory not found (~/.aigis/global/)")
 
-    # 9. Signed audit log (required under enterprise policy; opt-in otherwise)
+    # 9. Signed audit log (opt-in)
+    #
+    # This used to escalate to a failure when the policy's *name* contained
+    # "enterprise", which stopped meaning anything once --policy was removed in
+    # v2.0: all four values produced the same rules and differed only by name.
+    # Presence of the key is the honest signal, so that is what gets reported.
     key_file = Path(".aigis") / "audit_key"
     signed_log_file = Path(".aigis") / "signed_audit.jsonl"
-    _policy_is_enterprise = False
-    if policy_path.exists():
-        try:
-            from aigis.policy import load_policy as _lp
-
-            _pol = _lp(str(policy_path))
-            _policy_is_enterprise = "enterprise" in _pol.name.lower()
-        except Exception:  # policy file may be absent or unreadable; fall back to non-enterprise
-            pass
 
     if key_file.exists():
         if signed_log_file.exists() and signed_log_file.stat().st_size > 0:
             ok("Signed audit log: ACTIVE (.aigis/signed_audit.jsonl)")
         else:
             warn("Signed audit log: key present but no entries yet (run a tool call to populate)")
-    elif _policy_is_enterprise:
-        fail(
-            "Signed audit log: INACTIVE — enterprise policy requires signed log. "
-            "Run 'aigis init --policy enterprise' to initialise."
-        )
     else:
-        ok("Signed audit log: not enabled (opt-in via 'aigis init --policy enterprise')")
+        ok("Signed audit log: not enabled (opt-in via 'aigis init --signed-audit')")
 
     # Summary
     print()

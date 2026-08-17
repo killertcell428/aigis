@@ -9,7 +9,7 @@ describes the finished product. Where Aigis is not there yet, this page says so.
 
 | Work in a rollout | Can Aigis replace it? | Status |
 |---|---|---|
-| **Permission design** — deciding who may run what | **Yes.** It reduces to a combination of capabilities (see below), not to bespoke judgement | Designed, not built. Today's four `--policy` profiles differ only by name |
+| **Permission design** — deciding who may run what | **Yes.** It reduces to a combination of capabilities (see below), not to bespoke judgement | **Built** — `aigis profile build` composes a role from six capabilities and derives both layers from it |
 | **Writing and distributing settings** | **Yes**, and more accurately than by hand | **Built** — `aigis settings` derives Claude Code's own permission rules from the Aigis policy |
 | **Approval and steering-committee documents** | **Yes** | **Built** — `aigis trust-pack` generates the pack from live config |
 | **Audit response and evidence** | **Yes** | **Built** — signed, hash-chained audit log plus `aigis audit verify` |
