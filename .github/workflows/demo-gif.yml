@@ -52,17 +52,30 @@ jobs:
           ffmpeg -version | head -1; ttyd --version; vhs --version
 
       - name: Render tape → GIF
+        id: render
         env:
           TAPE: ${{ inputs.tape || 'docs/demo/aigis-demo.tape' }}
         run: |
           set -euo pipefail
           test -f "$TAPE" || { echo "::error::tape not found: $TAPE"; exit 1; }
+
+          # Read the output path out of the tape rather than assuming it. The PR
+          # step needs the exact path: create-pull-request only stages what
+          # add-paths names, so a hard-coded path silently drops the new GIF and
+          # reports "no changes" while the render itself succeeded.
+          GIF=$(awk '/^Output[[:space:]]+/{print $2; exit}' "$TAPE")
+          test -n "$GIF" || { echo "::error::no Output line in $TAPE"; exit 1; }
+
           vhs "$TAPE"
+
+          test -s "$GIF" || { echo "::error::render produced no file at $GIF"; exit 1; }
+          echo "gif=$GIF" >> "$GITHUB_OUTPUT"
+          echo "Rendered $GIF ($(du -h "$GIF" | cut -f1))"
 
       - name: Open PR with the regenerated GIF
         uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6
         with:
-          branch: chore/demo-gif-render
+          branch: chore/demo-gif-render-${{ hashFiles(inputs.tape || 'docs/demo/aigis-demo.tape') }}
           title: "docs: regenerate aigis demo GIF (VHS)"
           commit-message: "docs: regenerate aigis demo GIF via VHS"
           body: |
@@ -72,7 +85,7 @@ jobs:
             Once merged, embed it with:
 
             ```html
-            <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-demo.gif" width="760" />
+            <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/${{ steps.render.outputs.gif }}" width="760" />
             ```
-          add-paths: docs/demo/aigis-demo.gif
+          add-paths: ${{ steps.render.outputs.gif }}
           signoff: true
