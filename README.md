@@ -136,7 +136,7 @@ Rolling Claude Code out past one team means different permissions per team — m
 
 Claude Code checks its own permission rules before any hook runs, which is why that file is worth generating rather than leaving to hand-maintenance.
 
-**Why there is no "ask the user" setting.** An earlier draft had `shell: allowlist` — these commands are fine, prompt for the rest. It was removed deliberately. A prompt only protects someone who can judge it, and the people these roles are for are not being asked to judge shell commands mid-task: in practice a non-engineer either approves everything, which defeats the prompt, or refuses everything, which stops their work. So the judgement happens once, here, with context, for the whole group. Same reasoning removed `packages: approved` — whether a specific npm package is acceptable is not a question to interrupt someone with. If you do want per-command prompting, write those `ask` rules by hand; the generated file is a starting point you can edit.
+**Judgement happens here, once, for the whole group — not mid-task, per person.** A prompt only protects someone who can judge it, and these roles are for people who are not in a position to rule on a shell command while they're in the middle of something else: in practice a non-engineer either approves everything, which defeats the prompt, or refuses everything, which stops their work. That is why `shell` is `none` or `unrestricted` with no allowlist in between, and why `packages` has no `approved` value — whether a specific npm package is acceptable is a decision to make with context, for a team, not an interruption. If you do want per-command prompting, write those `ask` rules by hand; the generated file is a starting point you can edit.
 
 **What no combination can weaken.** Credential files, SSH keys, `rm -rf`, piping a download into a shell stay denied regardless of the six values. Getting that right required one non-obvious constraint: capability rules are evaluated *before* the baseline, so any axis emitting a blanket allow for `git push*` would place it in front of the baseline's own `*--force*` deny and quietly re-enable force-push. So `git` has three values (`none`, `local`, `push`) rather than an on/off switch, `push` still blocks force-push, and [a test](tests/test_profiles.py) asserts `git` is the only axis permitted to emit an allow at all.
 
@@ -168,7 +168,7 @@ Approving an autonomous agent comes down to a handful of questions. Aigis is bui
 | What can it execute? | A deterministic policy scans every Bash/Edit/Write/WebFetch before it runs; denied actions are blocked (exit 2) and never reach the shell. The shipped rules are a deny-list — an agent that can't run `ls` is not usable, so anything no rule covers proceeds. If your review requires fail-closed, set `default_decision: deny` plus explicit allow rules; enumerating those rules is real work, so budget for it. | `aigis init --agent claude-code --signed-audit` |
 | How do we enforce it org-wide? | `aigis settings --managed` derives Claude Code's own permission rules from your Aigis policy, so both come from one file instead of two hand-maintained ones. Managed rules cannot be overridden by any other settings level, not even command line arguments. Rules that can't be expressed exactly are reported, never approximated. | `aigis settings --managed` |
 | Where are the logs? | Schema-stable, machine-level audit logs at the tool-call layer, on any Claude Code plan. | `aigis logs --export-excel` |
-| Can the logs be tampered with? | Each record is HMAC-signed and hash-chained; verification fails loudly if a line was altered or removed. Where the key lives bounds what this proves — see [what the signed log does not prove](#what-the-signed-log-does-not-prove). | `aigis audit verify` |
+| Can the logs be tampered with? | Each record is HMAC-signed and hash-chained; verification fails loudly if a line was altered or removed. By default the key sits on the same machine as the agent, so pair this with SIEM forwarding where the person on the machine is in scope — [details](#the-keys-location-bounds-what-the-signature-proves). | `aigis audit verify` |
 | What standards does this map to? | A control matrix across ISO/IEC 27001:2022 Annex A, NIST AI RMF, OWASP LLM Top 10, and 経産省 AI 事業者ガイドライン, plus a live OWASP scorecard. | `aigis trust-pack` · `aigis monitor --owasp` |
 | What happens on an incident? | The pack ships an incident runbook (NIST SP 800-61 style); weekly digests keep managers in the loop. | `aigis report weekly` |
 
@@ -185,15 +185,15 @@ The order matters: Claude Code evaluates its own deny and ask rules regardless o
 
 The Claude Code Team plan exposes no audit-log API, and Enterprise's OpenTelemetry export is metrics-grade — useful for dashboards, but not designed as evidence for an investigation. Aigis hooks produce schema-stable, tamper-evident logs at the machine level regardless of plan, so you have a defensible record even where the platform doesn't provide one.
 
-### What the signed log does not prove
+### The key's location bounds what the signature proves
 
-By default the HMAC key is generated into `.aigis/audit_key` on the same machine as the agent. So the signature proves the log was not altered by anyone *without* that file — which is not the same as proving the developer running the agent didn't alter it. They have the key.
+By default the HMAC key is generated into `.aigis/audit_key` on the same machine as the agent. The signature therefore proves the log was not altered by anyone *without* that file — which is a weaker statement than it first appears, because the developer running the agent has it. Local signing catches an outside editor, not the log's own author.
 
-That is the right question to ask, and it has a real answer rather than a reassurance:
+Three things move that boundary, in increasing order of what they cover:
 
 - Pass an explicit key (`SignedAuditLog(secret_key=...)`) held outside the developer's reach — injected by CI, or read from a secrets manager — instead of using the auto-generated file.
 - Restrict access to the key file. Aigis sets POSIX permissions where the OS supports it; on Windows you need to set NTFS ACLs yourself, because `chmod` is not enforced there.
-- Forward events off the machine. Once a record is mirrored to Splunk, Datadog, Sentinel, or Elastic ([docs/forwarders.md](docs/forwarders.md)), editing the local copy no longer changes the evidence. For insider-threat scenarios this is the control that actually holds; local signing is not.
+- Forward events off the machine. Once a record is mirrored to Splunk, Datadog, Sentinel, or Elastic ([docs/forwarders.md](docs/forwarders.md)), editing the local copy no longer changes the evidence. This is the control that holds when the person you're auditing is the person on the machine.
 
 ### Why an independent OSS layer
 
