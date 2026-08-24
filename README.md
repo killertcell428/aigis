@@ -90,7 +90,7 @@ aigis init --agent claude-code
 
 Add `--signed-audit` to initialise the tamper-evident log at the same time.
 
-For rules that differ by department, see [`profiles/`](profiles/): `aigis profile build` takes one role file, written as six capabilities, and writes both the Aigis policy and Claude Code's own permission settings from it. (The `--policy` flag was removed in v2.0 — its four values only changed the policy's name.)
+To give different teams different permissions, see [`profiles/`](profiles/): pick six values for a role and `aigis profile build` writes both config files for you — the Aigis policy and Claude Code's own permission settings. (The `--policy` flag was removed in v2.0 — its four values only changed the policy's name.)
 </details>
 
 <details>
@@ -119,19 +119,24 @@ Endpoints: `POST /v1/check/input` · `POST /v1/check/output` · `POST /v1/check/
 
 ---
 
-## New in v2.0: one role file, two generated permission files
+## New in v2.0: give each team its own permissions without writing config by hand
 
-`aigis profile build` reads one role definition — six settings covering web, files, shell, git, packages, and MCP access — and writes both Aigis's own policy (`aigis-policy.yaml`) and Claude Code's permission settings (`.claude/settings.json`) from it. Previously these were two files you maintained by hand, which meant they could drift out of sync; generating both from the same source removes that risk.
+Rolling Claude Code out past one team means different permissions per team — marketing doesn't need `npm install`, engineering does. Setting that up used to mean hand-writing two config files per team: Claude Code's own permission rules, and the policy the Aigis hook enforces.
+
+`aigis profile build` replaces that with six choices. For the marketing role in [`profiles/`](profiles/), a 15-line file produces 56 rules across both config files:
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-profile.gif" alt="Aigis v2.0 demo: aigis profile show and aigis profile build generating both permission files from one role file" width="760" />
 </p>
 
-1. `aigis profile show` — what the role can and cannot do, in plain language, for whoever has to approve it.
-2. `aigis profile build` — writes `aigis-policy.yaml` (the hook's rules) and `.claude/settings.json` (Claude Code's own rules) from the one role file.
-3. Claude Code checks its own settings before any Aigis hook runs, so that file is generated here rather than hand-written.
+- **No rules to write by hand.** `web: read`, `files: workspace`, `shell: none`, `git: none`, `packages: none`, `mcp: approved` becomes a 191-line Aigis policy (30 rules) and 26 Claude Code permission rules.
+- **Rules that can't be translated are reported, not approximated.** The two formats disagree on what a wildcard means: Aigis matches with fnmatch, where `*` crosses directories, while Claude Code anchors `Bash()` at the start of the command and uses gitignore syntax for paths. 10 of the 30 policy rules can't be expressed exactly in Claude Code's format, so each one is listed with the reason and a hand-written alternative rather than emitted as something looser that looks equivalent.
+- **Something your approver can read.** `aigis profile show` prints the role as plain sentences ("Cannot run shell commands", "Cannot install dependencies"). That's what a department head signs off on; 191 lines of YAML is not.
+- **A form IT can enforce centrally.** `--managed` emits the `managed-settings.json` variant, which no other settings level can override — not even command line arguments.
 
-See [`profiles/`](profiles/) for starter role files, and the [v2.0.1 release notes](https://github.com/killertcell428/aigis/releases/tag/v2.0.1) for the full breaking-change list (`--policy` removed, the `[server]` extra removed, three unreleased subsystems dropped).
+Claude Code checks its own permission rules before any hook runs, which is why that file is worth generating rather than leaving to hand-maintenance.
+
+The three roles in [`profiles/`](profiles/) are starting points, not answers — they encode assumptions about what "marketing" means that are probably wrong for your company. Copy one and edit it. See the [v2.0.1 release notes](https://github.com/killertcell428/aigis/releases/tag/v2.0.1) for the full breaking-change list (`--policy` removed, the `[server]` extra removed, three unreleased subsystems dropped).
 
 ---
 
