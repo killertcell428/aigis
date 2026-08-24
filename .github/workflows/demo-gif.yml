@@ -18,12 +18,14 @@ on:
           - docs/demo/aigis-profile.tape
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   render:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write        # commit the rendered GIF
+      pull-requests: write   # open the PR with it
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
