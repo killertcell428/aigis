@@ -12,7 +12,16 @@ what got documented across releases.
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-08-17
+## [2.0.1] - 2026-08-24
+
+> **On the version number.** This is the first 2.x release; there is no usable
+> 2.0.0. That version was uploaded to PyPI on 2026-04-11, during early
+> development and before the project settled on 0.0.x and then 1.x, and PyPI
+> refuses re-uploads even for a version whose files have been deleted — so the
+> number is permanently burned. A `v2.0.0` tag was created and then deleted on
+> 2026-08-24, after `release.yml` failed at the publish step with
+> "400 File already exists". `release_preflight.sh` now queries PyPI before a
+> tag is pushed (exit 6), so a burned number is caught before it costs a tag.
 
 Aigis stops competing on detection-pattern count and becomes the tool that gets an
 AI agent through a company's security review. [ROADMAP.md](ROADMAP.md) records the
