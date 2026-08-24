@@ -18,7 +18,7 @@
 
 ```bash
 pip install pyaigis
-aigis init --agent claude-code --policy enterprise   # ガードレール + 監査ログ ON
+aigis init --agent claude-code --signed-audit   # ガードレール + 監査ログ ON
 aigis trust-pack --lang ja                            # → ./aigis-trust-pack/ をセキュリティ部門へ
 ```
 
@@ -84,13 +84,15 @@ print(result.blocked)     # False
 <summary><strong>Claude Code / Cursor hooks（30 秒）</strong></summary>
 
 ```bash
-aigis init --agent claude-code --policy developer
+aigis init --agent claude-code
 # .claude/hooks/ に PreToolUse フックを自動設定
 # Bash, Edit, Write, WebFetch が実行前にスキャンされます。
 # ブロックされたアクションは exit 2 を返し、Claude Code はそれを実行せず停止します。
 ```
 
-ポリシー: `developer` · `reviewer` · `restricted` · `enterprise`。現時点でこれらは**ラベルの選択であり、ルールセットの違いではありません** — 4つとも同一の拒否リストを生成し、`enterprise` のみ署名付き監査ログの鍵を追加で初期化します（`trust-pack` の土台になります）。`init` 後に `aigis-policy.yaml` を編集するか、[`policy_templates/`](policy_templates/) の業種別テンプレートから始めてください。
+`--signed-audit` を付けると、改ざん検知つき監査ログも同時に初期化します。
+
+部署ごとにルールを変えたい場合は [`profiles/`](profiles/) を参照してください。`aigis profile build` は6つの capability から役割を組み立て、**Aigis のポリシーと Claude Code 自身の権限設定の両方**を1つのファイルから生成します。（`--policy` フラグは v2.0 で削除しました。4つの値はポリシーの名前を変えるだけだったためです。）
 </details>
 
 <details>
@@ -119,6 +121,22 @@ curl -X POST http://localhost:8080/v1/check/input \
 
 ---
 
+## v2.0 の新機能：1つのファイルから2つの防御層を生成する
+
+v2.0 は検出パターン数の競争から降り、セキュリティレビューが本当に聞きたい問い ―― *誰に何を許すか*　―― に答えるようになりました。`aigis profile` は6つの capability（web / files / shell / git / packages / mcp）から役割を組み立て、**Aigis のポリシーと Claude Code 自身の権限設定の両方**を1つのファイルから導出します。2つの層が別々に手で書かれることがないため、ズレが生じません。
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-profile.gif" alt="Aigis v2.0 デモ：6つの capability から役割を組み立て、2つの防御層を生成する" width="760" />
+</p>
+
+1. **`aigis profile show`** — その役割にできること／できないことを、ルール構文ではなく承認者が読める言葉で表示
+2. **`aigis profile build`** — 1つのファイルを入力に、`aigis-policy.yaml`（フック側）と `.claude/settings.json`（Claude Code 自身の権限設定）という2つの防御層を出力
+3. Claude Code 側の設定 —— フックより先に評価される外側の門 —— を手書きではなく生成する
+
+スタータープロファイルは [`profiles/`](profiles/) を、破壊的変更の全リスト（`--policy` 廃止、`[server]` extra 廃止、未リリースだった3サブシステムの削除）は [v2.0.1 リリースノート](https://github.com/killertcell428/aigis/releases/tag/v2.0.1) を参照してください。
+
+---
+
 ## v1.2 の新機能：見えない ANSI 攻撃を検知し、IT 承認パックを生成する
 
 v1.2 では **ANSI エスケープに隠した命令**（目に見えないターミナル制御コードに埋め込まれた攻撃）の検出と、`aigis trust-pack` / `aigis audit` コマンドを追加しました。下のクリップは、実際のコマンドを4つ通しで実行しています。
@@ -142,7 +160,7 @@ v1.2 では **ANSI エスケープに隠した命令**（目に見えないタ�
 
 | 情シスの問い | Aigis の答え | コマンド |
 |---|---|---|
-| **何を実行できるのか？** | 決定論的ポリシーがすべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、拒否された操作はブロック（exit 2）されシェルに到達しません。同梱ルールは**拒否リスト方式**のため、どのルールにも該当しない操作は通ります。fail-closed が要件なら `default_decision: deny` と許可ルールの設定が必要です。 | `aigis init --agent claude-code --policy enterprise` |
+| **何を実行できるのか？** | 決定論的ポリシーがすべての Bash/Edit/Write/WebFetch を実行*前*にスキャンし、拒否された操作はブロック（exit 2）されシェルに到達しません。同梱ルールは**拒否リスト方式**のため、どのルールにも該当しない操作は通ります。fail-closed が要件なら `default_decision: deny` と許可ルールの設定が必要です。 | `aigis init --agent claude-code --signed-audit` |
 | **組織全体にどう強制するのか？** | `aigis settings --managed` が Aigis のポリシーから *Claude Code 自身の*権限ルールを生成します。2つのファイルを別々に手で保守するのではなく、1つの設定から両層を導出できます。managed ルールはコマンドライン引数を含むどの設定レベルからも上書きできません。正確に表現できないルールは、近似せず警告して除外します。 | `aigis settings --managed` |
 | **ログはどこにあるのか？** | ツール呼び出し層の、スキーマが安定したマシンレベル監査ログ。Claude Code のどのプランでも残せます。 | `aigis logs --export-excel` |
 | **ログは改ざんできないか？** | 各レコードは HMAC 署名 + ハッシュチェーンで連結され、1 行でも改変・削除されると検証が明確に失敗します。 | `aigis audit verify` |
@@ -215,7 +233,7 @@ v1.2 では **ANSI エスケープに隠した命令**（目に見えないタ�
 用途によります。*チャットボットの入出力フィルタ*なら LLM Guard・Guardrails AI・NeMo Guardrails が定番です。**自律型エージェント（Claude Code、MCP 接続エージェント）をセキュリティ承認つきで会社に導入する**なら Aigis が専用設計です — すべてのツール呼び出しへの決定論的ガードレール、改ざん検知監査ログ、生成される IT 承認パック。詳細は [なぜ Aigis か（使いどころと比較）](docs/why-aigis.md)。
 
 **Claude Code を会社で使う IT / セキュリティ承認を得るには？**
-`aigis init --agent claude-code --policy enterprise` でガードレールと監査ログを有効化し、`aigis trust-pack` で稼働中の設定から承認パック（エグゼクティブサマリ、ISO/IEC 27001・NIST AI RMF・OWASP LLM Top 10・経産省 AI 事業者ガイドラインへのコントロールマトリクス、ポリシースナップショット、監査ログのエビデンス、インシデント Runbook、展開計画）を生成し、そのフォルダを情シスに渡します。[生成物の実物](docs/sample-trust-pack/)はインストール不要で閲覧できます。
+`aigis init --agent claude-code --signed-audit` でガードレールと監査ログを有効化し、`aigis trust-pack` で稼働中の設定から承認パック（エグゼクティブサマリ、ISO/IEC 27001・NIST AI RMF・OWASP LLM Top 10・経産省 AI 事業者ガイドラインへのコントロールマトリクス、ポリシースナップショット、監査ログのエビデンス、インシデント Runbook、展開計画）を生成し、そのフォルダを情シスに渡します。[生成物の実物](docs/sample-trust-pack/)はインストール不要で閲覧できます。
 
 **LLM Guard や Lakera の OSS 代替はある？**
 あります — Aigis は Apache-2.0 かつ独立です。これらが主眼としないエージェント固有の攻撃面（MCP ツール汚染・rug-pull、メモリ汚染）もカバーし、独立を維持しています（Protect AI/LLM Guard は Palo Alto、Lakera は Check Point、promptfoo は OpenAI に買収）。
@@ -319,7 +337,7 @@ jobs:
 1. **入出力テキスト** — プロンプトインジェクション、jailbreak、エンコード済ペイロード、RAG 経由の間接インジェクション。**Wall 1–3**（パターン・意味類似度・エンコード正規化）と **Input Shaping** 層が担当。
 2. **ツール呼出し（MCP・function calling）** — rug-pull、クロスツール shadowing、confused-deputy。**MCP 3 段スキャナ**（定義 + 呼出し + 応答）と**ケイパビリティベース** taint 追跡が担当。
 3. **セッション横断のメモリ** — 休眠注入、偽嗜好なりすまし、プラン汚染。**メモリ模倣検出器**と **MemoryGraft 系書込みフィルタ**が担当。
-4. **エージェントランタイム挙動** — ゴールドリフト、FSM 違反、サブエージェント結託。**アトミック実行サンドボックス**、**安全仕様 Verifier**、**ゴール条件付き FSM** が担当。
+4. **エージェントランタイム挙動** — サブエージェント結託、後続セッションで発火するスリーパー命令、監査証跡の改ざん。すべてのツール呼び出しを**改ざん検知つき監査ログ**に記録し、**セッション横断**で相関を取って時限発動パターンを検出します。
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_2_architecture_ja.png" alt="Aigis Architecture" width="800" />
@@ -350,7 +368,7 @@ aigis monitor --owasp
 すべて読める正規表現ルール。ブラックボックスなし。
 </details>
 
-ベンチマーク: [**再現可能な実測結果**](docs/benchmarks/REPRODUCIBLE_RESULTS.md)（実際に計測した数値＋再現コマンド。レイテンシ末尾の正直な所見も記載）· [全ベンチ](docs/benchmarks/) · ダッシュボード & Web UI: [docs/](docs/)（`docker compose up -d`）
+ベンチマーク: [**再現可能な実測結果**](docs/benchmarks/REPRODUCIBLE_RESULTS.md)（実際に計測した数値＋再現コマンド。レイテンシ末尾の正直な所見も記載）· [全ベンチ](docs/benchmarks/)
 
 ---
 

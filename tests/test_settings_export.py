@@ -61,11 +61,36 @@ def test_file_write_maps_to_both_edit_and_write():
     assert result.permissions["deny"] == ["Edit(.env*)", "Write(.env*)"]
 
 
-def test_file_wildcard_maps_to_read_edit_write():
+def test_file_wildcard_maps_to_every_file_tool():
     policy = _policy(PolicyRule(id="s", action="file:*", target="*secrets*", decision="review"))
     result = export_permissions(policy)
 
-    assert result.permissions["ask"] == ["Read(*secrets*)", "Edit(*secrets*)", "Write(*secrets*)"]
+    assert result.permissions["ask"] == [
+        "Read(*secrets*)",
+        "Edit(*secrets*)",
+        "Write(*secrets*)",
+        "Glob(*secrets*)",
+        "Grep(*secrets*)",
+    ]
+
+
+def test_network_actions_map_to_web_tools():
+    policy = _policy(
+        PolicyRule(id="f", action="network:fetch", target="*", decision="deny"),
+        PolicyRule(id="s", action="network:search", target="*", decision="deny"),
+    )
+    result = export_permissions(policy)
+
+    assert result.permissions["deny"] == ["WebFetch", "WebSearch"]
+
+
+def test_mcp_tool_call_is_reported_not_approximated():
+    """Which MCP servers exist is managed-mcp.json's business, not a permission rule."""
+    policy = _policy(PolicyRule(id="m", action="mcp:tool_call", target="*", decision="deny"))
+    result = export_permissions(policy)
+
+    assert result.permissions["deny"] == []
+    assert result.excluded[0].rule_id == "m"
 
 
 def test_bare_star_target_becomes_bare_tool_rule():

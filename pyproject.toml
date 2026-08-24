@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling>=1.31.0,<1.32"]
+requires = ["hatchling>=1.31.0,<1.33"]
 build-backend = "hatchling.build"
 
 [project]
 name = "pyaigis"
-version = "1.2.0"
+version = "2.0.1"
 description = "Open-source trust layer for adopting Claude Code and autonomous AI agents at work: deterministic guardrails on every tool call, tamper-evident audit logs, and a generated IT-approval pack (aigis trust-pack). Zero-dependency Python firewall — prompt injection, MCP tool poisoning, memory defense; 44 compliance templates across US/CN/JP/EU. Library, Docker sidecar, or CLI."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -49,25 +49,6 @@ openai = ["openai>=2.53.0"]
 
 # Anthropic SDK integration
 anthropic = ["anthropic>=0.120.2"]
-
-# Full SaaS server (backend + all integrations)
-server = [
-    "pyaigis[yaml,fastapi,openai]",
-    "uvicorn[standard]>=0.52.1",
-    "sqlalchemy>=2.0.51",
-    "alembic>=1.19.0",
-    "asyncpg>=0.31.0",
-    "pydantic>=2.13.4",
-    "pydantic-settings>=2.14.2",
-    "PyJWT>=2.13.0",
-    "passlib[bcrypt]>=1.7.4",
-    "httpx>=0.28.1",
-    "redis>=8.1.0",
-    "structlog>=26.1.0",
-    "stripe>=15.4.0",
-    "reportlab>=5.0.0",
-    "openpyxl>=3.1.5",
-]
 
 # Everything
 all = ["pyaigis[yaml,fastapi,langchain,openai,anthropic]"]

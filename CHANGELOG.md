@@ -12,6 +12,29 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-08-24
+
+> **On the version number.** This is the first 2.x release; there is no usable
+> 2.0.0. That version was uploaded to PyPI on 2026-04-11, during early
+> development and before the project settled on 0.0.x and then 1.x, and PyPI
+> refuses re-uploads even for a version whose files have been deleted — so the
+> number is permanently burned. A `v2.0.0` tag was created and then deleted on
+> 2026-08-24, after `release.yml` failed at the publish step with
+> "400 File already exists". `release_preflight.sh` now queries PyPI before a
+> tag is pushed (exit 6), so a burned number is caught before it costs a tag.
+
+Aigis stops competing on detection-pattern count and becomes the tool that gets an
+AI agent through a company's security review. [ROADMAP.md](ROADMAP.md) records the
+measurements behind that decision — 54 stars against a 1,000 target, 300 article
+likes that did not convert, and a competitor publishing 768 rules against our 260+
+— and states what was dropped to reach it.
+
+**Breaking changes.** `aigis init --policy` is gone, the `[server]` extra is gone,
+and `aigis.aep` / `aigis.spec_lang` / `aigis.safety` are removed. Each entry below
+names what replaced it.
+
+**Tests:** 1781 passed · 0 failed
+
 ### Added
 
 - **`aigis settings`** — derives *Claude Code's own* permission rules from
@@ -56,7 +79,60 @@ what got documented across releases.
         fix: Write the rule by hand, e.g. Read(**/.ssh/**).
   ```
 
+- **`aigis profile`** — composes a role from six capabilities (`web`, `files`,
+  `shell`, `git`, `packages`, `mcp`) and derives *both* layers from it: the Aigis
+  policy and Claude Code's own permission settings. `profile show` prints what a
+  profile allows and blocks in plain language; `profile build` writes
+  `aigis-policy.yaml` and `.claude/settings.json`, or the managed form.
+
+  Capabilities rather than fixed role profiles, because shipping a `marketing`
+  profile ships *our* assumptions about what marketing does — it means one thing
+  where marketers query the warehouse and another where they write copy. A company
+  composes its own departments instead. Three starter files live in `profiles/`,
+  labelled as starting points rather than answers.
+
+  Three properties are deliberate and pinned by tests:
+
+  - **An axis a profile does not name gets the most restrictive value.** Silence
+    must not grant capability, so a half-written profile fails closed.
+  - **The capability layer never emits `review`.** A prompt only protects someone
+    who can judge it; in practice a non-engineer either approves everything, which
+    defeats the prompt, or refuses everything, which stops the work. Judgement
+    happens once, at profile-design time, for the whole group. This is also why
+    `shell` has no `allowlist` value and `packages` no `approved` value — both
+    would have put per-command questions in front of end users.
+  - **The baseline cannot be weakened** (`.env`, `~/.ssh`, credentials, `rm -rf`,
+    pipe-to-shell). Capability rules are evaluated *before* the baseline, so the
+    single `allow` the layer emits — `git push*`, cancelling the baseline's review
+    for a role explicitly granted push — is paired with denies for the force
+    variants placed ahead of it. `git` has no `unrestricted` value for the same
+    reason: it would have opened a path past the floor.
+
+  **Example:**
+  ```
+  $ aigis profile build profiles/marketing.json
+  Profile: Marketing
+
+    web       read          Can fetch web pages and search the web
+    shell     none          Cannot run shell commands
+    git       none          Cannot use git
+    packages  none          Cannot install dependencies
+
+    Wrote aigis-policy.yaml (30 rules)
+    Wrote .claude/settings.json (24 permission rules)
+  ```
+
 ### Changed
+
+- **`aigis settings`** now converts `network:fetch` → `WebFetch`,
+  `network:search` → `WebSearch`, and `file:search` → `Glob`/`Grep`, so a profile
+  that denies web access reaches Claude Code's own permission list instead of
+  being reported as unconvertible. `file:*` now covers all five file tools.
+
+  `mcp:tool_call` is still reported rather than converted, on purpose: Claude Code
+  names MCP tools `mcp__<server>__<tool>`, and which servers exist at all is
+  decided by `managed-mcp.json`. Approximating that with a wildcard would be a
+  guess about a spec, which is the failure mode this exporter exists to avoid.
 
 - **`exfil_crypto_wallet_transfer`** — added Japanese-language coverage. The rule
   previously keyed only on English verbs (`send`/`transfer`/`pay`), so a Japanese
@@ -66,6 +142,65 @@ what got documented across releases.
   振込 / 転送 / 入金 / 支払 / 手数料) in either word order — Japanese places the
   verb after the object. Benign Japanese like "レポートを送ってください" (no
   wallet address) still passes. 6 new tests.
+
+### Removed
+
+- **`aigis init --policy`** — the flag is gone. Its four values (`developer`,
+  `reviewer`, `restricted`, `enterprise`) generated identical rules and changed
+  only the policy's *name*, which the previous release disclosed rather than
+  fixed. The one real behaviour behind it — `enterprise` initialising the signed
+  audit-log key — is now `aigis init --signed-audit`.
+
+  Passing `--policy` still parses, but prints where each part went and exits 1,
+  instead of argparse's bare "unrecognized arguments". Per-department rules are
+  what `aigis profile build` does, which is what `--policy` looked like it was
+  doing.
+
+  `aigis doctor` changed with it: it used to fail when the policy *name*
+  contained "enterprise" but no key existed. That check stopped meaning anything
+  once all four values produced the same policy, so the report is now based on
+  whether the key is actually present.
+
+- **`backend/` and `frontend/`** — the self-hosted SaaS API (FastAPI + PostgreSQL +
+  Redis + Stripe) and its Next.js dashboard. ROADMAP.md withdrew the
+  Cloud/Business/Enterprise tiers, which left these as dormant code with no path
+  back. `docker-compose.yml` went with them — all four of its services (postgres,
+  redis, backend, frontend) existed only to run them — as did the `server` extra in
+  `pyproject.toml`, which declared 15 dependencies (uvicorn, sqlalchemy, alembic,
+  asyncpg, PyJWT, passlib, redis, structlog, stripe, reportlab, openpyxl, …) that no
+  module under `aigis/` imports.
+
+- **`aigis/aep/`, `aigis/spec_lang/`, `aigis/safety/`** — the Atomic Execution
+  Pipeline, the policy DSL with its goal-conditioned FSM, and the Safety
+  Specification Verifier. Each one was:
+
+  - imported by no other module under `aigis/`
+  - absent from the public API — `aigis/__init__.py` never exported them
+  - never released: no tag exists for v1.3.0 through v1.5.0, the versions that
+    introduced them
+
+  `Guard.authorize_tool()` was documented as "capability verification + safety
+  verification + AEP in one step". Reading it showed it only ever called the
+  capability enforcer. `capabilities/` therefore stays, as do `supply_chain/` and
+  `cross_session/`, which are exported and reachable from the public API.
+
+### Fixed
+
+- Documentation that presented the removed modules as shipping features:
+  ARCHITECTURE.md (the v1.3.1 header, the 6-layer pipeline diagram, the module tree,
+  the L5/L6 detail sections, and two academic references), `docs/api-reference.md`,
+  `docs/configuration.md`, `docs/getting-started.md`, `examples/README.md`, and both
+  READMEs.
+
+- **Published API examples that could not have run.** `docs/api-reference.md` and
+  `docs/getting-started.md` showed `authorize_tool()` taking
+  `action` / `resource` / `target` and returning `.authorized` and `.certificate`.
+  The real signature takes `tool_input: dict` and returns `.allowed`,
+  `.capability_used`, `.reason`, `.taint_level`, and `.scan_result`.
+
+- `docs/human-in-the-loop.md` and `docs/BRAND_STRATEGY_2026.md` now open with
+  notices stating, respectively, that they document a removed component and a
+  withdrawn strategy. Both are kept as records rather than deleted.
 
 ## [1.2.0] - 2026-08-09
 

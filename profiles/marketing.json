@@ -1,0 +1,15 @@
+{
+  "name": "Marketing",
+  "description": "Web research and content work. Reads and writes documents in the working directory; does not develop.",
+  "capabilities": {
+    "web": "read",
+    "files": "workspace",
+    "shell": "none",
+    "git": "none",
+    "packages": "none",
+    "mcp": "approved"
+  },
+  "allow": {
+    "mcp_servers": []
+  }
+}

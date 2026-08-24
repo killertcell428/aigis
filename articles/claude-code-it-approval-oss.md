@@ -58,7 +58,7 @@ published: true
 pip install 'pyaigis[all]'
 
 # Claude Codeフックとエンタープライズポリシーを設定
-aigis init --agent claude-code --policy enterprise
+aigis init --agent claude-code --signed-audit
 
 # 承認パッケージを生成（英語・日本語、HTML形式）
 aigis trust-pack --lang both --format html
@@ -176,7 +176,7 @@ Aigisは多層防御の一層です。魔法の解決策ではありません。
 
 ```bash
 pip install 'pyaigis[all]'
-aigis init --agent claude-code --policy enterprise
+aigis init --agent claude-code --signed-audit
 aigis trust-pack --lang both --format html
 open aigis-trust-pack/index.html
 ```

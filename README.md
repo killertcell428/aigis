@@ -18,7 +18,7 @@
 
 ```bash
 pip install pyaigis
-aigis init --agent claude-code --policy enterprise   # guardrails + audit log ON
+aigis init --agent claude-code --signed-audit   # guardrails + audit log ON
 aigis trust-pack --lang en                           # → hand ./aigis-trust-pack/ to your security team
 ```
 
@@ -82,13 +82,15 @@ Detection is deterministic — patterns, similarity, and structural analysis, no
 <summary><strong>Claude Code / Cursor hooks (30 seconds)</strong></summary>
 
 ```bash
-aigis init --agent claude-code --policy developer
+aigis init --agent claude-code
 # Installs PreToolUse hooks into .claude/hooks/
 # Every Bash, Edit, Write, WebFetch is scanned before it runs.
 # A blocked action returns exit 2, so Claude Code stops instead of executing it.
 ```
 
-Policies: `developer` · `reviewer` · `restricted` · `enterprise`. Be aware that these currently select a **label, not a distinct rule set** — all four generate the same deny-list, and only `enterprise` additionally initialises the signed audit-log key (the basis for `trust-pack`). Tailor `aigis-policy.yaml` after `init`, or start from an industry template in [`policy_templates/`](policy_templates/).
+Add `--signed-audit` to initialise the tamper-evident log at the same time.
+
+For rules that differ by department, see [`profiles/`](profiles/): `aigis profile build` composes a role from six capabilities and derives **both** the Aigis policy and Claude Code's own permission settings from one file. (The `--policy` flag was removed in v2.0 — its four values only changed the policy's name.)
 </details>
 
 <details>
@@ -117,6 +119,22 @@ Endpoints: `POST /v1/check/input` · `POST /v1/check/output` · `POST /v1/check/
 
 ---
 
+## New in v2.0: one file, two enforcement layers
+
+v2.0 stops competing on detection-pattern count and answers the question a security review actually asks: *who is allowed to do what.* `aigis profile` composes a role from six capabilities (web/files/shell/git/packages/mcp) and derives **both** the Aigis policy and Claude Code's own permission settings from that single file, so the two layers can't drift apart.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-profile.gif" alt="Aigis v2.0 demo: composing a role from six capabilities and generating both enforcement layers" width="760" />
+</p>
+
+1. **`aigis profile show`** — what the role can and cannot do, stated in plain language for whoever approves it, not in rule syntax.
+2. **`aigis profile build`** — one file in, two enforcement layers out: `aigis-policy.yaml` (the hook) and `.claude/settings.json` (Claude Code's own rules).
+3. The Claude Code side — the outer gate Claude Code checks *before* any hook runs — generated instead of hand-written.
+
+See [`profiles/`](profiles/) for starter profiles and the [v2.0.1 release notes](https://github.com/killertcell428/aigis/releases/tag/v2.0.1) for the full breaking-change list (`--policy` removed, the `[server]` extra removed, three unreleased subsystems dropped).
+
+---
+
 ## New in v1.2: catch invisible-ANSI attacks, then generate an IT-approval pack
 
 v1.2 adds detection for **ANSI-concealed instructions** (payloads hidden inside invisible terminal escape codes), plus the `aigis trust-pack` and `aigis audit` commands. The clip below runs four real commands end to end:
@@ -138,7 +156,7 @@ Approving an autonomous agent comes down to a handful of questions. Aigis is bui
 
 | What IT asks | Aigis answer | Command |
 |---|---|---|
-| **What can it execute?** | A deterministic policy scans every Bash/Edit/Write/WebFetch *before* it runs; denied actions are blocked (exit 2) and never reach the shell. The shipped rules are a **deny-list**, so an operation no rule covers proceeds — set `default_decision: deny` plus allow rules if your review requires fail-closed. | `aigis init --agent claude-code --policy enterprise` |
+| **What can it execute?** | A deterministic policy scans every Bash/Edit/Write/WebFetch *before* it runs; denied actions are blocked (exit 2) and never reach the shell. The shipped rules are a **deny-list**, so an operation no rule covers proceeds — set `default_decision: deny` plus allow rules if your review requires fail-closed. | `aigis init --agent claude-code --signed-audit` |
 | **How do we enforce it org-wide?** | `aigis settings --managed` derives *Claude Code's own* permission rules from your Aigis policy, so both layers come from one file instead of two hand-maintained ones. Managed rules cannot be overridden by any other settings level — not even command line arguments. Rules that can't be expressed exactly are reported, never approximated. | `aigis settings --managed` |
 | **Where are the logs?** | Schema-stable, machine-level audit logs at the tool-call layer — on any Claude Code plan. | `aigis logs --export-excel` |
 | **Can the logs be tampered with?** | Each record is HMAC-signed and hash-chained; verification fails loudly if a line was altered or removed. | `aigis audit verify` |
@@ -209,7 +227,7 @@ If none of these apply — for example, a stateless single-turn chatbot with no 
 It depends on the job. For *chatbot input/output filtering*, mature options include LLM Guard, Guardrails AI, and NeMo Guardrails. For **bringing an autonomous agent (Claude Code, MCP-connected agents) into a company with security approval**, Aigis is purpose-built: deterministic guardrails on every tool call, a tamper-evident audit log, and a generated IT-approval pack. See [Why Aigis — when to use it and how it compares](docs/why-aigis.md).
 
 **How do I get IT / security approval to use Claude Code at work?**
-Run `aigis init --agent claude-code --policy enterprise` to turn on guardrails + audit logging, then `aigis trust-pack` to generate an approval pack (executive summary, control matrix mapped to ISO/IEC 27001, NIST AI RMF, OWASP LLM Top 10, and 経産省 AI 事業者ガイドライン, policy snapshot, audit-log evidence, incident runbook, rollout plan) from your live config. Hand that folder to your security team. Browse a [real generated pack](docs/sample-trust-pack/) without installing.
+Run `aigis init --agent claude-code --signed-audit` to turn on guardrails + audit logging, then `aigis trust-pack` to generate an approval pack (executive summary, control matrix mapped to ISO/IEC 27001, NIST AI RMF, OWASP LLM Top 10, and 経産省 AI 事業者ガイドライン, policy snapshot, audit-log evidence, incident runbook, rollout plan) from your live config. Hand that folder to your security team. Browse a [real generated pack](docs/sample-trust-pack/) without installing.
 
 **Is there an open-source alternative to LLM Guard or Lakera for agent security?**
 Yes — Aigis is Apache-2.0 and independent. It also covers agent-specific surfaces those tools don't focus on (MCP tool poisoning/rug-pulls, memory poisoning) and stays independent (Protect AI/LLM Guard was acquired by Palo Alto, Lakera by Check Point, promptfoo by OpenAI).
@@ -311,7 +329,7 @@ The agent attack surface has four layers, each requiring a different defense:
 1. **Input / output text** — prompt injection, jailbreak, encoded payloads, indirect injection from RAG. Aigis's **Wall 1–3** (pattern · semantic similarity · encoded-payload normalisation) plus **Input Shaping** handle these.
 2. **Tool calls (MCP, function-calling)** — rug-pull, cross-tool shadowing, confused-deputy credential abuse. Aigis's **MCP 3-stage scanner** (definition + invocation + response) plus **capability-based** taint-tracking handle these.
 3. **Memory across sessions** — sleeper injections, false-preference impersonation, plan poisoning. Aigis's **memory imitation detector** and **MemoryGraft-style write filters** handle these.
-4. **Agent runtime behaviour** — goal drift, FSM violations, sub-agent collusion, audit-trail tampering. Aigis's **atomic execution sandbox**, **safety-spec verifier**, and **goal-conditioned FSM** handle these.
+4. **Agent runtime behaviour** — sub-agent collusion, sleeper instructions that fire in a later session, audit-trail tampering. Aigis records every tool call to a **tamper-evident audit log** and correlates activity **across sessions** to surface delayed-trigger patterns.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/images/gallery_2_architecture_en.png" alt="Aigis Architecture" width="800" />
@@ -342,7 +360,7 @@ aigis monitor --owasp
 Every template is a readable regex rule you can inspect, test, and modify.
 </details>
 
-Benchmarks: [**reproducible results**](docs/benchmarks/REPRODUCIBLE_RESULTS.md) (real measured numbers + exact repro commands — incl. an honest latency-tail finding) · [all benchmarks](docs/benchmarks/) · Dashboard & web UI: [docs/](docs/) (`docker compose up -d`)
+Benchmarks: [**reproducible results**](docs/benchmarks/REPRODUCIBLE_RESULTS.md) (real measured numbers + exact repro commands — incl. an honest latency-tail finding) · [all benchmarks](docs/benchmarks/)
 
 
 ---

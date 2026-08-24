@@ -51,7 +51,15 @@ _ACTION_TO_TOOLS: dict[str, tuple[str, ...]] = {
     "shell:exec": ("Bash",),
     "file:read": ("Read",),
     "file:write": ("Edit", "Write"),
-    "file:*": ("Read", "Edit", "Write"),
+    "file:search": ("Glob", "Grep"),
+    "file:*": ("Read", "Edit", "Write", "Glob", "Grep"),
+    "network:fetch": ("WebFetch",),
+    "network:search": ("WebSearch",),
+    # `mcp:tool_call` is deliberately absent. Claude Code names MCP tools
+    # `mcp__<server>__<tool>`, and which servers exist at all is decided by
+    # managed-mcp.json rather than by a permission rule — so a profile that sets
+    # `mcp: none` is reported as unconvertible instead of being approximated with
+    # a wildcard that may not match what the docs specify.
 }
 
 # Shell metacharacters. Claude Code documents that a rule trying to match a

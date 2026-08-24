@@ -719,12 +719,10 @@ allowed to do on your machine.
   add allow rules for the operations your team actually needs. That is a real
   piece of work, and it is the honest price of a fail-closed configuration.
 
-  Note also that the profile name above comes from `aigis init --policy <name>`,
-  which currently selects a **label rather than a distinct rule set**: the
-  `developer` and `enterprise` profiles generate identical rules today, and only
-  `enterprise` additionally initialises the signed audit-log key. Judge the
-  configuration by the rule counts and the policy snapshot in section 3, not by
-  the profile name.
+  The policy name above comes from the policy file itself. If it was produced by
+  `aigis profile build`, the capability combination behind it decides the rules —
+  and the rules, not the name, are what section 3 sets out in full. Judge the
+  configuration by those.
 - **Hook status:** {hook_state}.
 - **Log status:** {log_state}.
 - **Signed audit log:** {"enabled" if ev.signed_audit_enabled else "available but not yet enabled"}.
@@ -802,11 +800,10 @@ Aigisは完全にローカルで動作し、新たな実行時依存関係を追
   操作を許可ルールとして列挙する必要があります。これは相応の作業量を伴いますが、
   fail-closed 構成の正直な対価です。
 
-  また、上記のプロファイル名は `aigis init --policy <名前>` で指定したものですが、
-  現時点でこれは**ラベルの選択であり、ルールセットの違いではありません**。`developer`
-  と `enterprise` は同一のルールを生成し、`enterprise` のみ署名付き監査ログの鍵を
-  追加で初期化します。プロファイル名ではなく、上記のルール件数と第3章のポリシー
-  スナップショットで構成をご判断ください。
+  上記のポリシー名はポリシーファイル自体に由来します。`aigis profile build` で
+  生成した場合、その背後にある capability の組み合わせがルールを決定しており、
+  実際のルールは第3章に全文が掲載されています。名前ではなく、そのルールで
+  構成をご判断ください。
 - **フックの状態:** {hook_state}。
 - **ログの状態:** {log_state}。
 - **署名付き監査ログ:** {audit_state}。

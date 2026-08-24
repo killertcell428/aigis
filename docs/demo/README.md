@@ -38,7 +38,7 @@ If you prefer a real recording / asciinema embed:
 asciinema rec trust-pack-demo.cast
 # then run, in a fresh dir:
 #   pip install pyaigis
-#   aigis init --agent claude-code --policy enterprise
+#   aigis init --agent claude-code --signed-audit
 #   aigis trust-pack --lang both --format html
 #   ls aigis-trust-pack/
 #   aigis audit verify
@@ -50,7 +50,7 @@ asciinema rec trust-pack-demo.cast
 ```bash
 cd "$(mktemp -d)"
 pip install pyaigis
-aigis init --agent claude-code --policy enterprise   # guardrails + audit log ON
+aigis init --agent claude-code --signed-audit   # guardrails + audit log ON
 aigis trust-pack --lang both --format html           # → aigis-trust-pack/
 ls aigis-trust-pack/                                  # the docs IT reviews
 aigis audit verify                                    # tamper-evident proof

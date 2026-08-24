@@ -11,6 +11,8 @@
 #   4  — local branch is not on the master tip (so the tag would point
 #         somewhere humans haven't reviewed); abort
 #   5  — usage error
+#   6  — version already published on PyPI; abort (the number is burned —
+#         PyPI refuses re-uploads even after a file is deleted)
 #
 # Usage:
 #   ./release_preflight.sh vX.Y.Z              # checks current HEAD
@@ -41,7 +43,14 @@ fi
 echo "[preflight] checking $TAG against $SHA"
 
 # 1. Refresh remote view of tags + master.
-git fetch --quiet origin --tags
+#
+# --force matters here. A local tag that diverges from the remote makes
+# `git fetch --tags` exit non-zero ("would clobber existing tag"), and under
+# `set -e` that aborts this script before a single check runs — turning the
+# gatekeeper into a silent no-op. v1.1.9 was exactly that case: it pointed at
+# cycle 3 locally and cycle 4 on the remote, a leftover of the v1.1.x tag
+# incident. The remote is authoritative for what was published, so take it.
+git fetch --quiet --force origin --tags
 git fetch --quiet origin master
 
 RESOLVED_SHA=$(git rev-parse --verify "$SHA^{commit}" 2>/dev/null || true)
@@ -110,6 +119,53 @@ Recovery:
      (e.g. cutting a patch release for a previous minor).
 MSG
   exit 4
+fi
+
+# 5. PyPI collision check — the git tag can be clean while the version number
+#    is already burned on PyPI. That is exactly what happened to v2.0.0: it was
+#    uploaded on 2026-04-11 during early development, the project then moved to
+#    0.0.x and 1.x, and the number stayed unusable. Checks 2-4 all passed, the
+#    tag was pushed, and release.yml failed at the publish step with
+#    "400 File already exists" — after which the tag had to be deleted again.
+#
+#    PyPI refuses a re-upload even for a version whose files were deleted, so
+#    this has to be caught before the tag goes out.
+REPO_ROOT=$(git rev-parse --show-toplevel)
+# A missing pyproject.toml is normal: the preflight tests run this script
+# inside a bare fixture repo. Guard the read, because under `set -e` awk's
+# file-not-found (exit 2) would abort the whole script — and exit 2 is also
+# the tag-collision code, so the failure would masquerade as a real verdict.
+PKG=""
+if [[ -f "$REPO_ROOT/pyproject.toml" ]]; then
+  PKG=$(awk -F'"' '/^name = /{print $2; exit}' "$REPO_ROOT/pyproject.toml" || true)
+fi
+VERSION="${TAG#v}"
+
+if [[ -n "$PKG" ]] && command -v curl >/dev/null 2>&1; then
+  PYPI_STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://pypi.org/pypi/$PKG/$VERSION/json" 2>/dev/null || echo "000")
+
+  if [[ "$PYPI_STATUS" == "200" ]]; then
+    cat >&2 <<MSG
+[preflight] FAIL (exit 6) — $PKG $VERSION is already published on PyPI.
+
+The tag checks passed, but the version number is burned: PyPI rejects a
+re-upload of an existing version, and deleting its files does not free the
+number. Pushing the tag would leave a tag with no release behind it.
+
+Recovery:
+  1. Do not push the tag.
+  2. Check what is actually on PyPI:
+       https://pypi.org/project/$PKG/$VERSION/
+  3. If that release is an accident from an earlier era, pick the next free
+     number, and yank the stale one on PyPI so it stops resolving as an
+     install candidate.
+MSG
+    exit 6
+  elif [[ "$PYPI_STATUS" != "404" ]]; then
+    # Offline runs and PyPI hiccups must not block a release; say so loudly
+    # rather than pretending the check ran.
+    echo "[preflight] WARN — could not confirm PyPI state for $PKG $VERSION (HTTP $PYPI_STATUS); continuing unverified" >&2
+  fi
 fi
 
 echo "[preflight] OK — $TAG can be pushed against $RESOLVED_SHA"
