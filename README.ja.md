@@ -121,6 +121,22 @@ curl -X POST http://localhost:8080/v1/check/input \
 
 ---
 
+## v2.0 の新機能：1つのファイルから2つの防御層を生成する
+
+v2.0 は検出パターン数の競争から降り、セキュリティレビューが本当に聞きたい問い ―― *誰に何を許すか*　―― に答えるようになりました。`aigis profile` は6つの capability（web / files / shell / git / packages / mcp）から役割を組み立て、**Aigis のポリシーと Claude Code 自身の権限設定の両方**を1つのファイルから導出します。2つの層が別々に手で書かれることがないため、ズレが生じません。
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-profile.gif" alt="Aigis v2.0 デモ：6つの capability から役割を組み立て、2つの防御層を生成する" width="760" />
+</p>
+
+1. **`aigis profile show`** — その役割にできること／できないことを、ルール構文ではなく承認者が読める言葉で表示
+2. **`aigis profile build`** — 1つのファイルを入力に、`aigis-policy.yaml`（フック側）と `.claude/settings.json`（Claude Code 自身の権限設定）という2つの防御層を出力
+3. Claude Code 側の設定 —— フックより先に評価される外側の門 —— を手書きではなく生成する
+
+スタータープロファイルは [`profiles/`](profiles/) を、破壊的変更の全リスト（`--policy` 廃止、`[server]` extra 廃止、未リリースだった3サブシステムの削除）は [v2.0.1 リリースノート](https://github.com/killertcell428/aigis/releases/tag/v2.0.1) を参照してください。
+
+---
+
 ## v1.2 の新機能：見えない ANSI 攻撃を検知し、IT 承認パックを生成する
 
 v1.2 では **ANSI エスケープに隠した命令**（目に見えないターミナル制御コードに埋め込まれた攻撃）の検出と、`aigis trust-pack` / `aigis audit` コマンドを追加しました。下のクリップは、実際のコマンドを4つ通しで実行しています。

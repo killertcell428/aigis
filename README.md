@@ -119,6 +119,22 @@ Endpoints: `POST /v1/check/input` · `POST /v1/check/output` · `POST /v1/check/
 
 ---
 
+## New in v2.0: one file, two enforcement layers
+
+v2.0 stops competing on detection-pattern count and answers the question a security review actually asks: *who is allowed to do what.* `aigis profile` composes a role from six capabilities (web/files/shell/git/packages/mcp) and derives **both** the Aigis policy and Claude Code's own permission settings from that single file, so the two layers can't drift apart.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-profile.gif" alt="Aigis v2.0 demo: composing a role from six capabilities and generating both enforcement layers" width="760" />
+</p>
+
+1. **`aigis profile show`** — what the role can and cannot do, stated in plain language for whoever approves it, not in rule syntax.
+2. **`aigis profile build`** — one file in, two enforcement layers out: `aigis-policy.yaml` (the hook) and `.claude/settings.json` (Claude Code's own rules).
+3. The Claude Code side — the outer gate Claude Code checks *before* any hook runs — generated instead of hand-written.
+
+See [`profiles/`](profiles/) for starter profiles and the [v2.0.1 release notes](https://github.com/killertcell428/aigis/releases/tag/v2.0.1) for the full breaking-change list (`--policy` removed, the `[server]` extra removed, three unreleased subsystems dropped).
+
+---
+
 ## New in v1.2: catch invisible-ANSI attacks, then generate an IT-approval pack
 
 v1.2 adds detection for **ANSI-concealed instructions** (payloads hidden inside invisible terminal escape codes), plus the `aigis trust-pack` and `aigis audit` commands. The clip below runs four real commands end to end:

@@ -32,11 +32,18 @@ jobs:
           results_file: results.sarif
           results_format: sarif
           publish_results: true
-          # PAT with `public_repo` + `read:org` scope to read branch protection
-          # rules. Falls back to GITHUB_TOKEN if unset (Branch-Protection check
-          # will return "?"). Create at: Settings → Secrets → Actions →
-          # SCORECARD_TOKEN. See https://github.com/ossf/scorecard-action#authentication-with-fine-grained-pat-optional
-          repo_token: ${{ secrets.SCORECARD_TOKEN || secrets.GITHUB_TOKEN }}
+          # GITHUB_TOKEN is sufficient and is what upstream recommends. A
+          # fine-grained PAT is only needed to read *classic* Branch Protection,
+          # and this repository moved to Repository Rules on 2026-08-24 — which
+          # scorecard-action reads with the default token.
+          #
+          # The PAT is deliberately not referenced any more. It had expired, and
+          # because `secrets.SCORECARD_TOKEN || secrets.GITHUB_TOKEN` prefers the
+          # PAT whenever the secret exists, every run since failed with
+          # "401 Bad credentials" — a scheduled job going red weekly while the
+          # badge quietly served a stale score. An expiring credential in the
+          # fallback position fails closed and silently; the default token cannot.
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
