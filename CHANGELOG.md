@@ -12,6 +12,20 @@ what got documented across releases.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-08-17
+
+Aigis stops competing on detection-pattern count and becomes the tool that gets an
+AI agent through a company's security review. [ROADMAP.md](ROADMAP.md) records the
+measurements behind that decision — 54 stars against a 1,000 target, 300 article
+likes that did not convert, and a competitor publishing 768 rules against our 260+
+— and states what was dropped to reach it.
+
+**Breaking changes.** `aigis init --policy` is gone, the `[server]` extra is gone,
+and `aigis.aep` / `aigis.spec_lang` / `aigis.safety` are removed. Each entry below
+names what replaced it.
+
+**Tests:** 1781 passed · 0 failed
+
 ### Added
 
 - **`aigis settings`** — derives *Claude Code's own* permission rules from
