@@ -92,7 +92,7 @@ aigis init --agent claude-code
 
 `--signed-audit` を付けると、改ざん検知つき監査ログも同時に初期化します。
 
-部署ごとにルールを変えたい場合は [`profiles/`](profiles/) を参照してください。`aigis profile build` は6つの capability で書いた役割定義ファイル1つから、Aigis のポリシーと Claude Code 自身の権限設定の両方を生成します。（`--policy` フラグは v2.0 で削除しました。4つの値はポリシーの名前を変えるだけだったためです。）
+部署ごとに権限を変えたい場合は [`profiles/`](profiles/) を参照してください。役割ごとに6項目を選べば、`aigis profile build` が設定ファイル2つ（Aigis のポリシーと Claude Code 自身の権限設定）を書いてくれます。（`--policy` フラグは v2.0 で削除しました。4つの値はポリシーの名前を変えるだけだったためです。）
 </details>
 
 <details>
@@ -121,19 +121,24 @@ curl -X POST http://localhost:8080/v1/check/input \
 
 ---
 
-## v2.0 の新機能：役割定義1ファイルから、権限設定を2つ生成する
+## v2.0 の新機能：部署ごとに違う権限を、設定ファイルを手で書かずに用意する
 
-`aigis profile build` は、web / files / shell / git / packages / mcp の6つの capability で書いた役割定義ファイル1つから、Aigis 自身のポリシー（`aigis-policy.yaml`）と Claude Code の権限設定（`.claude/settings.json`）を両方生成します。これまではこの2つを別々に手で書いていたため食い違うことがありましたが、同じ元ファイルから両方を生成することでその心配がなくなりました。
+Claude Code を複数の部署に展開すると、部署ごとに許す範囲が変わります。マーケティング部に `npm install` は要らないが、開発部には要る。これを実現するには、これまで部署ごとに2つの設定ファイルを手で書く必要がありました。Claude Code 自身の権限ルールと、Aigis のフックが参照するポリシーです。
+
+`aigis profile build` は、これを6項目の選択に置き換えます。[`profiles/`](profiles/) 同梱のマーケティング用の役割定義は15行で、そこから2つの設定ファイルに合計56ルールが書き出されます。
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/killertcell428/aigis/master/docs/demo/aigis-profile.gif" alt="Aigis v2.0 デモ：aigis profile show と aigis profile build が役割定義ファイル1つから2つの権限設定を生成する" width="760" />
 </p>
 
-1. `aigis profile show` — その役割にできること・できないことを、ルール構文ではなく承認者が読める言葉で表示する
-2. `aigis profile build` — 役割定義ファイル1つから `aigis-policy.yaml`（フック側のルール）と `.claude/settings.json`（Claude Code 自身のルール）を生成する
-3. Claude Code は自身の設定を、Aigis のフックより先に評価するため、この設定ファイルも手書きではなく生成する対象にした
+- **手で書くルールがゼロになる。** `web: read` `files: workspace` `shell: none` `git: none` `packages: none` `mcp: approved` の6項目から、191行の Aigis ポリシー（30ルール）と Claude Code の権限ルール26件が生成されます。
+- **正確に変換できないルールは、近似せず報告される。** 2つの書式はワイルドカードの意味が違います。Aigis は fnmatch で `*` がディレクトリを跨ぎますが、Claude Code は `Bash()` をコマンド先頭で一致させ、パスには gitignore 形式を使います。30ルールのうち10件は Claude Code の書式では正確に表現できないため、同等に見えて実際は緩いルールを書くのではなく、1件ずつ理由と手書きの代替案を提示します。
+- **承認する人が読める形式で出る。** `aigis profile show` は「シェルコマンドを実行できない」「依存パッケージをインストールできない」のような平文で表示します。部門長が承認印を押せるのはこちらで、191行の YAML ではありません。
+- **情シスが中央で強制できる形式も出せる。** `--managed` を付けると `managed-settings.json` 形式で出力します。この層は他のどの設定レベルからも上書きできません。コマンドライン引数でも上書きできません。
 
-スタータープロファイルは [`profiles/`](profiles/) を、破壊的変更の全リスト（`--policy` 廃止、`[server]` extra 廃止、未リリースだった3サブシステムの削除）は [v2.0.1 リリースノート](https://github.com/killertcell428/aigis/releases/tag/v2.0.1) を参照してください。
+Claude Code は自身の権限ルールをフックより先に評価します。だからこの設定ファイルは、手で保守するのではなく生成する価値があります。
+
+[`profiles/`](profiles/) の3つの役割定義は出発点であって答えではありません。「マーケティング部とは何か」についての前提が入っており、それはおそらく自社には合いません。コピーして書き換えて使ってください。破壊的変更の全リスト（`--policy` 廃止、`[server]` extra 廃止、未リリースだった3サブシステムの削除）は [v2.0.1 リリースノート](https://github.com/killertcell428/aigis/releases/tag/v2.0.1) を参照してください。
 
 ---
 
