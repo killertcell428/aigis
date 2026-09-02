@@ -1,6 +1,6 @@
 # Aigis — Roadmap
 
-> Last updated: 2026-08-13
+> Last updated: 2026-09-02
 > Strategy: be the tool that gets AI agents through a **Japanese company's internal
 > security review** — and stay small enough for one person to maintain.
 
@@ -100,34 +100,42 @@ maintainer, not fifth at something large.
 
 Ordered by cost, cheapest first.
 
-1. **Fix where Aigis is discoverable.** The README already leads with the right
-   positioning ("trust layer for bringing Claude Code to work"), but the GitHub
-   description still says "firewall for AI agents … 44 compliance templates" — the
-   generic shelf. Topics are missing `tool-poisoning`, `claude-code`, and `audit-log`,
-   even though `github.com/topics/tool-poisoning` ranks for the exact search Aigis
-   should win.
-2. **Get listed where people actually look.** `awesome-ai-security-tools` and
-   `awesome-ai-agent-incidents` both rank on the core query and neither lists Aigis.
-   (Open since April as "Awesome list PRs (3 lists)".) Note: a 2026 submission to an
-   *academic literature* list was rejected as "not original work" — tool directories
-   are a different thing and are the right target.
-3. **Make `trust-pack` good enough to survive a real review.** It is the only
-   differentiator with no competing tool, and nobody with audit experience has read
-   its output yet. Development effort moves here from pattern work.
+1. ~~Fix where Aigis is discoverable.~~ **Done (2026-09-02).** GitHub description
+   changed from "firewall for AI agents … 44 compliance templates" (the generic
+   shelf) to lead with "get Claude Code and other AI agents approved for use at
+   work." Topics gained `tool-poisoning`, `claude-code`, `audit-log`.
+2. **Get listed where people actually look — narrower than planned, after
+   checking.** The original plan named two lists on the assumption both "rank on
+   the core query." Re-checked on 2026-09-02: `awesome-ai-agent-incidents` (45★)
+   does not surface on the queries a Japan-focused tool would be found by, so it
+   is dropped. `awesome-ai-security-tools` (1,094★, genuinely ranks #1 for "AI
+   agent security tools") does rank, but its 39-entry Runtime Protection &
+   Enforcement group already contains several tools claiming the same
+   "PreToolUse-style hook + tamper-evident audit log" positioning — HOL Guard
+   (466★), agentguard (456★), defenseclaw (819★), Agentmetry (hash-chained audit
+   trail) — several with more stars than Aigis. Listed there, Aigis would be
+   entry #40 making the same claim as better-known projects, not a differentiated
+   one. What none of those 39 entries claim is `trust-pack` (a generated
+   bilingual approval pack mapped to 経産省 AI 事業者ガイドライン) — but a
+   general security-tools list, read mostly by an English-speaking audience, is
+   not where that lands or gets noticed. Narrowing the target to
+   governance/compliance-focused lists instead (e.g. `awesome-ai-agent-governance`,
+   whose own description names "MCP and Claude Code security" directly) — not yet
+   submitted, and not yet re-verified the way the two lists above were.
+3. **Make `trust-pack` good enough to survive a real review.** Confirmed, not just
+   assumed: checking #2 against a real competitor list is what established that
+   `trust-pack` is the actual point of difference, not the detection/audit-log
+   mechanism. Raise this item's priority accordingly — it is what to invest
+   development time in rather than search-listing work.
 4. **Keep publishing.** The two winning articles share a shape: a felt threat, a
    simple fix, a cited basis. One per month is enough to show the project is alive.
-5. **Cover the rollout, not just the approval.** Getting the pack signed is half the
-   job; the other half is configuring and distributing the agent afterwards, which is
-   what the published enterprise rollouts (Mercari's MDM-distributed settings,
-   WINTICKET's setup script) actually spend their effort on. `aigis settings` covers
-   the first piece by deriving Claude Code's own permission rules from the Aigis
-   policy. The next piece is **composable role profiles**: rather than shipping fixed
-   profiles that encode our assumptions about what "marketing" means, express a role
-   as a combination of six capabilities — `web`, `files`, `shell`, `git`, `packages`,
-   `mcp` — over a baseline no combination can weaken. A company then composes its own
-   departments instead of adopting ours. See
-   [docs/what-aigis-replaces.md](docs/what-aigis-replaces.md) for the reasoning and
-   for an honest split of which rollout work a tool can take over.
+5. ~~Cover the rollout, not just the approval — composable role profiles.~~
+   **Shipped in v2.0** as `aigis profile build`: a role is a combination of six
+   capabilities — `web`, `files`, `shell`, `git`, `packages`, `mcp` — over a
+   baseline no combination can weaken, and one role file generates both the Aigis
+   policy and Claude Code's own permission settings so they cannot drift apart.
+   See [profiles/](profiles/) for the starter roles and
+   [docs/what-aigis-replaces.md](docs/what-aigis-replaces.md) for the reasoning.
 
 ---
 
@@ -187,7 +195,18 @@ were done by hand.
 | Zero runtime dependencies | **Yes** | n/a | — | — | — |
 
 Read the first two rows as the reason to stop competing there, and the last five as
-where Aigis is actually alone.
+where Aigis is actually alone — **against this set.** That set was chosen for the
+pattern-count comparison and does not include the smaller "PreToolUse-style hook for
+coding agents" niche Aigis actually sits in.
+
+**A closer set, found 2026-09-02 while evaluating awesome-list placement** (see
+`What Aigis is doing` #2): `HOL Guard` (466★), `agentguard` (456★), `defenseclaw`
+(819★), and `Agentmetry` (hash-chained JSONL audit trail) all claim materially the
+same mechanism — intercept before execution, log with tamper evidence — and several
+have more stars than Aigis (54). The "Tamper-evident audit log: Yes, alone" row above
+is true only against the four projects it's compared to, not against this niche.
+`trust-pack` and 経産省 AI 事業者ガイドライン mapping remain unmatched across both
+sets; that is the actual moat, not the hook-and-log mechanism.
 
 ---
 
