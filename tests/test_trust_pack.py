@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from aigis.cli import main
-from aigis.policy import Policy, PolicyRule, save_policy
+from aigis.policy import Policy, PolicyRule, _default_policy, save_policy
 from aigis.trust_pack import (
     TrustPackGenerator,
     control_matrix,
@@ -212,6 +212,64 @@ class TestMarkdownGeneration:
         cm_ja = (out / "02_control_matrix.ja.md").read_text(encoding="utf-8")
         assert "does NOT cover" in cm_en
         assert "対象としない範囲" in cm_ja
+
+    def test_ja_policy_snapshot_translates_default_rule_reasons(self, tmp_path: Path) -> None:
+        # The default policy's rule reasons are English string literals
+        # (aigis.policy.default_policy). The ja snapshot's human-readable
+        # table must not leak them untranslated. Materialise the policy
+        # file first, otherwise the YAML section is just a placeholder
+        # comment and this wouldn't be exercising the literal-file case.
+        save_policy(_default_policy(), str(tmp_path / "aigis-policy.yaml"))
+        gen = TrustPackGenerator(project_dir=str(tmp_path))
+        out = tmp_path / "pack"
+        gen.write_markdown(out, lang="ja")
+        snapshot = (out / "03_policy_snapshot.ja.md").read_text(encoding="utf-8")
+        table, _, yaml_block = snapshot.partition("## ポリシーファイル")
+        assert "Recursive forced deletion is blocked" not in table
+        assert "再帰的な強制削除をブロックします" in table
+        # The literal YAML is the actual file under version control and is
+        # never translated — this is the one place the English reason
+        # should still appear.
+        assert "Recursive forced deletion is blocked" in yaml_block
+
+    def test_ja_policy_snapshot_falls_back_for_custom_rule_reason(self, tmp_path: Path) -> None:
+        # A rule id Aigis doesn't ship (i.e. user-authored) has no Japanese
+        # translation available; its own reason must pass through as-is
+        # rather than disappearing or raising.
+        policy = Policy(
+            name="Custom Test Policy",
+            rules=[
+                PolicyRule(
+                    id="forbid_curl_pipe",
+                    action="shell:exec",
+                    target="*curl*| bash*",
+                    decision="deny",
+                    reason="No remote pipe to bash",
+                )
+            ],
+        )
+        save_policy(policy, str(tmp_path / "aigis-policy.yaml"))
+        gen = TrustPackGenerator(project_dir=str(tmp_path))
+        out = tmp_path / "pack"
+        gen.write_markdown(out, lang="ja")
+        snapshot = (out / "03_policy_snapshot.ja.md").read_text(encoding="utf-8")
+        assert "No remote pipe to bash" in snapshot
+
+    def test_ja_siem_status_has_no_untranslated_english(self, tmp_path: Path) -> None:
+        gen = TrustPackGenerator(project_dir=str(tmp_path))
+        out = tmp_path / "pack"
+        gen.write_markdown(out, lang="ja")
+        for stem in ("01_executive_summary", "04_audit_log_evidence"):
+            text = (out / f"{stem}.ja.md").read_text(encoding="utf-8")
+            assert "not detected (forwarders are configured in code" not in text
+            assert "未検出" in text
+
+    def test_ja_control_matrix_has_no_english_owasp_note(self, tmp_path: Path) -> None:
+        gen = TrustPackGenerator(project_dir=str(tmp_path))
+        out = tmp_path / "pack"
+        gen.write_markdown(out, lang="ja")
+        cm_ja = (out / "02_control_matrix.ja.md").read_text(encoding="utf-8")
+        assert "cross-cutting; not an OWASP risk category" not in cm_ja
 
     def test_no_crash_with_logs_present(self, tmp_path: Path) -> None:
         from datetime import UTC, datetime

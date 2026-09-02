@@ -8,8 +8,7 @@ Aigisは監査ログを3階層で保持します（いずれも追記専用のJS
 - **グローバルログ:** `~/.aigis/global/`（全プロジェクト横断、監査・CISO向け）
 - **アラート保管:** `~/.aigis/alerts/`（拒否・レビューイベントを恒久保存）
 
-現状: ローカルログは未生成、
-直近7日間で0件、30日間で0件を記録しています。
+現状: ローカルログは未生成、直近7日間で0件、30日間で0件を記録しています。
 
 ## イベントスキーマ（JSONLフィールド）
 
@@ -99,4 +98,4 @@ POSIX権限を強制しません。Windows環境ではNTFS ACLを明示的に設
 イベントは任意で外部SIEMへ転送できます（Elastic Common Schema形式、HTTP）。転送は
 非ブロッキングで、エージェントのツール呼び出しを遅延させません。送信前に個人情報の
 墨消し（Redactor）を実行できます。詳細は `docs/forwarders.md` を参照してください。
-現状: not detected (forwarders are configured in code; see docs/forwarders.md)。
+現状: 未検出（転送設定はコードで行うため。docs/forwarders.md を参照）。

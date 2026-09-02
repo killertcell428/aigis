@@ -177,11 +177,11 @@ def control_matrix() -> list[ControlMapping]:
         ControlMapping(
             control="Weekly security report",
             control_ja="週次セキュリティレポート",
-            what_it_does="Automated weekly report of scans, blocks, OWASP coverage, and week-over-week trend for review meetings.",
-            what_it_does_ja="スキャン数・ブロック数・OWASPカバレッジ・前週比トレンドを集計した週次レポートを自動生成します。",
+            what_it_does="Automated weekly report of scans, blocks, OWASP coverage, and week-over-week trend for review meetings. Cross-cutting — it aggregates the other controls rather than mapping to its own OWASP risk category.",
+            what_it_does_ja="スキャン数・ブロック数・OWASPカバレッジ・前週比トレンドを集計した週次レポートを自動生成します。横断的なコントロールであり、他のコントロールを集計するもので、独自のOWASPリスクカテゴリには対応しません。",
             iso27001="A.5.36 (Compliance review), A.8.16 (Monitoring activities)",
             nist_ai_rmf="MEASURE 4.1, GOVERN 4.1",
-            owasp_llm="— (cross-cutting; not an OWASP risk category)",
+            owasp_llm="—",
             ai_gl="GL-TRANS-01 (ドキュメント化), GL-RISK-02",
         ),
     ]
@@ -205,6 +205,32 @@ _NOT_COVERED_JA = [
     "Claude Code自体のクラウド側処理 — Anthropicへ送信されるプロンプトはAnthropicの規約に従うものであり、Aigisの統制対象外です。",
     "ID・アクセス管理 — ユーザー認証やSSOは引き続き貴社のIdP（ID基盤）の責任範囲です。",
 ]
+
+# Japanese translations for the built-in default policy's rule reasons
+# (aigis.policy.default_policy()), keyed by rule id. The policy snapshot's
+# "human-readable" table (section 3) looks these up for lang="ja"; the
+# verbatim YAML in the same section is never translated, since it claims
+# to be the literal file under version control. A rule id not in this
+# dict — i.e. a user-authored rule — falls back to its own `reason`
+# unchanged: Aigis cannot know what language a custom policy was written in.
+_DEFAULT_RULE_REASONS_JA = {
+    "dangerous_commands": "再帰的な強制削除をブロックします",
+    "dangerous_format": "ファイルシステムのフォーマットコマンドをブロックします",
+    "dangerous_dd": "ディスクへの直接操作をブロックします",
+    "sudo_commands": "権限昇格はレビューが必要です",
+    "env_file_protection": "環境変数ファイルへの変更をブロックします",
+    "secrets_dir_protection": "secretsディレクトリへのアクセスはレビューが必要です",
+    "ssh_key_protection": "SSH鍵へのアクセスをブロックします",
+    "credentials_protection": "認証情報ファイルを保護します",
+    "pipe_to_shell": "取得した内容をシェルへパイプする操作をブロックします",
+    "pipe_to_sh": "取得した内容をシェルへパイプする操作をブロックします",
+    "git_force_push": "force pushをブロックします",
+    "git_push_review": "git pushはレビューが必要です",
+    "agent_spawn_review": "サブエージェントの起動はレビューが必要です",
+    "llm_prompt_scan": "LLMへのプロンプトはAigisの検出エンジンでスキャンされます",
+    "risk_threshold_critical": "Aigisのスキャンエンジンが重大リスクのコンテンツを検出しました",
+    "risk_threshold_medium": "Aigisのスキャンエンジンが疑わしいコンテンツを検出しました",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -301,20 +327,36 @@ def _detect_siem_forwarder(project_dir: Path) -> tuple[bool, str]:
 
     Forwarders in Aigis are wired programmatically (no canonical config
     file), so this is a heuristic: we look for the conventional
-    environment variable and a project-level marker file. When neither is
-    present we report "not detected" rather than guessing.
+    environment variable and a project-level marker file.
+
+    Returns ``(configured, detail)`` where ``detail`` is a bare fact (an
+    env var name, a file path) with no English sentence around it, so the
+    caller can render an ``en``/``ja`` status line from it. When neither
+    signal is present ``detail`` is empty — the "not configured" wording
+    lives in :func:`_siem_status_text`, not here.
     """
     import os
 
     env_url = os.environ.get("AIGIS_SIEM_URL", "").strip()
     if env_url:
-        return True, f"AIGIS_SIEM_URL is set ({env_url})"
+        return True, f"AIGIS_SIEM_URL={env_url}"
 
     marker = project_dir / ".aigis" / "forwarders.json"
     if marker.exists():
-        return True, f"forwarder config present: {marker}"
+        return True, str(marker)
 
-    return False, "not detected (forwarders are configured in code; see docs/forwarders.md)"
+    return False, ""
+
+
+def _siem_status_text(configured: bool, detail: str, lang: str) -> str:
+    """Render the SIEM-forwarder evidence line in the requested language."""
+    if lang == "ja":
+        if configured:
+            return f"設定済み（{detail}）"
+        return "未検出（転送設定はコードで行うため。docs/forwarders.md を参照）"
+    if configured:
+        return f"configured ({detail})"
+    return "not detected (forwarders are configured in code; see docs/forwarders.md)"
 
 
 def gather_evidence(project_dir: str = ".") -> Evidence:
@@ -726,7 +768,7 @@ allowed to do on your machine.
 - **Hook status:** {hook_state}.
 - **Log status:** {log_state}.
 - **Signed audit log:** {"enabled" if ev.signed_audit_enabled else "available but not yet enabled"}.
-- **SIEM forwarding:** {ev.siem_forwarder_detail}.
+- **SIEM forwarding:** {_siem_status_text(ev.siem_forwarder_configured, ev.siem_forwarder_detail, "en")}.
 
 {self._notes_block_en(ev)}
 """
@@ -807,7 +849,7 @@ Aigisは完全にローカルで動作し、新たな実行時依存関係を追
 - **フックの状態:** {hook_state}。
 - **ログの状態:** {log_state}。
 - **署名付き監査ログ:** {audit_state}。
-- **SIEM転送:** {ev.siem_forwarder_detail}。
+- **SIEM転送:** {_siem_status_text(ev.siem_forwarder_configured, ev.siem_forwarder_detail, "ja")}。
 
 {self._notes_block_ja(ev)}
 """
@@ -905,7 +947,8 @@ Aigisは完全にローカルで動作し、新たな実行時依存関係を追
             head += "| # | ルールID | アクション | 対象 | 判定 | 理由 |\n"
             head += "|---|---|---|---|---|---|\n"
             for i, rule in enumerate(policy.rules, 1):
-                head += f"| {i} | `{rule.id}` | `{rule.action}` | `{rule.target}` | **{rule.decision}** | {rule.reason} |\n"
+                reason = _DEFAULT_RULE_REASONS_JA.get(rule.id, rule.reason)
+                head += f"| {i} | `{rule.id}` | `{rule.action}` | `{rule.target}` | **{rule.decision}** | {reason} |\n"
             head += "\n## ポリシーファイル（実体・YAML）\n\n"
             head += "以下は、リポジトリで管理されている実際のポリシーファイルの全文です。\n\n"
             head += "```yaml\n" + self._policy_yaml.rstrip("\n") + "\n```\n"
@@ -944,8 +987,7 @@ Aigisは監査ログを3階層で保持します（いずれも追記専用のJS
 - **グローバルログ:** `~/.aigis/global/`（全プロジェクト横断、監査・CISO向け）
 - **アラート保管:** `~/.aigis/alerts/`（拒否・レビューイベントを恒久保存）
 
-現状: ローカルログは{"あり" if ev.local_log_present else "未生成"}、
-直近7日間で{ev.events_last_7d}件、30日間で{ev.events_last_30d}件を記録しています。
+現状: ローカルログは{"あり" if ev.local_log_present else "未生成"}、直近7日間で{ev.events_last_7d}件、30日間で{ev.events_last_30d}件を記録しています。
 
 ## イベントスキーマ（JSONLフィールド）
 
@@ -1012,7 +1054,7 @@ POSIX権限を強制しません。Windows環境ではNTFS ACLを明示的に設
 イベントは任意で外部SIEMへ転送できます（Elastic Common Schema形式、HTTP）。転送は
 非ブロッキングで、エージェントのツール呼び出しを遅延させません。送信前に個人情報の
 墨消し（Redactor）を実行できます。詳細は `docs/forwarders.md` を参照してください。
-現状: {ev.siem_forwarder_detail}。
+現状: {_siem_status_text(ev.siem_forwarder_configured, ev.siem_forwarder_detail, "ja")}。
 """
 
         return f"""# 4. Audit Log Evidence
@@ -1025,8 +1067,7 @@ Aigis keeps audit logs in three tiers (all append-only JSONL, one event per line
 - **Global logs:** `~/.aigis/global/` (cross-project, for audit / CISO)
 - **Alert archive:** `~/.aigis/alerts/` (deny / review events, permanent)
 
-Current state: local logs are {"present" if ev.local_log_present else "not yet created"},
-with {ev.events_last_7d} events in the last 7 days and {ev.events_last_30d} in 30 days.
+Current state: local logs are {"present" if ev.local_log_present else "not yet created"}, with {ev.events_last_7d} events in the last 7 days and {ev.events_last_30d} in 30 days.
 
 ## Event schema (JSONL fields)
 
@@ -1098,7 +1139,7 @@ enforce POSIX permissions — set NTFS ACLs explicitly there.
 Events can optionally be forwarded to an external SIEM (Elastic Common Schema,
 over HTTP). Forwarding is non-blocking and never delays an agent tool call. A
 PII redactor can run before any event leaves the process. See
-`docs/forwarders.md`. Current state: {ev.siem_forwarder_detail}.
+`docs/forwarders.md`. Current state: {_siem_status_text(ev.siem_forwarder_configured, ev.siem_forwarder_detail, "en")}.
 """
 
     # -- 05 Incident runbook ------------------------------------------------

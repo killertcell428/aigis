@@ -3,7 +3,7 @@
 **組織:** Example Corp（サンプル株式会社）
 **提出先:** 【要記入: 情報システム部門】
 **セキュリティ窓口:** security@example.com
-**生成日時:** 2026-08-16T15:03:20.485326+00:00（Aigis v1.2.0）
+**生成日時:** 2026-09-02T06:06:39.931020+00:00（Aigis v2.0.1）
 
 ## Claude Codeとは
 
@@ -66,6 +66,6 @@ Aigisは完全にローカルで動作し、新たな実行時依存関係を追
 - **フックの状態:** 導入・設定済み。
 - **ログの状態:** まだイベントは記録されていません。
 - **署名付き監査ログ:** 有効。
-- **SIEM転送:** not detected (forwarders are configured in code; see docs/forwarders.md)。
+- **SIEM転送:** 未検出（転送設定はコードで行うため。docs/forwarders.md を参照）。
 
 

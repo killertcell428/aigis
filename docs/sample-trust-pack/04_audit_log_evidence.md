@@ -8,8 +8,7 @@ Aigis keeps audit logs in three tiers (all append-only JSONL, one event per line
 - **Global logs:** `~/.aigis/global/` (cross-project, for audit / CISO)
 - **Alert archive:** `~/.aigis/alerts/` (deny / review events, permanent)
 
-Current state: local logs are not yet created,
-with 0 events in the last 7 days and 0 in 30 days.
+Current state: local logs are not yet created, with 0 events in the last 7 days and 0 in 30 days.
 
 ## Event schema (JSONL fields)
 

@@ -15,8 +15,8 @@ This pack contains the documents an IT / information-security department reviews
 
 ## Pack metadata / パック情報
 
-- **Generated at / 生成日時:** 2026-08-16T15:03:20.485326+00:00
-- **Aigis version / バージョン:** 1.2.0
+- **Generated at / 生成日時:** 2026-09-02T06:06:39.931020+00:00
+- **Aigis version / バージョン:** 2.0.1
 - **Organisation / 組織:** Example Corp（サンプル株式会社）
 - **Security contact / セキュリティ窓口:** security@example.com
 - **Languages / 言語:** en, ja
