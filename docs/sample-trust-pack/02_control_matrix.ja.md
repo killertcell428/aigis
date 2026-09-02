@@ -13,7 +13,7 @@
 | メモリ・ファイル書き込みフィルター | 保護対象パス（.env、認証情報、SSH鍵）への書き込みをブロックし、永続化されるエージェントメモリを検査します。 | A.8.3 (Information access restriction), A.8.12 (Data leakage prevention) | MANAGE 2.1, GOVERN 1.4 | LLM06 Excessive Agency, LLM02 Sensitive Information Disclosure | GL-HUMAN-03 (最小権限), GL-DATA-02 |
 | 改ざん検知監査ログ（HMAC＋ハッシュチェーン） | 追記専用ログ。各エントリをHMAC-SHA256で署名しハッシュチェーンで連結するため、削除・改ざんを検知できます。 | A.8.15 (Logging), A.8.16 (Monitoring activities), A.5.28 (Collection of evidence) | MEASURE 2.8, MANAGE 4.1 | LLM06 Excessive Agency (logging & monitoring) | GL-AUDIT-01 (追跡可能性), GL-RISK-02 (インシデントDB) |
 | SIEM転送（ECS／HTTP） | 任意の非ブロッキング転送機能が、イベントをElastic Common Schema形式でSIEMへ複製します。送信前に個人情報の墨消しを実施します。 | A.8.16 (Monitoring activities), A.5.25 (Assessment of security events) | MEASURE 2.8, MANAGE 4.1 | LLM06 Excessive Agency | GL-HUMAN-04 (継続的モニタリング) |
-| 週次セキュリティレポート | スキャン数・ブロック数・OWASPカバレッジ・前週比トレンドを集計した週次レポートを自動生成します。 | A.5.36 (Compliance review), A.8.16 (Monitoring activities) | MEASURE 4.1, GOVERN 4.1 | — (cross-cutting; not an OWASP risk category) | GL-TRANS-01 (ドキュメント化), GL-RISK-02 |
+| 週次セキュリティレポート | スキャン数・ブロック数・OWASPカバレッジ・前週比トレンドを集計した週次レポートを自動生成します。横断的なコントロールであり、他のコントロールを集計するもので、独自のOWASPリスクカテゴリには対応しません。 | A.5.36 (Compliance review), A.8.16 (Monitoring activities) | MEASURE 4.1, GOVERN 4.1 | — | GL-TRANS-01 (ドキュメント化), GL-RISK-02 |
 
 ## Aigisが対象としない範囲
 

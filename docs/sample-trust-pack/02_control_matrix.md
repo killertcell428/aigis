@@ -13,7 +13,7 @@ This table maps each control Aigis implements to the major security and AI-gover
 | Memory / file-write filter | Blocks writes to protected paths (.env, credentials, SSH keys) and filters persisted agent memory. | A.8.3 (Information access restriction), A.8.12 (Data leakage prevention) | MANAGE 2.1, GOVERN 1.4 | LLM06 Excessive Agency, LLM02 Sensitive Information Disclosure | GL-HUMAN-03 (最小権限), GL-DATA-02 |
 | Tamper-evident audit log (HMAC + hash chain) | Append-only log; each entry HMAC-SHA256 signed and hash-chained so deletion/modification is detectable. | A.8.15 (Logging), A.8.16 (Monitoring activities), A.5.28 (Collection of evidence) | MEASURE 2.8, MANAGE 4.1 | LLM06 Excessive Agency (logging & monitoring) | GL-AUDIT-01 (追跡可能性), GL-RISK-02 (インシデントDB) |
 | SIEM forwarding (ECS / HTTP) | Optional non-blocking forwarder mirrors events to a SIEM in Elastic Common Schema; PII redaction runs first. | A.8.16 (Monitoring activities), A.5.25 (Assessment of security events) | MEASURE 2.8, MANAGE 4.1 | LLM06 Excessive Agency | GL-HUMAN-04 (継続的モニタリング) |
-| Weekly security report | Automated weekly report of scans, blocks, OWASP coverage, and week-over-week trend for review meetings. | A.5.36 (Compliance review), A.8.16 (Monitoring activities) | MEASURE 4.1, GOVERN 4.1 | — (cross-cutting; not an OWASP risk category) | GL-TRANS-01 (ドキュメント化), GL-RISK-02 |
+| Weekly security report | Automated weekly report of scans, blocks, OWASP coverage, and week-over-week trend for review meetings. Cross-cutting — it aggregates the other controls rather than mapping to its own OWASP risk category. | A.5.36 (Compliance review), A.8.16 (Monitoring activities) | MEASURE 4.1, GOVERN 4.1 | — | GL-TRANS-01 (ドキュメント化), GL-RISK-02 |
 
 ## What Aigis does NOT cover
 

@@ -3,7 +3,7 @@
 **Organisation:** Example Corp（サンプル株式会社）
 **Prepared for:** [TO FILL: IT / Information Security Department]
 **Security contact:** security@example.com
-**Generated:** 2026-08-16T15:03:20.485326+00:00 (Aigis v1.2.0)
+**Generated:** 2026-09-02T06:06:39.931020+00:00 (Aigis v2.0.1)
 
 ## What Claude Code is
 
